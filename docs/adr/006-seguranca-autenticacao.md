@@ -53,8 +53,7 @@ public class UserController {
         // ...
     }
 
-    @GetMapping("/me")
-    @PreAuthorize("isAuthenticated()") // Qualquer usuário logado
+    @GetMapping("/me") // Qualquer usuário logado
     public UserResponse getMyProfile(@AuthenticationPrincipal User user) {
         // ...
     }

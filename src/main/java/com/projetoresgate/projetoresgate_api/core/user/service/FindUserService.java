@@ -4,7 +4,7 @@ import com.projetoresgate.projetoresgate_api.core.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.core.user.usecase.FindUserUseCase;
 import com.projetoresgate.projetoresgate_api.core.user.usecase.query.FindUserByIdQuery;
-import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
+import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -22,7 +22,7 @@ public class FindUserService implements FindUserUseCase {
     public User handle(FindUserByIdQuery query) {
         Optional<User> optionalUser = repository.findById(query.id());
         if (optionalUser.isEmpty()) {
-            throw new InternalException("Usuário não encontrado.");
+            throw new ResourceNotFoundException("Usuário não encontrado.");
         }
         return optionalUser.get();
     }

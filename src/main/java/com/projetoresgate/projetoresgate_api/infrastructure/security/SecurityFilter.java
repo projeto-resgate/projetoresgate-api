@@ -32,24 +32,21 @@ public class SecurityFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
-
-        String token = this.recoverToken(request);
-        if (token != null) {
-            try {
+        try {
+            String token = this.recoverToken(request);
+            if (token != null) {
                 String subject = tokenService.validateToken(token);
-                UserDetails user = userRepository.findByEmail(subject);
+                UserDetails user = userRepository.findUserByEmail(subject).orElse(null);
+
                 if (user != null) {
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
-            } catch (Exception e) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setCharacterEncoding("UTF-8");
-                response.setContentType("text/plain; charset=UTF-8");
-                response.getWriter().write("Token inválido ou expirado");
-                return;
             }
+        } catch (Exception e) {
+            SecurityContextHolder.clearContext();
         }
+
         filterChain.doFilter(request, response);
     }
 

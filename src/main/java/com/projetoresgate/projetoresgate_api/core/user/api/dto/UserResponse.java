@@ -5,17 +5,28 @@ import com.projetoresgate.projetoresgate_api.core.user.domain.enums.UserRole;
 
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 public class UserResponse {
 
+    private UUID id;
     private String email;
     private String name;
     private Set<UserRole> roles;
 
     public UserResponse(User user) {
+        this.id = user.getId();
         this.email = user.getEmail();
         this.name = user.getName();
         this.roles = user.getRoles();
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
     }
 
     public String getEmail() {
@@ -47,11 +58,11 @@ public class UserResponse {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UserResponse that = (UserResponse) o;
-        return Objects.equals(email, that.email) && Objects.equals(name, that.name) && Objects.equals(roles, that.roles);
+        return Objects.equals(id, that.id) && Objects.equals(email, that.email) && Objects.equals(name, that.name) && Objects.equals(roles, that.roles);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(email, name, roles);
+        return Objects.hash(id, email, name, roles);
     }
 }
