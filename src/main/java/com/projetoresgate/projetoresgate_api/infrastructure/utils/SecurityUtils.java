@@ -1,7 +1,7 @@
 package com.projetoresgate.projetoresgate_api.infrastructure.utils;
 
+import com.projetoresgate.projetoresgate_api.core.user.domain.User;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
-import com.projetoresgate.projetoresgate_api.modules.user.domain.User;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 

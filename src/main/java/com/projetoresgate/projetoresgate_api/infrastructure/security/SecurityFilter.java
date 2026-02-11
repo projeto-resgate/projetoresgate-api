@@ -1,7 +1,7 @@
 package com.projetoresgate.projetoresgate_api.infrastructure.security;
 
+import com.projetoresgate.projetoresgate_api.core.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.services.TokenService;
-import com.projetoresgate.projetoresgate_api.modules.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
