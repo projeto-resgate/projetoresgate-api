@@ -45,6 +45,17 @@ Contém os contextos delimitados (Bounded Contexts), como `user`. A estrutura in
 *   **Docker**: Containerização do banco de dados para consistência entre ambientes.
 *   **Spring Security + JWT**: Autenticação *stateless*.
 
+### 📄 Documentação de Decisões Arquiteturais (ADR)
+
+Para mais detalhes sobre as decisões arquiteturais e padrões adotados, consulte nossos ADRs:
+
+*   [001 - Padrões Arquiteturais e Estrutura do Projeto](docs/adr/001-padroes-arquiteturais.md)
+*   [002 - Estratégia de Tratamento de Erros](docs/adr/002-tratamento-de-erros.md)
+*   [003 - Gerenciamento de Banco de Dados e Migrations](docs/adr/003-gerenciamento-banco-dados.md)
+*   [004 - Estratégia de Testes](docs/adr/004-estrategia-testes.md)
+*   [005 - Padrões de Nomenclatura e Idioma](docs/adr/005-padroes-nomenclatura-idioma.md)
+*   [006 - Segurança e Autenticação](docs/adr/006-seguranca-autenticacao.md)
+
 </details>
 
 <details>
