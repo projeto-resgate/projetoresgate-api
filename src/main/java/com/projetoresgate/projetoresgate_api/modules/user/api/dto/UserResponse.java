@@ -1,0 +1,57 @@
+package com.projetoresgate.projetoresgate_api.modules.user.api.dto;
+
+import com.projetoresgate.projetoresgate_api.modules.user.domain.User;
+import com.projetoresgate.projetoresgate_api.modules.user.domain.enums.UserRole;
+
+import java.util.Objects;
+import java.util.Set;
+
+public class UserResponse {
+
+    private String email;
+    private String name;
+    private Set<UserRole> roles;
+
+    public UserResponse(User user) {
+        this.email = user.getEmail();
+        this.name = user.getName();
+        this.roles = user.getRoles();
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Set<UserRole> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<UserRole> roles) {
+        this.roles = roles;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserResponse that = (UserResponse) o;
+        return Objects.equals(email, that.email) && Objects.equals(name, that.name) && Objects.equals(roles, that.roles);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(email, name, roles);
+    }
+}
