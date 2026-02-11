@@ -21,30 +21,6 @@ API RESTful desenvolvida para o sistema **Projeto Resgate**. Esta aplicação ge
 
 O projeto adota **Clean Architecture** e princípios de **DDD (Domain-Driven Design)** para isolar regras de negócio de detalhes de infraestrutura.
 
-### Estrutura de Pacotes
-
-A organização segue Separando a aplicação em `core` (domínio) e `infrastructure`.
-
-#### 1. `infrastructure`
-Camada de suporte técnico e integração com frameworks. Contém configurações do Spring, Security, implementações de e-mail e tratamento global de exceções. O domínio não possui dependência desta camada.
-
-#### 2. `core` (Domínio)
-Contém os contextos delimitados (Bounded Contexts), como `user`. A estrutura interna reflete as camadas da arquitetura limpa:
-
-*   **`domain`**: Entidades e Enums. Camada mais interna, contendo apenas lógica de negócio pura e estado, sem dependências de frameworks.
-*   **`usecase`**: Interfaces e Commands que definem as operações do sistema (ex: `CreateUser`), seguindo o princípio de Segregação de Interfaces.
-*   **`service`**: Implementação dos casos de uso. Orquestra o fluxo de dados, validações e chamadas aos repositórios.
-*   **`repository`**: Interfaces para persistência de dados. O domínio define o contrato, e a infraestrutura provê a implementação (Inversão de Dependência).
-*   **`api`**: Camada de entrada (Controllers e DTOs). Responsável pela conversão entre requisições HTTP e objetos de domínio. Utiliza Records para DTOs.
-
-### Decisões Técnicas
-
-*   **Java 21**: Uso de *Records* e *Pattern Matching*.
-*   **Spring Boot 3.3**: Framework base para injeção de dependência e servidor web.
-*   **Flyway**: Versionamento e migração de esquema de banco de dados.
-*   **Docker**: Containerização do banco de dados para consistência entre ambientes.
-*   **Spring Security + JWT**: Autenticação *stateless*.
-
 ### 📄 Documentação de Decisões Arquiteturais (ADR)
 
 Para mais detalhes sobre as decisões arquiteturais e padrões adotados, consulte nossos ADRs:
