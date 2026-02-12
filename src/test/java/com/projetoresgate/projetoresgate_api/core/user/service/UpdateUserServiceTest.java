@@ -23,7 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Serviço de Atualização de Usuário - Testes")
+@DisplayName("Serviço de Atualização de Usuário - Test")
 class UpdateUserServiceTest {
 
     @Mock
@@ -73,9 +73,52 @@ class UpdateUserServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar exceção ao atualizar a senha sem a senha atual")
-    void handle_shouldThrowException_whenPasswordUpdateWithoutCurrentPassword() {
+    @DisplayName("Não deve atualizar o nome se o nome fornecido for em branco")
+    void handle_shouldNotUpdateName_whenNameIsBlank() {
+        UpdateUserCommand command = new UpdateUserCommand(userId, "   ", null, null);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+
+        updateUserService.handle(command);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        User savedUser = userCaptor.getValue();
+
+        assertEquals("Old Name", savedUser.getName());
+    }
+
+    @Test
+    @DisplayName("Não deve atualizar a senha se a nova senha for em branco")
+    void handle_shouldNotUpdatePassword_whenPasswordIsBlank() {
+        UpdateUserCommand command = new UpdateUserCommand(userId, null, "   ", "correctCurrentPassword");
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+
+        updateUserService.handle(command);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        User savedUser = userCaptor.getValue();
+
+        assertEquals("encodedCurrentPassword", savedUser.getPassword());
+        verify(passwordEncoder, never()).matches(any(), any());
+        verify(passwordEncoder, never()).encode(any());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção ao atualizar a senha sem a senha atual (null)")
+    void handle_shouldThrowException_whenPasswordUpdateWithoutCurrentPasswordAsNull() {
         UpdateUserCommand command = new UpdateUserCommand(userId, null, "newPassword", null);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+
+        InternalException exception = assertThrows(InternalException.class, () -> updateUserService.handle(command));
+        assertEquals("A senha atual é obrigatória para alterar a senha.", exception.getMessage());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção ao atualizar a senha sem a senha atual (blank)")
+    void handle_shouldThrowException_whenPasswordUpdateWithoutCurrentPasswordAsBlank() {
+        UpdateUserCommand command = new UpdateUserCommand(userId, null, "newPassword", "   ");
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
 
         InternalException exception = assertThrows(InternalException.class, () -> updateUserService.handle(command));

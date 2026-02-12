@@ -20,7 +20,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Serviço de Exclusão Lógica de Usuário - Testes")
+@DisplayName("Serviço de Exclusão Lógica de Usuário - Test")
 class SoftDeleteUserServiceTest {
 
     @Mock

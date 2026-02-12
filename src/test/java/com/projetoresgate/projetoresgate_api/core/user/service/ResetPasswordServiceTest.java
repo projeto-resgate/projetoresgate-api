@@ -24,7 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Serviço de Redefinição de Senha - Testes")
+@DisplayName("Serviço de Redefinição de Senha - Test")
 class ResetPasswordServiceTest {
 
     @Mock
