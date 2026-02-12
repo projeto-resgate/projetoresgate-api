@@ -5,6 +5,7 @@ import com.projetoresgate.projetoresgate_api.core.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.user.repository.PasswordResetTokenRepository;
 import com.projetoresgate.projetoresgate_api.core.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.email.JavaMailEmailService;
+import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,15 +13,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,28 +58,35 @@ class RequestPasswordResetServiceTest {
 
         requestPasswordResetService.handle(userEmail);
 
-        verify(passwordResetTokenRepository, never()).deleteByUser(any(User.class));
-        verify(passwordResetTokenRepository, never()).save(any(PasswordResetToken.class));
-        verify(javaMailEmailService, never()).sendHtml(anyString(), anyString(), anyString());
+        verifyNoInteractions(passwordResetTokenRepository, javaMailEmailService);
     }
 
     @Test
-    @DisplayName("Deve criar token e enviar e-mail se o usuário existir")
+    @DisplayName("Deve criar token com hash e enviar e-mail com token original")
     void handle_shouldCreateTokenAndSendEmail_whenUserExists() {
-        when(userRepository.findUserByEmail(userEmail)).thenReturn(Optional.of(existingUser));
+        String plainTextToken = "my-secure-plain-text-token";
+        String expectedTokenHash = "expected-hash-of-the-token";
 
-        requestPasswordResetService.handle(userEmail);
+        try (MockedStatic<TokenUtils> mockedTokenUtils = Mockito.mockStatic(TokenUtils.class)) {
+            mockedTokenUtils.when(TokenUtils::generateSecureToken).thenReturn(plainTextToken);
+            mockedTokenUtils.when(() -> TokenUtils.hashToken(plainTextToken)).thenReturn(expectedTokenHash);
 
-        verify(passwordResetTokenRepository).deleteByUser(existingUser);
+            when(userRepository.findUserByEmail(userEmail)).thenReturn(Optional.of(existingUser));
 
-        ArgumentCaptor<PasswordResetToken> tokenCaptor = ArgumentCaptor.forClass(PasswordResetToken.class);
-        verify(passwordResetTokenRepository).save(tokenCaptor.capture());
-        PasswordResetToken savedToken = tokenCaptor.getValue();
-        assertEquals(existingUser, savedToken.getUser());
+            ArgumentCaptor<PasswordResetToken> tokenCaptor = ArgumentCaptor.forClass(PasswordResetToken.class);
+            ArgumentCaptor<String> htmlCaptor = ArgumentCaptor.forClass(String.class);
 
-        ArgumentCaptor<String> htmlCaptor = ArgumentCaptor.forClass(String.class);
-        verify(javaMailEmailService).sendHtml(eq(userEmail), eq("Redefinição de Senha - Projeto Resgate"), htmlCaptor.capture());
-        String emailHtml = htmlCaptor.getValue();
-        assertTrue(emailHtml.contains("href=\"http://localhost:5173/reset-password?token=" + savedToken.getToken() + "\""));
+            requestPasswordResetService.handle(userEmail);
+
+            verify(passwordResetTokenRepository).deleteByUser(existingUser);
+            verify(passwordResetTokenRepository).save(tokenCaptor.capture());
+            verify(javaMailEmailService).sendHtml(eq(userEmail), anyString(), htmlCaptor.capture());
+
+            PasswordResetToken savedToken = tokenCaptor.getValue();
+            String emailHtml = htmlCaptor.getValue();
+
+            assertEquals(expectedTokenHash, savedToken.getTokenHash());
+            assertTrue(emailHtml.contains("token=" + plainTextToken));
+        }
     }
 }

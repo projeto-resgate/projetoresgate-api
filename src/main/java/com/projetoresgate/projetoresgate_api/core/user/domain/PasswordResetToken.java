@@ -13,8 +13,8 @@ public class PasswordResetToken {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
-    private String token;
+    @Column(nullable = false, unique = true, name = "token_hash")
+    private String tokenHash;
 
     @OneToOne(targetEntity = User.class, fetch = FetchType.EAGER)
     @JoinColumn(nullable = false, name = "user_id")
@@ -25,8 +25,8 @@ public class PasswordResetToken {
 
     public PasswordResetToken() {}
 
-    public PasswordResetToken(String token, User user, LocalDateTime expiryDate) {
-        this.token = token;
+    public PasswordResetToken(String tokenHash, User user, LocalDateTime expiryDate) {
+        this.tokenHash = tokenHash;
         this.user = user;
         this.expiryDate = expiryDate;
     }
@@ -35,8 +35,12 @@ public class PasswordResetToken {
         return id;
     }
 
-    public String getToken() {
-        return token;
+    public String getTokenHash() {
+        return tokenHash;
+    }
+
+    public void setTokenHash(String tokenHash) {
+        this.tokenHash = tokenHash;
     }
 
     public User getUser() {

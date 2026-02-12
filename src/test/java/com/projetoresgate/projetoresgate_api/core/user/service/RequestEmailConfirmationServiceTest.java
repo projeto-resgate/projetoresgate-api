@@ -5,6 +5,7 @@ import com.projetoresgate.projetoresgate_api.core.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.user.repository.EmailConfirmationTokenRepository;
 import com.projetoresgate.projetoresgate_api.core.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.email.JavaMailEmailService;
+import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,13 +13,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -70,23 +74,31 @@ class RequestEmailConfirmationServiceTest {
     }
 
     @Test
-    @DisplayName("Deve criar token e enviar e-mail se o usuário existir e não estiver verificado")
-    void handle_shouldCreateTokenAndSendEmail_whenUserExistsAndNotVerified() {
-        when(userRepository.findUserByEmail(userEmail)).thenReturn(Optional.of(existingUser));
+    @DisplayName("Deve criar token com hash e enviar e-mail com token original")
+    void handle_shouldCreateHashedTokenAndSendEmailWithPlainText() {
+        String plainTextToken = "my-secure-plain-text-token";
+        String expectedTokenHash = "expected-hash-of-the-token";
 
-        requestEmailConfirmationService.handle(userEmail);
+        try (MockedStatic<TokenUtils> mockedTokenUtils = Mockito.mockStatic(TokenUtils.class)) {
+            mockedTokenUtils.when(TokenUtils::generateSecureToken).thenReturn(plainTextToken);
+            mockedTokenUtils.when(() -> TokenUtils.hashToken(plainTextToken)).thenReturn(expectedTokenHash);
 
-        verify(emailConfirmationTokenRepository).deleteByUser(existingUser);
+            when(userRepository.findUserByEmail(userEmail)).thenReturn(Optional.of(existingUser));
 
-        ArgumentCaptor<EmailConfirmationToken> tokenCaptor = ArgumentCaptor.forClass(EmailConfirmationToken.class);
-        verify(emailConfirmationTokenRepository).save(tokenCaptor.capture());
-        EmailConfirmationToken savedToken = tokenCaptor.getValue();
-        assertEquals(existingUser, savedToken.getUser());
-        assertTrue(savedToken.getToken().matches("\\d{6}"), "O token deve ser um número de 6 dígitos");
+            ArgumentCaptor<EmailConfirmationToken> tokenCaptor = ArgumentCaptor.forClass(EmailConfirmationToken.class);
+            ArgumentCaptor<String> htmlCaptor = ArgumentCaptor.forClass(String.class);
 
-        ArgumentCaptor<String> htmlCaptor = ArgumentCaptor.forClass(String.class);
-        verify(javaMailEmailService).sendHtml(eq(userEmail), eq("Código de Confirmação - Projeto Resgate"), htmlCaptor.capture());
-        String emailHtml = htmlCaptor.getValue();
-        assertTrue(emailHtml.contains(savedToken.getToken()));
+            requestEmailConfirmationService.handle(userEmail);
+
+            verify(emailConfirmationTokenRepository).deleteByUser(existingUser);
+            verify(emailConfirmationTokenRepository).save(tokenCaptor.capture());
+            verify(javaMailEmailService).sendHtml(eq(userEmail), anyString(), htmlCaptor.capture());
+
+            EmailConfirmationToken savedToken = tokenCaptor.getValue();
+            String emailHtml = htmlCaptor.getValue();
+
+            assertEquals(expectedTokenHash, savedToken.getTokenHash());
+            assertTrue(emailHtml.contains("/confirm-email/" + plainTextToken));
+        }
     }
 }

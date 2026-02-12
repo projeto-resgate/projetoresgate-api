@@ -10,6 +10,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import static java.util.Objects.isNull;
+
 @Service
 public class AuthenticateUserService implements AuthenticateUserUseCase {
 
@@ -28,7 +30,7 @@ public class AuthenticateUserService implements AuthenticateUserUseCase {
         User user = userRepository.findUserByEmail(query.email())
                 .orElse(null);
 
-        if (user == null || !passwordEncoder.matches(query.password(), user.getPassword())) {
+        if (isNull(user) || !passwordEncoder.matches(query.password(), user.getPassword())) {
             throw new BadCredentialsException("Authentication failed");
         }
 

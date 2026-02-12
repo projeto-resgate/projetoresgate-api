@@ -1,6 +1,9 @@
 package com.projetoresgate.projetoresgate_api.core.user.api;
 
-import com.projetoresgate.projetoresgate_api.core.user.api.dto.*;
+import com.projetoresgate.projetoresgate_api.core.user.api.dto.AuthenticationResponse;
+import com.projetoresgate.projetoresgate_api.core.user.api.dto.ForgotPasswordRequest;
+import com.projetoresgate.projetoresgate_api.core.user.api.dto.ResetPasswordRequest;
+import com.projetoresgate.projetoresgate_api.core.user.api.dto.UserResponse;
 import com.projetoresgate.projetoresgate_api.core.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.user.usecase.*;
 import com.projetoresgate.projetoresgate_api.core.user.usecase.command.ConfirmEmailCommand;
@@ -101,14 +104,14 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/confirm-email")
-    @Operation(summary = "Confirmar e-mail", description = "Confirma o e-mail do usuário usando o token recebido.")
+    @PutMapping("/confirm-email/{token}")
+    @Operation(summary = "Confirmar e-mail", description = "Confirma o e-mail do usuário usando o token recebido por link.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "E-mail confirmado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Token inválido ou expirado")
     })
-    public ResponseEntity<Void> confirmEmail(@RequestBody @Valid ConfirmEmailRequest request, @AuthenticationPrincipal User user) {
-        confirmEmailUseCase.handle(new ConfirmEmailCommand(request.token(), user));
+    public ResponseEntity<Void> confirmEmail(@PathVariable String token) {
+        confirmEmailUseCase.handle(new ConfirmEmailCommand(token));
         return ResponseEntity.ok().build();
     }
 
@@ -122,6 +125,8 @@ public class UserController {
         User user = findUserUseCase.handle(new FindUserByIdQuery(id));
         return ResponseEntity.ok(new UserResponse(user));
     }
+
+
 
     @PostMapping
     @Operation(summary = "Criar usuário", description = "Cria um novo usuário no sistema.")

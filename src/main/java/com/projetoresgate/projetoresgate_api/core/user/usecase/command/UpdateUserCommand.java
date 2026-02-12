@@ -11,7 +11,7 @@ public record UpdateUserCommand(
 
         String name,
 
-        @Size(min = 6, message = "{validation.user.password.size}")
+        @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres.")
         String password,
 
         String currentPassword

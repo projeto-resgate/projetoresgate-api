@@ -8,6 +8,7 @@ import com.projetoresgate.projetoresgate_api.core.user.usecase.command.CreateUse
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.UUID;
 
@@ -29,9 +30,18 @@ public class CreateUserService implements CreateUserUseCase {
             throw new InternalException("Este e-mail já está cadastrado.");
         }
 
+        if (StringUtils.hasText(cmd.password()) && cmd.password().length() < 6) {
+            throw new InternalException("A senha deve ter no mínimo 6 caracteres.");
+        }
+
+        String encodedPassword = null;
+        if (StringUtils.hasText(cmd.password())) {
+            encodedPassword = passwordEncoder.encode(cmd.password());
+        }
+
         User newUser = new User(
                 cmd.email(),
-                passwordEncoder.encode(cmd.password()),
+                encodedPassword,
                 cmd.name()
         );
 

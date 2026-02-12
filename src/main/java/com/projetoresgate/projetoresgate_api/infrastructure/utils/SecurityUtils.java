@@ -5,6 +5,8 @@ import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalEx
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import static java.util.Objects.isNull;
+
 public class SecurityUtils {
 
     private SecurityUtils() {
@@ -13,7 +15,7 @@ public class SecurityUtils {
     public static User getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+        if (isNull(authentication) || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
             throw new InternalException("Usuário não autenticado.");
         }
 

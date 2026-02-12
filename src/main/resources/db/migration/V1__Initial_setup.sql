@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     date_updated TIMESTAMP,
     deleted_at TIMESTAMP,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
+    password VARCHAR(255),
     name VARCHAR(255) NOT NULL,
     is_email_verified BOOLEAN NOT NULL DEFAULT FALSE
 );
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS user_roles (
 
 CREATE TABLE IF NOT EXISTS email_confirmation_tokens (
     id UUID PRIMARY KEY,
-    token VARCHAR(255) NOT NULL,
+    token_hash VARCHAR(255) NOT NULL,
     user_id UUID NOT NULL,
     expiry_date TIMESTAMP NOT NULL,
     CONSTRAINT fk_email_confirmation_tokens_user FOREIGN KEY (user_id) REFERENCES users(id)
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS email_confirmation_tokens (
 
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
     id UUID PRIMARY KEY,
-    token VARCHAR(255) NOT NULL,
+    token_hash VARCHAR(255) NOT NULL,
     user_id UUID NOT NULL,
     expiry_date TIMESTAMP NOT NULL,
     CONSTRAINT fk_password_reset_tokens_user FOREIGN KEY (user_id) REFERENCES users(id)

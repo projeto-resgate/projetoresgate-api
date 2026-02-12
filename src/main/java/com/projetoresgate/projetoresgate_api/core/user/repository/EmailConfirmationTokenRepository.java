@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface EmailConfirmationTokenRepository extends JpaRepository<EmailConfirmationToken, UUID> {
-    Optional<EmailConfirmationToken> findByToken(String token);
+    Optional<EmailConfirmationToken> findByTokenHash(String tokenHash);
 
     @Modifying
     @Query("delete from EmailConfirmationToken t where t.user = ?1")

@@ -6,12 +6,12 @@ import com.projetoresgate.projetoresgate_api.core.user.repository.PasswordResetT
 import com.projetoresgate.projetoresgate_api.core.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.core.user.usecase.RequestPasswordResetUseCase;
 import com.projetoresgate.projetoresgate_api.infrastructure.email.JavaMailEmailService;
+import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class RequestPasswordResetService implements RequestPasswordResetUseCase {
@@ -39,11 +39,13 @@ public class RequestPasswordResetService implements RequestPasswordResetUseCase 
 
         passwordResetTokenRepository.deleteByUser(user);
 
-        String token = UUID.randomUUID().toString();
-        PasswordResetToken myToken = new PasswordResetToken(token, user, LocalDateTime.now().plusMinutes(10));
+        String plainTextToken = TokenUtils.generateSecureToken();
+        String tokenHash = TokenUtils.hashToken(plainTextToken);
+
+        PasswordResetToken myToken = new PasswordResetToken(tokenHash, user, LocalDateTime.now().plusMinutes(10));
         passwordResetTokenRepository.save(myToken);
 
-        String htmlContent = getResetPasswordHtml(token);
+        String htmlContent = getResetPasswordHtml(plainTextToken);
         javaMailEmailService.sendHtml(user.getEmail(), "Redefinição de Senha - Projeto Resgate", htmlContent);
     }
 

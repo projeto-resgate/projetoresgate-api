@@ -5,10 +5,10 @@ import com.projetoresgate.projetoresgate_api.core.user.repository.UserRepository
 import com.projetoresgate.projetoresgate_api.core.user.usecase.RequestEmailConfirmationUseCase;
 import com.projetoresgate.projetoresgate_api.core.user.usecase.command.CreateUserCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -37,57 +37,74 @@ class CreateUserServiceTest {
     @InjectMocks
     private CreateUserService createUserService;
 
-    private CreateUserCommand createUserCommand;
+    @Test
+    @DisplayName("Deve criar usuário com senha com sucesso")
+    void handle_shouldCreateUserWithPassword_successfully() {
+        CreateUserCommand command = new CreateUserCommand("Test User", "test@example.com", "password123");
+        when(userRepository.findUserByEmail(command.email())).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(command.password())).thenReturn("encodedPassword");
+        
+        User savedUser = new User(command.email(), "encodedPassword", command.name());
+        savedUser.setId(UUID.randomUUID());
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
-    @BeforeEach
-    void setUp() {
-        createUserCommand = new CreateUserCommand(
-                "Test User",
-                "test@example.com",
-                "password123"
-        );
+        createUserService.handle(command);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        User capturedUser = userCaptor.getValue();
+
+        assertEquals("encodedPassword", capturedUser.getPassword());
+        verify(passwordEncoder).encode("password123");
+        verify(requestEmailConfirmationUseCase).handle(command.email());
     }
 
     @Test
-    @DisplayName("Deve criar usuário com sucesso quando o e-mail não está em uso")
-    void handle_shouldCreateUser_whenEmailIsNotInUse() {
-        User newUser = new User(
-                createUserCommand.email(),
-                "encodedPassword",
-                createUserCommand.name()
-        );
-        newUser.setId(UUID.randomUUID());
+    @DisplayName("Deve criar usuário sem senha com sucesso")
+    void handle_shouldCreateUserWithoutPassword_successfully() {
+        CreateUserCommand command = new CreateUserCommand("Test User", "test@example.com", null);
+        when(userRepository.findUserByEmail(command.email())).thenReturn(Optional.empty());
 
-        when(userRepository.findUserByEmail(createUserCommand.email())).thenReturn(Optional.empty());
-        when(passwordEncoder.encode(createUserCommand.password())).thenReturn("encodedPassword");
-        when(userRepository.save(any(User.class))).thenReturn(newUser);
-        doNothing().when(requestEmailConfirmationUseCase).handle(createUserCommand.email());
+        User savedUser = new User(command.email(), null, command.name());
+        savedUser.setId(UUID.randomUUID());
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
-        UUID createdUserId = createUserService.handle(createUserCommand);
+        createUserService.handle(command);
 
-        assertNotNull(createdUserId);
-        assertEquals(newUser.getId(), createdUserId);
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        User capturedUser = userCaptor.getValue();
 
-        verify(userRepository).findUserByEmail(createUserCommand.email());
-        verify(passwordEncoder).encode(createUserCommand.password());
-        verify(userRepository).save(any(User.class));
-        verify(requestEmailConfirmationUseCase).handle(createUserCommand.email());
+        assertNull(capturedUser.getPassword());
+        verify(passwordEncoder, never()).encode(any());
+        verify(requestEmailConfirmationUseCase).handle(command.email());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção se a senha for inválida (curta)")
+    void handle_shouldThrowException_whenPasswordIsInvalid() {
+        CreateUserCommand command = new CreateUserCommand("Test User", "test@example.com", "123");
+        when(userRepository.findUserByEmail(command.email())).thenReturn(Optional.empty());
+
+        InternalException exception = assertThrows(InternalException.class, () -> {
+            createUserService.handle(command);
+        });
+
+        assertEquals("A senha deve ter no mínimo 6 caracteres.", exception.getMessage());
+        verify(userRepository, never()).save(any());
     }
 
     @Test
     @DisplayName("Deve lançar InternalException quando o e-mail já está em uso")
     void handle_shouldThrowException_whenEmailIsInUse() {
-        when(userRepository.findUserByEmail(createUserCommand.email())).thenReturn(Optional.of(new User()));
+        CreateUserCommand command = new CreateUserCommand("Test User", "test@example.com", "password123");
+        when(userRepository.findUserByEmail(command.email())).thenReturn(Optional.of(new User()));
 
         InternalException exception = assertThrows(InternalException.class, () -> {
-            createUserService.handle(createUserCommand);
+            createUserService.handle(command);
         });
 
         assertEquals("Este e-mail já está cadastrado.", exception.getMessage());
-
-        verify(userRepository).findUserByEmail(createUserCommand.email());
-        verify(passwordEncoder, never()).encode(anyString());
-        verify(userRepository, never()).save(any(User.class));
-        verify(requestEmailConfirmationUseCase, never()).handle(anyString());
+        verify(userRepository, never()).save(any());
     }
 }

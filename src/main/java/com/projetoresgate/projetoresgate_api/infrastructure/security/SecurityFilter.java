@@ -16,6 +16,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
 
@@ -34,11 +37,11 @@ public class SecurityFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
         try {
             String token = this.recoverToken(request);
-            if (token != null) {
+            if (nonNull(token)) {
                 String subject = tokenService.validateToken(token);
                 UserDetails user = userRepository.findUserByEmail(subject).orElse(null);
 
-                if (user != null) {
+                if (nonNull(user)) {
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
@@ -52,7 +55,7 @@ public class SecurityFilter extends OncePerRequestFilter {
 
     private String recoverToken(HttpServletRequest request) {
         var authHeader = request.getHeader("Authorization");
-        if (authHeader == null) return null;
+        if (isNull(authHeader)) return null;
         return authHeader.replace("Bearer ", "").trim();
     }
 }

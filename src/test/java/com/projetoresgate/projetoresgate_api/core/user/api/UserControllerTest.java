@@ -3,7 +3,6 @@ package com.projetoresgate.projetoresgate_api.core.user.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projetoresgate.projetoresgate_api.config.security.WithMockCustomUser;
 import com.projetoresgate.projetoresgate_api.core.user.api.dto.AuthenticationResponse;
-import com.projetoresgate.projetoresgate_api.core.user.api.dto.ConfirmEmailRequest;
 import com.projetoresgate.projetoresgate_api.core.user.api.dto.ForgotPasswordRequest;
 import com.projetoresgate.projetoresgate_api.core.user.api.dto.ResetPasswordRequest;
 import com.projetoresgate.projetoresgate_api.core.user.domain.User;
@@ -34,6 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -81,7 +81,7 @@ class UserControllerTest {
     @Test
     @DisplayName("POST /user - Deve retornar 201 Created ao criar usuário com sucesso")
     void createUser_shouldReturn201Created() throws Exception {
-        CreateUserCommand command = new CreateUserCommand("test@example.com", "password123", "Test User");
+        CreateUserCommand command = new CreateUserCommand("Test User", "test@example.com", "password123");
         UUID newUserId = UUID.randomUUID();
         when(createUserUseCase.handle(any(CreateUserCommand.class))).thenReturn(newUserId);
 
@@ -92,6 +92,21 @@ class UserControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", "http://localhost/user/" + newUserId))
                 .andExpect(jsonPath("$").value(newUserId.toString()));
+    }
+
+    @Test
+    @DisplayName("POST /user - Deve retornar 400 Bad Request quando validação falha")
+    void createUser_shouldReturn400_whenValidationFails() throws Exception {
+        CreateUserCommand command = new CreateUserCommand("", "invalid-email", "123");
+
+        mockMvc.perform(post("/user")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(command)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(containsString("O formato do e-mail é inválido.")))
+                .andExpect(content().string(containsString("A senha deve ter no mínimo 6 caracteres.")))
+                .andExpect(content().string(containsString("O nome não pode ser vazio.")));
     }
 
     @Test
@@ -108,6 +123,20 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value("mock.jwt.token"))
                 .andExpect(jsonPath("$.name").value("Test User"));
+    }
+
+    @Test
+    @DisplayName("POST /user/login - Deve retornar 400 Bad Request quando validação falha")
+    void login_shouldReturn400_whenValidationFails() throws Exception {
+        AuthenticateUserQuery query = new AuthenticateUserQuery("", "123");
+
+        mockMvc.perform(post("/user/login")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(query)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(containsString("O e-mail não pode ser vazio.")))
+                .andExpect(content().string(containsString("A senha deve ter no mínimo 6 caracteres.")));
     }
 
     @Test
@@ -208,6 +237,18 @@ class UserControllerTest {
     }
 
     @Test
+    @DisplayName("POST /user/forgot-password - Deve retornar 400 Bad Request quando validação falha")
+    void forgotPassword_shouldReturn400_whenValidationFails() throws Exception {
+        ForgotPasswordRequest request = new ForgotPasswordRequest("invalid-email");
+
+        mockMvc.perform(post("/user/forgot-password")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("POST /user/reset-password - Deve retornar 200 OK em sucesso")
     void resetPassword_shouldReturn200Ok() throws Exception {
         ResetPasswordRequest request = new ResetPasswordRequest("valid-token", "new-password");
@@ -221,8 +262,20 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("POST /user/reset-password - Deve retornar 400 Bad Request em falha")
-    void resetPassword_shouldReturn400BadRequest() throws Exception {
+    @DisplayName("POST /user/reset-password - Deve retornar 400 Bad Request quando validação falha")
+    void resetPassword_shouldReturn400_whenValidationFails() throws Exception {
+        ResetPasswordRequest request = new ResetPasswordRequest("", "123");
+
+        mockMvc.perform(post("/user/reset-password")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /user/reset-password - Deve retornar 400 Bad Request em falha de serviço")
+    void resetPassword_shouldReturn400BadRequest_onServiceFailure() throws Exception {
         ResetPasswordRequest request = new ResetPasswordRequest("invalid-token", "new-password");
         doThrow(new InternalException("Token inválido")).when(resetPasswordUseCase).handle(anyString(), anyString());
 
@@ -248,28 +301,22 @@ class UserControllerTest {
     }
 
     @Test
-    @WithMockCustomUser
-    @DisplayName("POST /user/confirm-email - Deve retornar 200 OK em sucesso")
+    @DisplayName("PUT /user/confirm-email/{token} - Deve retornar 200 OK em sucesso")
     void confirmEmail_shouldReturn200Ok() throws Exception {
-        ConfirmEmailRequest request = new ConfirmEmailRequest("123456");
+        String token = "valid-token";
         doNothing().when(confirmEmailUseCase).handle(any(ConfirmEmailCommand.class));
 
-        mockMvc.perform(post("/user/confirm-email")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(put("/user/confirm-email/{token}", token))
                 .andExpect(status().isOk());
     }
 
     @Test
-    @DisplayName("POST /user/confirm-email - Deve retornar 401 Unauthorized se não autenticado")
-    void confirmEmail_shouldReturn401Unauthorized() throws Exception {
-        ConfirmEmailRequest request = new ConfirmEmailRequest("123456");
+    @DisplayName("PUT /user/confirm-email/{token} - Deve retornar 400 Bad Request em falha")
+    void confirmEmail_shouldReturn400BadRequest_onFailure() throws Exception {
+        String token = "invalid-token";
+        doThrow(new InternalException("Token inválido")).when(confirmEmailUseCase).handle(any(ConfirmEmailCommand.class));
 
-        mockMvc.perform(post("/user/confirm-email")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
+        mockMvc.perform(put("/user/confirm-email/{token}", token))
+                .andExpect(status().isBadRequest());
     }
 }

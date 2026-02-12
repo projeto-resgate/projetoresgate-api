@@ -8,6 +8,9 @@ import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalEx
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 @Service
 public class UpdateUserService implements UpdateUserUseCase {
 
@@ -23,12 +26,12 @@ public class UpdateUserService implements UpdateUserUseCase {
     public void handle(UpdateUserCommand cmd) {
         User user = repository.findById(cmd.id()).orElseThrow(() -> new InternalException("Usuário não encontrado."));
 
-        if (cmd.name() != null && !cmd.name().isBlank()) {
+        if (nonNull(cmd.name()) && !cmd.name().isBlank()) {
             user.setName(cmd.name());
         }
 
-        if (cmd.password() != null && !cmd.password().isBlank()) {
-            if (cmd.currentPassword() == null || cmd.currentPassword().isBlank()) {
+        if (nonNull(cmd.password()) && !cmd.password().isBlank()) {
+            if (isNull(cmd.currentPassword()) || cmd.currentPassword().isBlank()) {
                 throw new InternalException("A senha atual é obrigatória para alterar a senha.");
             }
 

@@ -7,10 +7,9 @@ import com.projetoresgate.projetoresgate_api.core.user.repository.UserRepository
 import com.projetoresgate.projetoresgate_api.core.user.usecase.ConfirmEmailUseCase;
 import com.projetoresgate.projetoresgate_api.core.user.usecase.command.ConfirmEmailCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
+import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Objects;
 
 @Service
 public class ConfirmEmailService implements ConfirmEmailUseCase {
@@ -27,18 +26,19 @@ public class ConfirmEmailService implements ConfirmEmailUseCase {
     @Override
     @Transactional
     public void handle(ConfirmEmailCommand command) {
-        EmailConfirmationToken confirmationToken = emailConfirmationTokenRepository.findByToken(command.token())
+        String tokenHash = TokenUtils.hashToken(command.token());
+        EmailConfirmationToken confirmationToken = emailConfirmationTokenRepository.findByTokenHash(tokenHash)
                 .orElseThrow(() -> new InternalException("Token inválido ou não encontrado."));
-
-        if (!Objects.equals(confirmationToken.getUser().getId(), command.user().getId())) {
-            throw new InternalException("Token inválido para este usuário.");
-        }
 
         if (confirmationToken.isExpired()) {
             throw new InternalException("O token expirou. Solicite um novo.");
         }
 
         User user = confirmationToken.getUser();
+        if (user.isEmailVerified()) {
+            return;
+        }
+        
         user.setIsEmailVerified(true);
         userRepository.save(user);
 

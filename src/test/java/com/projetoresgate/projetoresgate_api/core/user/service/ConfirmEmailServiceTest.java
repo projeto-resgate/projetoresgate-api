@@ -6,6 +6,7 @@ import com.projetoresgate.projetoresgate_api.core.user.repository.EmailConfirmat
 import com.projetoresgate.projetoresgate_api.core.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.core.user.usecase.command.ConfirmEmailCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
+import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,24 +38,26 @@ class ConfirmEmailServiceTest {
 
     private User user;
     private EmailConfirmationToken confirmationToken;
-    private ConfirmEmailCommand command;
-    private String token;
+    private String plainTextToken;
 
     @BeforeEach
     void setUp() {
         user = new User("test@example.com", "password", "Test User");
         user.setId(UUID.randomUUID());
+        user.setIsEmailVerified(false);
 
-        token = UUID.randomUUID().toString();
-        command = new ConfirmEmailCommand(token, user);
+        plainTextToken = TokenUtils.generateSecureToken();
+        String tokenHash = TokenUtils.hashToken(plainTextToken);
 
-        confirmationToken = new EmailConfirmationToken(token, user, LocalDateTime.now().plusHours(1));
+        confirmationToken = new EmailConfirmationToken(tokenHash, user, LocalDateTime.now().plusHours(1));
     }
 
     @Test
     @DisplayName("Deve confirmar o e-mail com sucesso com um token válido")
     void handle_shouldConfirmEmail_withValidToken() {
-        when(emailConfirmationTokenRepository.findByToken(token)).thenReturn(Optional.of(confirmationToken));
+        ConfirmEmailCommand command = new ConfirmEmailCommand(plainTextToken);
+        String expectedHash = TokenUtils.hashToken(plainTextToken);
+        when(emailConfirmationTokenRepository.findByTokenHash(expectedHash)).thenReturn(Optional.of(confirmationToken));
 
         confirmEmailService.handle(command);
 
@@ -66,7 +69,9 @@ class ConfirmEmailServiceTest {
     @Test
     @DisplayName("Deve lançar exceção quando o token não for encontrado")
     void handle_shouldThrowException_whenTokenNotFound() {
-        when(emailConfirmationTokenRepository.findByToken(token)).thenReturn(Optional.empty());
+        ConfirmEmailCommand command = new ConfirmEmailCommand(plainTextToken);
+        String expectedHash = TokenUtils.hashToken(plainTextToken);
+        when(emailConfirmationTokenRepository.findByTokenHash(expectedHash)).thenReturn(Optional.empty());
 
         InternalException exception = assertThrows(InternalException.class, () -> confirmEmailService.handle(command));
         assertEquals("Token inválido ou não encontrado.", exception.getMessage());
@@ -75,27 +80,29 @@ class ConfirmEmailServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar exceção quando o token pertence a outro usuário")
-    void handle_shouldThrowException_whenTokenBelongsToAnotherUser() {
-        User anotherUser = new User("another@example.com", "password", "Another User");
-        anotherUser.setId(UUID.randomUUID());
-        confirmationToken.setUser(anotherUser);
-
-        when(emailConfirmationTokenRepository.findByToken(token)).thenReturn(Optional.of(confirmationToken));
-
-        InternalException exception = assertThrows(InternalException.class, () -> confirmEmailService.handle(command));
-        assertEquals("Token inválido para este usuário.", exception.getMessage());
-        verify(userRepository, never()).save(any());
-    }
-
-    @Test
     @DisplayName("Deve lançar exceção quando o token está expirado")
     void handle_shouldThrowException_whenTokenIsExpired() {
+        ConfirmEmailCommand command = new ConfirmEmailCommand(plainTextToken);
         confirmationToken.setExpiryDate(LocalDateTime.now().minusHours(1));
-        when(emailConfirmationTokenRepository.findByToken(token)).thenReturn(Optional.of(confirmationToken));
+        String expectedHash = TokenUtils.hashToken(plainTextToken);
+        when(emailConfirmationTokenRepository.findByTokenHash(expectedHash)).thenReturn(Optional.of(confirmationToken));
 
         InternalException exception = assertThrows(InternalException.class, () -> confirmEmailService.handle(command));
         assertEquals("O token expirou. Solicite um novo.", exception.getMessage());
         verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Não deve fazer nada se o e-mail já estiver verificado")
+    void handle_shouldDoNothing_whenEmailIsAlreadyVerified() {
+        ConfirmEmailCommand command = new ConfirmEmailCommand(plainTextToken);
+        user.setIsEmailVerified(true);
+        String expectedHash = TokenUtils.hashToken(plainTextToken);
+        when(emailConfirmationTokenRepository.findByTokenHash(expectedHash)).thenReturn(Optional.of(confirmationToken));
+
+        confirmEmailService.handle(command);
+
+        verify(userRepository, never()).save(any());
+        verify(emailConfirmationTokenRepository, never()).delete(any());
     }
 }

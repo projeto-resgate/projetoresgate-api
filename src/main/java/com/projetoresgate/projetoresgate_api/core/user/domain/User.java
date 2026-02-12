@@ -17,6 +17,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.nonNull;
+
 @Entity
 @Table(name = "users")
 @SQLDelete(sql = "UPDATE users SET deleted_at = now() WHERE id = ?")
@@ -104,7 +106,7 @@ public class User extends BaseModel implements UserDetails {
             throw new InternalException("O e-mail não pode ser vazio.");
         }
 
-        if (this.password != null && this.password.length() < 6) {
+        if (nonNull(this.password) && this.password.length() < 6) {
             throw new InternalException("A senha deve ter no mínimo 6 caracteres.");
         }
     }
