@@ -1,0 +1,170 @@
+@startuml
+title System - Complete Domain Model
+skinparam classAttributeIconSize 0
+
+' =========================
+' USER PACKAGE
+' =========================
+package "core.user" {
+
+    class User {
+        id: UUID
+        name: String
+        email: String
+        password: String
+        isEmailVerified: boolean
+    }
+
+    enum UserRole {
+        ADMIN
+        USER
+    }
+
+    class EmailConfirmationToken {
+        id: UUID
+        userId: UUID
+        tokenHash: String
+        expiryDate: LocalDateTime
+    }
+
+    class PasswordResetToken {
+        id: UUID
+        userId: UUID
+        tokenHash: String
+        expiryDate: LocalDateTime
+    }
+
+    User "1" --> "0..1" EmailConfirmationToken
+    User "1" --> "0..1" PasswordResetToken
+}
+
+' =========================
+' PERSON / ADDRESS PACKAGE
+' =========================
+package "core.person" {
+
+    class Address {
+        id: UUID
+        physicalPersonId: UUID
+        streetType: String
+        streetName: String
+        number: String
+        complement: String
+        neighborhood: String
+        city: String
+        zipCode: String
+        state: String
+    }
+
+    class PhysicalPerson {
+        id: UUID
+        userId: UUID
+        familyGroupId: UUID
+        rg: String
+        cpf: String
+        cellphone: String
+        gender: String
+    }
+
+    User "1" --> "1" PhysicalPerson
+    PhysicalPerson "1" --> "1" Address
+}
+
+' =========================
+' STUDENT / RESPONSIBLE PACKAGE
+' =========================
+package "core.student" {
+
+    class Student {
+        id: UUID
+        physicalPersonId: UUID
+        interestInArts: UUID
+        class: String
+        mouthConditions: String
+        schoolYear: Integer
+        motherName: String
+    }
+
+    class Responsible {
+        id: UUID
+        studentId: UUID
+        physicalPersonId: UUID
+    }
+
+    PhysicalPerson "1" --> "0..1" Student
+    Student "1" --> "1..*" Responsible
+    Responsible "1" <-- "1" PhysicalPerson
+}
+
+' =========================
+' FAMILY GROUP PACKAGE
+' =========================
+package "core.family_group" {
+
+    class FamilyGroup {
+        id: UUID
+        familyGroupIncomeId: UUID
+        familyGroupExpensesId: UUID
+        numberOfResidents: Integer
+        deprivationIndex: BigDecimal
+    }
+
+    class FamilyGroupIncome {
+        id: UUID
+        grossIncome: BigDecimal
+        netIncome: BigDecimal
+        netIncomePerCapita: BigDecimal
+    }
+
+    class FamilyGroupExpenses {
+        id: UUID
+        education: BigDecimal
+        health: BigDecimal
+        housing: BigDecimal
+    }
+
+    class FamilyGroupFiles {
+        id: UUID
+        familyGroupId: UUID
+        storageId: String
+        fileKey: String
+        url: String
+        contentType: String
+    }
+
+    FamilyGroup "1" --> "1..*" PhysicalPerson
+    FamilyGroup "1" <-- "1" FamilyGroupIncome
+    FamilyGroup "1" <-- "1" FamilyGroupExpenses
+    FamilyGroup "1" --> "0..*" FamilyGroupFiles
+}
+
+' =========================
+' FINANCIAL SUPPORT PACKAGE
+' =========================
+package "core.financial" {
+
+    enum SupportType {
+        CROWDFUNDING
+        TRANSPORT_VOUCHER
+    }
+
+    class CalculationSettings {
+        id: UUID
+        financialSupportId: UUID
+        totalAmount: BigDecimal
+        type: SupportType
+    }
+
+    class FinancialSupport {
+        id: UUID
+        studentId: UUID
+        amount: BigDecimal
+        paymentStatus: String
+        type: SupportType
+    }
+
+    Student "1" --> "0..*" FinancialSupport
+    FinancialSupport "1" --> "1" CalculationSettings
+}
+
+@enduml

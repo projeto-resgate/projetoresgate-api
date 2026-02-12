@@ -95,3 +95,33 @@ Acesse a documentação interativa com a aplicação rodando:
 5.  Cole o token `Bearer seu_token`.
 
 </details>
+
+<details>
+<summary><strong style="font-size:1.5em">📈 Diagramas e Documentação Visual</strong></summary>
+
+Utilizamos **PlantUML** para gerar diagramas diretamente do código, mantendo a documentação visual sempre sincronizada com a arquitetura.
+
+### Diagrama de Classes
+O principal diagrama que representa nosso modelo de domínio completo está localizado em:
+*   [`docs/class-diagram.puml`](docs/class-diagram.puml)
+
+Este arquivo descreve as entidades, seus atributos e os relacionamentos entre elas, servindo como uma referência central para entender a estrutura do banco de dados e das classes de domínio.
+
+### 🔧 Como Visualizar os Diagramas (.puml)
+
+Para visualizar e editar os arquivos `.puml` diretamente na sua IDE, é necessário instalar um plugin.
+
+#### No IntelliJ IDEA (Recomendado)
+1.  Vá em `File` > `Settings` (ou `Ctrl+Alt+S`).
+2.  Selecione a aba **Plugins**.
+3.  Busque por **"PlantUML integration"** e instale-o.
+4.  Após a instalação, reinicie a IDE.
+5.  Abra qualquer arquivo `.puml` e utilize a janela de preview para ver o diagrama renderizado.
+
+#### No VS Code
+1.  Vá para a aba de **Extensions** (ou `Ctrl+Shift+X`).
+2.  Busque por **"PlantUML"** (por `jebbs`).
+3.  Instale a extensão.
+4.  Com um arquivo `.puml` aberto, use o atalho `Alt+D` para abrir o preview do diagrama.
+
+</details>
