@@ -32,6 +32,74 @@ Adotamos a **Pirâmide de Testes**, focando em uma base sólida de testes unitá
 ### 3. Cobertura
 Embora não tenhamos um número rígido, buscamos cobrir os fluxos principais de negócio. Classes de configuração, DTOs simples (getters/setters) e código gerado não precisam de testes intensivos.
 
+## Exemplos de testes abaixo
+
+## AAA Pattern (Arrange-Act-Assert)
+
+```java
+@Test
+@DisplayName("Descrição do que testa")
+void methodName_shouldBehavior_whenCondition() {
+    // ARRANGE - Preparar dados
+    CreateUserCommand cmd = new CreateUserCommand("name", "email@test.com", "pwd123");
+    when(repository.findByEmail("email@test.com")).thenReturn(Optional.empty());
+    
+    // ACT - Executar
+    User result = service.handle(cmd);
+    
+    // ASSERT - Verificar
+    assertNotNull(result);
+    assertEquals("email@test.com", result.getEmail());
+    verify(repository).save(any(User.class));
+}
+```
+
+## Unit Test
+
+```java
+@ExtendWith(MockitoExtension.class)
+class UserTest {
+    @Mock UserRepository repository;
+    @InjectMocks UserService service;
+    
+    @Test void test() { }
+}
+```
+
+## Integration Test
+
+```java
+@SpringBootTest
+class UserControllerTest {
+    @Autowired MockMvc mockMvc;
+    
+    @Test void test() throws Exception {
+        mockMvc.perform(post("/user"))
+            .andExpect(status().isCreated());
+    }
+}
+```
+
+## Mockito
+
+```java
+// Mock
+@Mock UserRepository repository;
+
+// Simular
+when(repository.findById(any())).thenReturn(Optional.of(user));
+
+// Verificar
+verify(repository).findById(userId);
+verify(repository, times(2)).save(any());
+verify(repository, never()).delete(any());
+
+// Capturar argumentos
+ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+verify(repository).save(captor.capture());
+User saved = captor.getValue();
+```
+
 ## O que NÃO fazer
 
 *   Não escreva testes que dependem de dados pré-existentes no banco (o teste deve criar seus dados e limpar depois, ou usar mocks).

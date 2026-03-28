@@ -35,6 +35,74 @@ Para mais detalhes sobre as decisões arquiteturais e padrões adotados, consult
 </details>
 
 <details>
+<summary><strong style="font-size:1.5em">💡 Dicas antes de commitar</strong></summary>
+
+## Branch Naming
+
+```
+feature/nome-descritivo     # Nova feature
+fix/bug-description          # Correção
+docs/assunto                 # Documentação
+test/teste                   # Testes
+refactor/mudanca            # Refatoração
+```
+
+## Commits (Conventional Commits)
+
+```
+feat(user): adicionar email confirmation
+fix(auth): corrigir jwt expiration
+docs: atualizar README
+test(user): aumentar cobertura para 90%
+refactor(service): simplificar validação
+```
+
+## Pull Request
+
+**Título:** Siga o padrão de commits acima
+
+**Descrição:**
+```
+## O que mudou
+Breve descrição.
+
+## Por quê
+Por que foi feito.
+
+## Tipos de mudança
+- [x] Nova feature
+- [ ] Bug fix
+- [ ] Breaking change
+- [ ] Documentação
+
+## Checklist
+- [ ] Testes adicionados
+- [ ] Documentação atualizada
+- [ ] Cobertura >= 80%
+- [ ] Code review solicitado
+```
+
+## Code Style
+
+### Nomenclatura
+- **Classes:** PascalCase (`UserService`, `CreateUserCommand`)
+- **Métodos:** camelCase (`handle()`, `findByEmail()`)
+- **Constantes:** UPPER_SNAKE_CASE
+- **Variáveis:** camelCase
+
+## Checklist para fazer antes de um commit
+
+- [ ] Regras de domínio na entidade
+- [ ] Utilizou padrão service implementando usecase
+- [ ] Está utilizando DTOs (Request/Response) para se comunicar com mundo exterior
+- [ ] Unit tests (80%+ cobertura)
+- [ ] Integration tests
+- [ ] Swagger documentado
+
+---
+</details>
+
+<details>
 <summary><strong style="font-size:1.5em">⚙️ Configuração e Execução</strong></summary>
 
 ### 1. Pré-requisitos e Banco de Dados (Docker)
