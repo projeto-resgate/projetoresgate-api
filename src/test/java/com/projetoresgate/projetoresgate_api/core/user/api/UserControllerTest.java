@@ -157,7 +157,7 @@ class UserControllerTest {
     @DisplayName("GET /user/{id} - Deve retornar 200 OK com dados do usuário quando encontrado")
     void findUser_shouldReturn200OkWithUserData() throws Exception {
         UUID userId = UUID.randomUUID();
-        User foundUser = new User("test@example.com", "password", "Found User");
+        User foundUser = User.create("test@example.com", "password", "Found User");
         foundUser.setId(userId);
         when(findUserUseCase.handle(any(FindUserByIdQuery.class))).thenReturn(foundUser);
 

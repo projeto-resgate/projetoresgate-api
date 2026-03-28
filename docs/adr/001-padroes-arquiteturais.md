@@ -29,6 +29,7 @@ Dentro do `core`, organizamos o código por **funcionalidades** (ex: `user`), e 
 *   **Localização:** `core/{feature}/usecase`
 *   **Sufixo:** `UseCase` (ex: `CreateUserUseCase`, `FindUserUseCase`)
 *   **Padrão:** Interface que define o contrato da operação.
+*   **Método Principal:** O método de execução deve ser nomeado como **`handle`** (ex: `handle(Command cmd)`).
 
 ### 4. Service (`service`)
 *   **Responsabilidade:** Implementação concreta dos Casos de Uso. Contém a lógica de orquestração do negócio, chamando repositórios, outros serviços ou entidades de domínio.
@@ -70,7 +71,7 @@ Dentro do `core`, organizamos o código por **funcionalidades** (ex: `user`), e 
 1.  **Cliente** envia POST para `/users` com JSON.
 2.  **Controller** (`UserController`) recebe, converte JSON para `CreateUserRequest` (DTO).
 3.  **Controller** converte `CreateUserRequest` para `CreateUserCommand`.
-4.  **Controller** chama `CreateUserUseCase.execute(command)`.
+4.  **Controller** chama `CreateUserUseCase.handle(command)`.
 5.  **Service** (`CreateUserService`) executa a lógica:
     *   Valida regras de negócio.
     *   Cria entidade `User` (Domain).

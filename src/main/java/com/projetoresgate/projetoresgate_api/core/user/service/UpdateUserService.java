@@ -7,8 +7,8 @@ import com.projetoresgate.projetoresgate_api.core.user.usecase.command.UpdateUse
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
-import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @Service
@@ -31,15 +31,19 @@ public class UpdateUserService implements UpdateUserUseCase {
         }
 
         if (nonNull(cmd.password()) && !cmd.password().isBlank()) {
-            if (isNull(cmd.currentPassword()) || cmd.currentPassword().isBlank()) {
-                throw new InternalException("A senha atual é obrigatória para alterar a senha.");
+            if (!StringUtils.hasText(cmd.currentPassword())) {
+                 throw new InternalException("A senha atual é obrigatória para alterar a senha.");
             }
-
+            
             if (!passwordEncoder.matches(cmd.currentPassword(), user.getPassword())) {
                 throw new InternalException("A senha atual está incorreta.");
             }
 
-            user.setPassword(passwordEncoder.encode(cmd.password()));
+            if (cmd.password().length() < 6) {
+                throw new InternalException("A nova senha deve ter no mínimo 6 caracteres.");
+            }
+            
+            user.changePassword(passwordEncoder.encode(cmd.password()));
         }
 
         user.validate();

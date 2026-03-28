@@ -44,7 +44,7 @@ class CreateUserServiceTest {
         when(userRepository.findUserByEmail(command.email())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(command.password())).thenReturn("encodedPassword");
         
-        User savedUser = new User(command.email(), "encodedPassword", command.name());
+        User savedUser = User.create(command.email(), "encodedPassword", command.name());
         savedUser.setId(UUID.randomUUID());
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
@@ -65,7 +65,7 @@ class CreateUserServiceTest {
         CreateUserCommand command = new CreateUserCommand("Test User", "test@example.com", null);
         when(userRepository.findUserByEmail(command.email())).thenReturn(Optional.empty());
 
-        User savedUser = new User(command.email(), null, command.name());
+        User savedUser = User.create(command.email(), null, command.name());
         savedUser.setId(UUID.randomUUID());
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 

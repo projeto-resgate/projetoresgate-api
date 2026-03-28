@@ -39,7 +39,7 @@ public class ConfirmEmailService implements ConfirmEmailUseCase {
             return;
         }
         
-        user.setIsEmailVerified(true);
+        user.confirmEmail();
         userRepository.save(user);
 
         emailConfirmationTokenRepository.delete(confirmationToken);

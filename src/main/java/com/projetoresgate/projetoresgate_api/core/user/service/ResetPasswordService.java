@@ -10,6 +10,7 @@ import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 public class ResetPasswordService implements ResetPasswordUseCase {
@@ -38,8 +39,12 @@ public class ResetPasswordService implements ResetPasswordUseCase {
             throw new InternalException("O token expirou. Solicite uma nova redefinição de senha.");
         }
 
+        if (!StringUtils.hasText(newPassword) || newPassword.length() < 6) {
+            throw new InternalException("A nova senha deve ter no mínimo 6 caracteres.");
+        }
+
         User user = resetToken.getUser();
-        user.setPassword(passwordEncoder.encode(newPassword));
+        user.changePassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
 
         passwordResetTokenRepository.delete(resetToken);

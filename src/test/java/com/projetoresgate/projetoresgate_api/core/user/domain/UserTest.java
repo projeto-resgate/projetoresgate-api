@@ -10,7 +10,7 @@ class UserTest {
 
     @Test
     void shouldCreateUserSuccessfully() {
-        User user = new User("test@example.com", "password123", "Test User");
+        User user = User.create("test@example.com", "password123", "Test User");
 
         assertNotNull(user);
         assertEquals("test@example.com", user.getEmail());
@@ -23,7 +23,7 @@ class UserTest {
     @Test
     void shouldThrowExceptionWhenEmailIsEmpty() {
         InternalException exception = assertThrows(InternalException.class, () -> {
-            new User("", "password123", "Test User");
+            User.create("", "password123", "Test User");
         });
 
         assertEquals("O e-mail não pode ser vazio.", exception.getMessage());
@@ -32,7 +32,7 @@ class UserTest {
     @Test
     void shouldThrowExceptionWhenPasswordIsTooShort() {
         InternalException exception = assertThrows(InternalException.class, () -> {
-            new User("test@example.com", "12345", "Test User");
+            User.create("test@example.com", "12345", "Test User");
         });
 
         assertEquals("A senha deve ter no mínimo 6 caracteres.", exception.getMessage());
@@ -40,7 +40,7 @@ class UserTest {
 
     @Test
     void shouldAddRole() {
-        User user = new User("test@example.com", "password123", "Test User");
+        User user = User.create("test@example.com", "password123", "Test User");
         user.addRole(UserRole.ADMIN);
 
         assertTrue(user.getRoles().contains(UserRole.ADMIN));
@@ -49,7 +49,7 @@ class UserTest {
 
     @Test
     void shouldVerifyEmail() {
-        User user = new User("test@example.com", "password123", "Test User");
+        User user = User.create("test@example.com", "password123", "Test User");
         user.setIsEmailVerified(true);
 
         assertTrue(user.isEmailVerified());

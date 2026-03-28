@@ -41,8 +41,7 @@ class UpdateUserServiceTest {
     @BeforeEach
     void setUp() {
         userId = UUID.randomUUID();
-        existingUser = new User("test@example.com", "encodedCurrentPassword", "Old Name");
-        existingUser.setId(userId);
+        existingUser = User.create("test@example.com", "encodedCurrentPassword", "Old Name");
     }
 
     @Test
@@ -151,7 +150,7 @@ class UpdateUserServiceTest {
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
         User savedUser = userCaptor.getValue();
-        
+
         assertEquals("encodedNewPassword", savedUser.getPassword());
         assertEquals("Old Name", savedUser.getName());
     }

@@ -29,17 +29,16 @@ public class CreateUserService implements CreateUserUseCase {
         if (repository.findUserByEmail(cmd.email()).isPresent()) {
             throw new InternalException("Este e-mail já está cadastrado.");
         }
-
-        if (StringUtils.hasText(cmd.password()) && cmd.password().length() < 6) {
-            throw new InternalException("A senha deve ter no mínimo 6 caracteres.");
-        }
-
+        
         String encodedPassword = null;
         if (StringUtils.hasText(cmd.password())) {
+            if (cmd.password().length() < 6) {
+                throw new InternalException("A senha deve ter no mínimo 6 caracteres.");
+            }
             encodedPassword = passwordEncoder.encode(cmd.password());
         }
 
-        User newUser = new User(
+        User newUser = User.create(
                 cmd.email(),
                 encodedPassword,
                 cmd.name()

@@ -47,7 +47,7 @@ class RequestPasswordResetServiceTest {
     @BeforeEach
     void setUp() {
         userEmail = "test@example.com";
-        existingUser = new User(userEmail, "password", "Test User");
+        existingUser = User.create(userEmail, "password", "Test User");
         existingUser.setId(UUID.randomUUID());
     }
 

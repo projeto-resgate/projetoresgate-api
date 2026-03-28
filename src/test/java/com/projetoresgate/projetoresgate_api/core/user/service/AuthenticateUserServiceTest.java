@@ -46,7 +46,7 @@ class AuthenticateUserServiceTest {
     @BeforeEach
     void setUp() {
         authQuery = new AuthenticateUserQuery("test@example.com", "password123");
-        existingUser = new User("test@example.com", "encodedPassword", "Test User");
+        existingUser = User.create("test@example.com", "encodedPassword", "Test User");
         existingUser.setId(UUID.randomUUID());
         existingUser.setRoles(Set.of(UserRole.USER));
         existingUser.setIsEmailVerified(true);

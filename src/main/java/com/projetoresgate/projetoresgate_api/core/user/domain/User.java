@@ -17,8 +17,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static java.util.Objects.nonNull;
-
 @Entity
 @Table(name = "users")
 @SQLDelete(sql = "UPDATE users SET deleted_at = now() WHERE id = ?")
@@ -43,17 +41,44 @@ public class User extends BaseModel implements UserDetails {
     @Column(name = "is_email_verified", nullable = false)
     private boolean isEmailVerified = false;
 
-    public User() {
-    }
-
-    public User(String email, String password, String name) {
+    private User(String email, String encodedPassword, String name) {
         this.email = email;
-        this.password = password;
+        this.password = encodedPassword;
         this.name = name;
         this.roles.add(UserRole.USER);
         this.isEmailVerified = false;
-
         validate();
+    }
+
+    public User() {
+    }
+
+    public static User create(String email, String encodedPassword, String name) {
+        return new User(email, encodedPassword, name);
+    }
+
+    public void changePassword(String newEncodedPassword) {
+        if (!StringUtils.hasText(newEncodedPassword)) {
+            throw new InternalException("A senha não pode ser vazia.");
+        }
+        this.password = newEncodedPassword;
+        validate();
+    }
+
+    public void confirmEmail() {
+        this.isEmailVerified = true;
+    }
+
+    public void validate() {
+        if (!StringUtils.hasText(this.email)) {
+            throw new InternalException("O e-mail não pode ser vazio.");
+        }
+        if (!StringUtils.hasText(this.name)) {
+            throw new InternalException("O nome não pode ser vazio.");
+        }
+        if (StringUtils.hasText(this.password) && this.password.length() < 6) {
+            throw new InternalException("A senha deve ter no mínimo 6 caracteres.");
+        }
     }
 
     public String getEmail() {
@@ -67,10 +92,6 @@ public class User extends BaseModel implements UserDetails {
     @Override
     public String getPassword() {
         return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getName() {
@@ -97,18 +118,8 @@ public class User extends BaseModel implements UserDetails {
         return isEmailVerified;
     }
 
-    public void setIsEmailVerified(boolean emailVerified) {
-        isEmailVerified = emailVerified;
-    }
-
-    public void validate() {
-        if (!StringUtils.hasText(this.email)) {
-            throw new InternalException("O e-mail não pode ser vazio.");
-        }
-
-        if (nonNull(this.password) && this.password.length() < 6) {
-            throw new InternalException("A senha deve ter no mínimo 6 caracteres.");
-        }
+    public void setIsEmailVerified(boolean isEmailVerified) {
+        this.isEmailVerified = isEmailVerified;
     }
 
     @Override
@@ -125,22 +136,22 @@ public class User extends BaseModel implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return UserDetails.super.isAccountNonExpired();
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return UserDetails.super.isAccountNonLocked();
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return UserDetails.super.isCredentialsNonExpired();
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return UserDetails.super.isEnabled();
+        return this.isEmailVerified;
     }
 
     @Override
