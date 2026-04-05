@@ -17,11 +17,13 @@ public interface PhysicalPersonRepository extends JpaRepository<PhysicalPerson, 
 
     boolean existsByCpf(Cpf cpf);
 
+    boolean existsByCpfAndIdNot(Cpf cpf, UUID id);
+
     default PhysicalPerson findByIdOrThrow(UUID id) {
         return findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Pessoa física não encontrada com ID: " + id));
     }
-    
+
     default PhysicalPerson findByUserIdOrThrow(UUID userId) {
         return findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pessoa física não encontrada para o usuário com ID: " + userId));

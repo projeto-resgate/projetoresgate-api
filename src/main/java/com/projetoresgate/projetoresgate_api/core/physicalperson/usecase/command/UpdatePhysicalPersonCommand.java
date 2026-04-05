@@ -1,13 +1,16 @@
 package com.projetoresgate.projetoresgate_api.core.physicalperson.usecase.command;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.enums.Gender;
-import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDate;
 import java.util.UUID;
 
 public record UpdatePhysicalPersonCommand(
-        @NotNull(message = "O ID é obrigatório")
+
+        @JsonIgnore
         UUID id,
+
         String rg,
         String cpf,
         LocalDate birthDate,

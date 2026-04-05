@@ -21,8 +21,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -100,15 +100,17 @@ public class PhysicalPersonController {
     })
     public ResponseEntity<Page<PhysicalPersonResponse>> search(
             @Parameter(description = "Termo de pesquisa (Nome, Nickname, CPF ou RG)") @RequestParam(required = false) String searchTerm,
-            @Parameter(description = "CPF") @RequestParam(required = false) Cpf cpf,
-            @Parameter(description = "RG") @RequestParam(required = false) Rg rg,
+            @Parameter(description = "CPF") @RequestParam(required = false) String cpf,
+            @Parameter(description = "RG") @RequestParam(required = false) String rg,
             @Parameter(description = "Celular") @RequestParam(required = false) String cellphone,
             @Parameter(description = "Gênero") @RequestParam(required = false) Gender gender,
-            @PageableDefault(size = 10) Pageable pageable
+            @Parameter(description = "Número da página") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Tamanho da página") @RequestParam(defaultValue = "10") int size
     ) {
-        SearchPhysicalPersonQuery query = new SearchPhysicalPersonQuery(searchTerm, rg, cpf, cellphone, gender, pageable);
-        Page<PhysicalPerson> page = searchUseCase.handle(query);
-        return ResponseEntity.ok(page.map(PhysicalPersonResponse::fromEntity));
+        Pageable pageable = PageRequest.of(page, size);
+        SearchPhysicalPersonQuery query = new SearchPhysicalPersonQuery(searchTerm, new Rg(rg), new Cpf(cpf), cellphone, gender, pageable);
+        Page<PhysicalPerson> pageResult = searchUseCase.handle(query);
+        return ResponseEntity.ok(pageResult.map(PhysicalPersonResponse::fromEntity));
     }
 
     @GetMapping("/{id}")

@@ -13,15 +13,19 @@ public class OpenApiConfig {
 
     @Bean
     public OpenAPI customOpenAPI() {
+        final String securitySchemeName = "bearerAuth";
         return new OpenAPI()
-                .info(new Info().title("Projeto Resgate API").version("1.0").description("API do sistema do projeto resgate."))
-                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+                .info(new Info()
+                        .title("Projeto Resgate API")
+                        .version("0.0.1")
+                        .description("API para o sistema da ong Projeto Resgate"))
+                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
-                        .addSecuritySchemes("bearerAuth",
+                        .addSecuritySchemes(securitySchemeName,
                                 new SecurityScheme()
-                                        .type(SecurityScheme.Type.APIKEY)
-                                        .in(SecurityScheme.In.HEADER)
-                                        .name("Authorization")
-                                        .description("Para obter o token, faça uma requisição POST para /user/login. Após obter o token, cole-o aqui no formato 'Bearer &lt;token&gt;'.")));
+                                        .name(securitySchemeName)
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")));
     }
 }

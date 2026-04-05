@@ -27,7 +27,7 @@ public class UpdatePhysicalPersonService implements UpdatePhysicalPersonUseCase 
         Cpf cpf = new Cpf(command.cpf());
         Rg rg = new Rg(command.rg());
 
-        if (!person.getCpf().equals(cpf) && repository.existsByCpf(cpf)) {
+        if (!person.getCpf().equals(cpf) && repository.existsByCpfAndIdNot(cpf, command.id())) {
             throw new InternalException("Já existe uma pessoa cadastrada com este CPF.");
         }
 
