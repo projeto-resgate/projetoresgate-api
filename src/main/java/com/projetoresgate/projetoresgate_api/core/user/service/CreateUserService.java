@@ -10,8 +10,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.UUID;
-
 @Service
 public class CreateUserService implements CreateUserUseCase {
 
@@ -25,11 +23,11 @@ public class CreateUserService implements CreateUserUseCase {
         this.requestEmailConfirmationUseCase = requestEmailConfirmationUseCase;
     }
 
-    public UUID handle(CreateUserCommand cmd) {
+    public User handle(CreateUserCommand cmd) {
         if (repository.findUserByEmail(cmd.email()).isPresent()) {
             throw new InternalException("Este e-mail já está cadastrado.");
         }
-        
+
         String encodedPassword = null;
         if (StringUtils.hasText(cmd.password())) {
             if (cmd.password().length() < 6) {
@@ -41,14 +39,15 @@ public class CreateUserService implements CreateUserUseCase {
         User newUser = User.create(
                 cmd.email(),
                 encodedPassword,
-                cmd.name()
+                cmd.name(),
+                cmd.nickname()
         );
 
         newUser = repository.save(newUser);
 
         requestEmailConfirmationUseCase.handle(newUser.getEmail());
 
-        return newUser.getId();
+        return newUser;
     }
 
 }

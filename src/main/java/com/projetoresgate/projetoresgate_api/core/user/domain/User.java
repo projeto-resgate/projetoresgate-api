@@ -32,6 +32,9 @@ public class User extends BaseModel implements UserDetails {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "nickname")
+    private String nickname;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)
@@ -41,10 +44,11 @@ public class User extends BaseModel implements UserDetails {
     @Column(name = "is_email_verified", nullable = false)
     private boolean isEmailVerified = false;
 
-    private User(String email, String encodedPassword, String name) {
+    private User(String email, String encodedPassword, String name, String nickname) {
         this.email = email;
         this.password = encodedPassword;
         this.name = name;
+        this.nickname = nickname;
         this.roles.add(UserRole.USER);
         this.isEmailVerified = false;
         validate();
@@ -53,8 +57,14 @@ public class User extends BaseModel implements UserDetails {
     public User() {
     }
 
-    public static User create(String email, String encodedPassword, String name) {
-        return new User(email, encodedPassword, name);
+    public static User create(String email, String encodedPassword, String name, String nickname) {
+        return new User(email, encodedPassword, name, nickname);
+    }
+
+    public void updateInfo(String name, String nickname) {
+        this.name = name;
+        this.nickname = nickname;
+        validate();
     }
 
     public void changePassword(String newEncodedPassword) {
@@ -100,6 +110,14 @@ public class User extends BaseModel implements UserDetails {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
     }
 
     public Set<UserRole> getRoles() {

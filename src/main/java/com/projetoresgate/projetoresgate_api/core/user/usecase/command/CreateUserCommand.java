@@ -12,6 +12,8 @@ public record CreateUserCommand(
         @Email(message = "O formato do e-mail é inválido.")
         String email,
 
+        String nickname,
+
         @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres.")
         String password
 ) {

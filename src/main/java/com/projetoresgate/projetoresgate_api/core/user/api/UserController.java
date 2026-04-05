@@ -127,7 +127,6 @@ public class UserController {
     }
 
 
-
     @PostMapping
     @Operation(summary = "Criar usuário", description = "Cria um novo usuário no sistema.")
     @ApiResponses(value = {
@@ -135,7 +134,7 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos ou e-mail já existente")
     })
     public ResponseEntity<UUID> create(@Valid @RequestBody CreateUserCommand cmd) {
-        UUID userId = createUserUseCase.handle(cmd);
+        UUID userId = createUserUseCase.handle(cmd).getId();
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand(userId).toUri();
         return ResponseEntity.created(uri).body(userId);
