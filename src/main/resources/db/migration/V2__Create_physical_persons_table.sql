@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS physical_persons (
     id UUID PRIMARY KEY,
-    user_id UUID NOT NULL,
+    user_id UUID NOT NULL UNIQUE,
     cpf VARCHAR(14) NOT NULL UNIQUE,
     rg VARCHAR(20),
     birth_date DATE,
