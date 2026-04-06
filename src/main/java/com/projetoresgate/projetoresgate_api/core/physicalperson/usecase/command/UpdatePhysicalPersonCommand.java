@@ -11,6 +11,8 @@ public record UpdatePhysicalPersonCommand(
         @JsonIgnore
         UUID id,
 
+        String name,
+        String nickname,
         String rg,
         String cpf,
         LocalDate birthDate,
@@ -21,6 +23,8 @@ public record UpdatePhysicalPersonCommand(
     public UpdatePhysicalPersonCommand withId(UUID id) {
         return new UpdatePhysicalPersonCommand(
                 id,
+                this.name,
+                this.nickname,
                 this.rg,
                 this.cpf,
                 this.birthDate,

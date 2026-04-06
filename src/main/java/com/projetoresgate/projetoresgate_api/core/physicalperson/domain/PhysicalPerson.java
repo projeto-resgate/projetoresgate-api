@@ -18,8 +18,8 @@ import java.time.LocalDate;
 @Where(clause = "deleted_at is null")
 public class PhysicalPerson extends BaseModel {
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", unique = true)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id", unique = true, nullable = false, updatable = false)
     private User user;
 
     @Embedded
@@ -59,17 +59,31 @@ public class PhysicalPerson extends BaseModel {
         return new PhysicalPerson(user, cpf, rg, birthDate, gender, phone, cellphone);
     }
 
-    public void updatePersonalInfo(Rg rg, Cpf cpf, LocalDate birthDate, Gender gender, String phone, String cellphone) {
-        this.rg = rg;
+    public void setCpf(Cpf cpf) {
         this.cpf = cpf;
-        this.birthDate = birthDate;
-        this.gender = gender;
-        this.phone = phone;
-        this.cellphone = cellphone;
-        validate();
     }
 
-    private void validate() {
+    public void setRg(Rg rg) {
+        this.rg = rg;
+    }
+
+    public void setBirthDate(LocalDate birthDate) {
+        this.birthDate = birthDate;
+    }
+
+    public void setGender(Gender gender) {
+        this.gender = gender;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void setCellphone(String cellphone) {
+        this.cellphone = cellphone;
+    }
+
+    public void validate() {
         if (this.cpf == null || this.cpf.getValue() == null) {
             throw new InternalException("O CPF é obrigatório.");
         }

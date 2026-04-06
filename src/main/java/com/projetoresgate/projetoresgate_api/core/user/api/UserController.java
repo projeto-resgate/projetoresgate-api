@@ -111,6 +111,7 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    @Deprecated
     @GetMapping("/{id}")
     @Operation(summary = "Buscar usuário por ID", description = "Retorna os detalhes de um usuário específico.")
     @ApiResponses(value = {
@@ -122,7 +123,7 @@ public class UserController {
         return ResponseEntity.ok(UserResponse.fromEntity(user));
     }
 
-
+    @Deprecated
     @PostMapping
     @Operation(summary = "Criar usuário", description = "Cria um novo usuário no sistema.")
     @ApiResponses(value = {
@@ -136,6 +137,7 @@ public class UserController {
         return ResponseEntity.created(uri).body(userId);
     }
 
+    @Deprecated
     @PutMapping
     @Operation(summary = "Atualizar usuário", description = "Atualiza os dados do usuário autenticado.")
     @ApiResponses(value = {
@@ -147,6 +149,7 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    @Deprecated
     @DeleteMapping
     @Operation(summary = "Deletar usuário", description = "Realiza a exclusão lógica do usuário autenticado.")
     @ApiResponses(value = {
