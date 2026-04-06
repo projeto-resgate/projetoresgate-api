@@ -2,8 +2,8 @@ package com.projetoresgate.projetoresgate_api.core.physicalperson.api.dto;
 
 import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.PhysicalPerson;
 import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.enums.Gender;
-import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.valueobjects.Cpf;
-import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.valueobjects.Rg;
+import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.vo.Cpf;
+import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.vo.Rg;
 
 import java.time.LocalDate;
 import java.util.UUID;

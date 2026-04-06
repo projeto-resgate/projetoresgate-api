@@ -1,8 +1,8 @@
 package com.projetoresgate.projetoresgate_api.core.physicalperson.service;
 
 import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.PhysicalPerson;
-import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.valueobjects.Cpf;
-import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.valueobjects.Rg;
+import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.vo.Cpf;
+import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.vo.Rg;
 import com.projetoresgate.projetoresgate_api.core.physicalperson.repository.PhysicalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.physicalperson.usecase.CreatePhysicalPersonUseCase;
 import com.projetoresgate.projetoresgate_api.core.physicalperson.usecase.command.CreatePhysicalPersonCommand;
@@ -48,9 +48,9 @@ public class CreatePhysicalPersonService implements CreatePhysicalPersonUseCase 
         );
 
         User newUser = createUserUseCase.handle(createUserCommand);
-        
+
         newUser.addRole(UserRole.PHYSICAL_PERSON);
-        
+
         userRepository.save(newUser);
 
         PhysicalPerson person = PhysicalPerson.create(

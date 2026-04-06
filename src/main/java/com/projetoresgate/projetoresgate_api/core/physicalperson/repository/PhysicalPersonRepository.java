@@ -1,7 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.physicalperson.repository;
 
 import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.PhysicalPerson;
-import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.valueobjects.Cpf;
+import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.vo.Cpf;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;

@@ -1,4 +1,4 @@
-package com.projetoresgate.projetoresgate_api.core.physicalperson.domain.valueobjects;
+package com.projetoresgate.projetoresgate_api.core.physicalperson.domain.vo;
 
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import jakarta.persistence.Column;

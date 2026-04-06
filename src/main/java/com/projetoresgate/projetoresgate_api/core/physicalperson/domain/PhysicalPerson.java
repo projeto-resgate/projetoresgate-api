@@ -1,8 +1,8 @@
 package com.projetoresgate.projetoresgate_api.core.physicalperson.domain;
 
 import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.enums.Gender;
-import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.valueobjects.Cpf;
-import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.valueobjects.Rg;
+import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.vo.Cpf;
+import com.projetoresgate.projetoresgate_api.core.physicalperson.domain.vo.Rg;
 import com.projetoresgate.projetoresgate_api.core.user.domain.User;
 import com.projetoresgate.projetoresgate_api.infrastructure.baseentities.BaseModel;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
