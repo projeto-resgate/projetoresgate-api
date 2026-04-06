@@ -2,6 +2,7 @@ package com.projetoresgate.projetoresgate_api.config.security;
 
 import com.projetoresgate.projetoresgate_api.core.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.user.domain.enums.UserRole;
+import com.projetoresgate.projetoresgate_api.infrastructure.security.UserDetailsImpl;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -19,14 +20,16 @@ public class WithMockCustomUserSecurityContextFactory implements WithSecurityCon
     public SecurityContext createSecurityContext(WithMockCustomUser customUser) {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
 
-        User principal = User.create(customUser.username(), "password", customUser.name());
-        principal.setId(UUID.fromString(customUser.id()));
+        User user = User.create(customUser.username(), "password", customUser.name(), null);
+        user.setId(UUID.fromString(customUser.id()));
         Set<UserRole> roles = Arrays.stream(customUser.roles())
                 .map(UserRole::valueOf)
                 .collect(Collectors.toSet());
-        principal.setRoles(roles);
+        user.setRoles(roles);
 
-        Authentication auth = new UsernamePasswordAuthenticationToken(principal, "password", principal.getAuthorities());
+        UserDetailsImpl userDetails = new UserDetailsImpl(user);
+
+        Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, "password", userDetails.getAuthorities());
         context.setAuthentication(auth);
         return context;
     }

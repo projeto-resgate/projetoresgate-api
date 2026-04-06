@@ -3,16 +3,11 @@ package com.projetoresgate.projetoresgate_api.core.user.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projetoresgate.projetoresgate_api.config.security.WithMockCustomUser;
 import com.projetoresgate.projetoresgate_api.core.user.api.dto.AuthenticationResponse;
-import com.projetoresgate.projetoresgate_api.core.user.api.dto.ForgotPasswordRequest;
-import com.projetoresgate.projetoresgate_api.core.user.api.dto.ResetPasswordRequest;
 import com.projetoresgate.projetoresgate_api.core.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.user.domain.enums.UserRole;
 import com.projetoresgate.projetoresgate_api.core.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.core.user.usecase.*;
-import com.projetoresgate.projetoresgate_api.core.user.usecase.command.ConfirmEmailCommand;
-import com.projetoresgate.projetoresgate_api.core.user.usecase.command.CreateUserCommand;
-import com.projetoresgate.projetoresgate_api.core.user.usecase.command.SoftDeleteUserCommand;
-import com.projetoresgate.projetoresgate_api.core.user.usecase.command.UpdateUserCommand;
+import com.projetoresgate.projetoresgate_api.core.user.usecase.command.*;
 import com.projetoresgate.projetoresgate_api.core.user.usecase.query.AuthenticateUserQuery;
 import com.projetoresgate.projetoresgate_api.core.user.usecase.query.FindUserByIdQuery;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
@@ -81,9 +76,13 @@ class UserControllerTest {
     @Test
     @DisplayName("POST /user - Deve retornar 201 Created ao criar usuário com sucesso")
     void createUser_shouldReturn201Created() throws Exception {
-        CreateUserCommand command = new CreateUserCommand("Test User", "test@example.com", "password123");
+        CreateUserCommand command = new CreateUserCommand("Test User", "test@example.com", "testnick", "password123");
         UUID newUserId = UUID.randomUUID();
-        when(createUserUseCase.handle(any(CreateUserCommand.class))).thenReturn(newUserId);
+        
+        User savedUser = User.create(command.email(), "encodedPassword", command.name(), command.nickname());
+        savedUser.setId(newUserId);
+        
+        when(createUserUseCase.handle(any(CreateUserCommand.class))).thenReturn(savedUser);
 
         mockMvc.perform(post("/user")
                         .with(csrf())
@@ -97,7 +96,7 @@ class UserControllerTest {
     @Test
     @DisplayName("POST /user - Deve retornar 400 Bad Request quando validação falha")
     void createUser_shouldReturn400_whenValidationFails() throws Exception {
-        CreateUserCommand command = new CreateUserCommand("", "invalid-email", "123");
+        CreateUserCommand command = new CreateUserCommand("", "invalid-email", null, "123");
 
         mockMvc.perform(post("/user")
                         .with(csrf())
@@ -157,7 +156,7 @@ class UserControllerTest {
     @DisplayName("GET /user/{id} - Deve retornar 200 OK com dados do usuário quando encontrado")
     void findUser_shouldReturn200OkWithUserData() throws Exception {
         UUID userId = UUID.randomUUID();
-        User foundUser = User.create("test@example.com", "password", "Found User");
+        User foundUser = User.create("test@example.com", "password", "Found User", "foundnick");
         foundUser.setId(userId);
         when(findUserUseCase.handle(any(FindUserByIdQuery.class))).thenReturn(foundUser);
 
@@ -182,7 +181,7 @@ class UserControllerTest {
     @WithMockCustomUser
     @DisplayName("PUT /user - Deve retornar 200 OK em atualização bem-sucedida")
     void updateUser_shouldReturn200Ok() throws Exception {
-        UpdateUserCommand command = new UpdateUserCommand(null, "New Name", null, null);
+        UpdateUserCommand command = new UpdateUserCommand(null, "New Name", "newnick", null, null);
         doNothing().when(updateUserUseCase).handle(any(UpdateUserCommand.class));
 
         mockMvc.perform(put("/user")
@@ -195,7 +194,7 @@ class UserControllerTest {
     @Test
     @DisplayName("PUT /user - Deve retornar 401 Unauthorized se usuário não autenticado")
     void updateUser_shouldReturn401Unauthorized() throws Exception {
-        UpdateUserCommand command = new UpdateUserCommand(null, "New Name", null, null);
+        UpdateUserCommand command = new UpdateUserCommand(null, "New Name", null, null, null);
 
         mockMvc.perform(put("/user")
                         .with(csrf())
@@ -226,63 +225,63 @@ class UserControllerTest {
     @Test
     @DisplayName("POST /user/forgot-password - Deve retornar 200 OK")
     void forgotPassword_shouldReturn200Ok() throws Exception {
-        ForgotPasswordRequest request = new ForgotPasswordRequest("test@example.com");
+        ForgotPasswordCommand command = new ForgotPasswordCommand("test@example.com");
         doNothing().when(requestPasswordResetUseCase).handle(anyString());
 
         mockMvc.perform(post("/user/forgot-password")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(command)))
                 .andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("POST /user/forgot-password - Deve retornar 400 Bad Request quando validação falha")
     void forgotPassword_shouldReturn400_whenValidationFails() throws Exception {
-        ForgotPasswordRequest request = new ForgotPasswordRequest("invalid-email");
+        ForgotPasswordCommand command = new ForgotPasswordCommand("invalid-email");
 
         mockMvc.perform(post("/user/forgot-password")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(command)))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("POST /user/reset-password - Deve retornar 200 OK em sucesso")
     void resetPassword_shouldReturn200Ok() throws Exception {
-        ResetPasswordRequest request = new ResetPasswordRequest("valid-token", "new-password");
+        ResetPasswordCommand command = new ResetPasswordCommand("valid-token", "new-password");
         doNothing().when(resetPasswordUseCase).handle(anyString(), anyString());
 
         mockMvc.perform(post("/user/reset-password")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(command)))
                 .andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("POST /user/reset-password - Deve retornar 400 Bad Request quando validação falha")
     void resetPassword_shouldReturn400_whenValidationFails() throws Exception {
-        ResetPasswordRequest request = new ResetPasswordRequest("", "123");
+        ResetPasswordCommand command = new ResetPasswordCommand("", "123");
 
         mockMvc.perform(post("/user/reset-password")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(command)))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("POST /user/reset-password - Deve retornar 400 Bad Request em falha de serviço")
     void resetPassword_shouldReturn400BadRequest_onServiceFailure() throws Exception {
-        ResetPasswordRequest request = new ResetPasswordRequest("invalid-token", "new-password");
+        ResetPasswordCommand command = new ResetPasswordCommand("invalid-token", "new-password");
         doThrow(new InternalException("Token inválido")).when(resetPasswordUseCase).handle(anyString(), anyString());
 
         mockMvc.perform(post("/user/reset-password")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(command)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -290,13 +289,13 @@ class UserControllerTest {
     @WithMockCustomUser
     @DisplayName("POST /user/request-email-confirmation - Deve retornar 200 OK")
     void requestEmailConfirmation_shouldReturn200Ok() throws Exception {
-        ForgotPasswordRequest request = new ForgotPasswordRequest("test@example.com");
+        ForgotPasswordCommand command = new ForgotPasswordCommand("test@example.com");
         doNothing().when(requestEmailConfirmationUseCase).handle(anyString());
 
         mockMvc.perform(post("/user/request-email-confirmation")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(command)))
                 .andExpect(status().isOk());
     }
 

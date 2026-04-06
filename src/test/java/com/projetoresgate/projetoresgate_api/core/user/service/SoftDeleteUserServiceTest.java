@@ -34,7 +34,7 @@ class SoftDeleteUserServiceTest {
     void handle_shouldCallDelete_whenUserIsFound() {
         UUID userId = UUID.randomUUID();
         SoftDeleteUserCommand command = new SoftDeleteUserCommand(userId);
-        User existingUser = User.create("test@example.com", "password", "Test User");
+        User existingUser = User.create("test@example.com", "password", "Test User", "tester");
         existingUser.setId(userId);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));

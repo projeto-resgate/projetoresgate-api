@@ -27,7 +27,7 @@ public class AuthenticateUserService implements AuthenticateUserUseCase {
 
     @Override
     public AuthenticationResponse handle(AuthenticateUserQuery query) {
-        User user = userRepository.findUserByEmail(query.email())
+        User user = userRepository.findByEmail(query.email())
                 .orElse(null);
 
         if (isNull(user) || !passwordEncoder.matches(query.password(), user.getPassword())) {

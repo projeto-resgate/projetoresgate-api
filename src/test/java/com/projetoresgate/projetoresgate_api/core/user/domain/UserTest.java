@@ -10,12 +10,13 @@ class UserTest {
 
     @Test
     void shouldCreateUserSuccessfully() {
-        User user = User.create("test@example.com", "password123", "Test User");
+        User user = User.create("test@example.com", "password123", "Test User", "tester");
 
         assertNotNull(user);
         assertEquals("test@example.com", user.getEmail());
         assertEquals("password123", user.getPassword());
         assertEquals("Test User", user.getName());
+        assertEquals("tester", user.getNickname());
         assertTrue(user.getRoles().contains(UserRole.USER));
         assertFalse(user.isEmailVerified());
     }
@@ -23,7 +24,7 @@ class UserTest {
     @Test
     void shouldThrowExceptionWhenEmailIsEmpty() {
         InternalException exception = assertThrows(InternalException.class, () -> {
-            User.create("", "password123", "Test User");
+            User.create("", "password123", "Test User", null);
         });
 
         assertEquals("O e-mail não pode ser vazio.", exception.getMessage());
@@ -32,7 +33,7 @@ class UserTest {
     @Test
     void shouldThrowExceptionWhenPasswordIsTooShort() {
         InternalException exception = assertThrows(InternalException.class, () -> {
-            User.create("test@example.com", "12345", "Test User");
+            User.create("test@example.com", "12345", "Test User", null);
         });
 
         assertEquals("A senha deve ter no mínimo 6 caracteres.", exception.getMessage());
@@ -40,7 +41,7 @@ class UserTest {
 
     @Test
     void shouldAddRole() {
-        User user = User.create("test@example.com", "password123", "Test User");
+        User user = User.create("test@example.com", "password123", "Test User", null);
         user.addRole(UserRole.ADMIN);
 
         assertTrue(user.getRoles().contains(UserRole.ADMIN));
@@ -49,7 +50,7 @@ class UserTest {
 
     @Test
     void shouldVerifyEmail() {
-        User user = User.create("test@example.com", "password123", "Test User");
+        User user = User.create("test@example.com", "password123", "Test User", null);
         user.setIsEmailVerified(true);
 
         assertTrue(user.isEmailVerified());

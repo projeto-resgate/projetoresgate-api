@@ -42,7 +42,7 @@ class ConfirmEmailServiceTest {
 
     @BeforeEach
     void setUp() {
-        user = User.create("test@example.com", "password", "Test User");
+        user = User.create("test@example.com", "password", "Test User", "tester");
         user.setId(UUID.randomUUID());
         user.setIsEmailVerified(false);
 

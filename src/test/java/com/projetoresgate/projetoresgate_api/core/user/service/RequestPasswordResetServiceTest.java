@@ -47,14 +47,14 @@ class RequestPasswordResetServiceTest {
     @BeforeEach
     void setUp() {
         userEmail = "test@example.com";
-        existingUser = User.create(userEmail, "password", "Test User");
+        existingUser = User.create(userEmail, "password", "Test User", "tester");
         existingUser.setId(UUID.randomUUID());
     }
 
     @Test
     @DisplayName("Não deve fazer nada se o e-mail do usuário não existir")
     void handle_shouldDoNothing_whenUserEmailDoesNotExist() {
-        when(userRepository.findUserByEmail(userEmail)).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.empty());
 
         requestPasswordResetService.handle(userEmail);
 
@@ -71,7 +71,7 @@ class RequestPasswordResetServiceTest {
             mockedTokenUtils.when(TokenUtils::generateSecureToken).thenReturn(plainTextToken);
             mockedTokenUtils.when(() -> TokenUtils.hashToken(plainTextToken)).thenReturn(expectedTokenHash);
 
-            when(userRepository.findUserByEmail(userEmail)).thenReturn(Optional.of(existingUser));
+            when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(existingUser));
 
             ArgumentCaptor<PasswordResetToken> tokenCaptor = ArgumentCaptor.forClass(PasswordResetToken.class);
             ArgumentCaptor<String> htmlCaptor = ArgumentCaptor.forClass(String.class);

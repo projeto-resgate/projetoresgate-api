@@ -46,7 +46,7 @@ class AuthenticateUserServiceTest {
     @BeforeEach
     void setUp() {
         authQuery = new AuthenticateUserQuery("test@example.com", "password123");
-        existingUser = User.create("test@example.com", "encodedPassword", "Test User");
+        existingUser = User.create("test@example.com", "encodedPassword", "Test User", "tester");
         existingUser.setId(UUID.randomUUID());
         existingUser.setRoles(Set.of(UserRole.USER));
         existingUser.setIsEmailVerified(true);
@@ -55,7 +55,7 @@ class AuthenticateUserServiceTest {
     @Test
     @DisplayName("Deve retornar AuthenticationResponse em autenticação bem-sucedida")
     void handle_shouldReturnResponse_onSuccessfulAuthentication() {
-        when(userRepository.findUserByEmail(authQuery.email())).thenReturn(Optional.of(existingUser));
+        when(userRepository.findByEmail(authQuery.email())).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches(authQuery.password(), existingUser.getPassword())).thenReturn(true);
         when(tokenService.generateToken(existingUser.getEmail())).thenReturn("mocked.jwt.token");
 
@@ -68,7 +68,7 @@ class AuthenticateUserServiceTest {
         assertEquals(existingUser.getRoles(), response.roles());
         assertTrue(response.isEmailVerified());
 
-        verify(userRepository).findUserByEmail(authQuery.email());
+        verify(userRepository).findByEmail(authQuery.email());
         verify(passwordEncoder).matches(authQuery.password(), existingUser.getPassword());
         verify(tokenService).generateToken(existingUser.getEmail());
     }
@@ -76,7 +76,7 @@ class AuthenticateUserServiceTest {
     @Test
     @DisplayName("Deve lançar BadCredentialsException quando usuário não encontrado")
     void handle_shouldThrowException_whenUserNotFound() {
-        when(userRepository.findUserByEmail(authQuery.email())).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(authQuery.email())).thenReturn(Optional.empty());
 
         assertThrows(BadCredentialsException.class, () -> {
             authenticateUserService.handle(authQuery);
@@ -89,7 +89,7 @@ class AuthenticateUserServiceTest {
     @Test
     @DisplayName("Deve lançar BadCredentialsException quando a senha não corresponde")
     void handle_shouldThrowException_whenPasswordDoesNotMatch() {
-        when(userRepository.findUserByEmail(authQuery.email())).thenReturn(Optional.of(existingUser));
+        when(userRepository.findByEmail(authQuery.email())).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches(authQuery.password(), existingUser.getPassword())).thenReturn(false);
 
         assertThrows(BadCredentialsException.class, () -> {

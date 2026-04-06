@@ -1,17 +1,13 @@
 package com.projetoresgate.projetoresgate_api.core.user.api;
 
 import com.projetoresgate.projetoresgate_api.core.user.api.dto.AuthenticationResponse;
-import com.projetoresgate.projetoresgate_api.core.user.api.dto.ForgotPasswordRequest;
-import com.projetoresgate.projetoresgate_api.core.user.api.dto.ResetPasswordRequest;
 import com.projetoresgate.projetoresgate_api.core.user.api.dto.UserResponse;
 import com.projetoresgate.projetoresgate_api.core.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.user.usecase.*;
-import com.projetoresgate.projetoresgate_api.core.user.usecase.command.ConfirmEmailCommand;
-import com.projetoresgate.projetoresgate_api.core.user.usecase.command.CreateUserCommand;
-import com.projetoresgate.projetoresgate_api.core.user.usecase.command.SoftDeleteUserCommand;
-import com.projetoresgate.projetoresgate_api.core.user.usecase.command.UpdateUserCommand;
+import com.projetoresgate.projetoresgate_api.core.user.usecase.command.*;
 import com.projetoresgate.projetoresgate_api.core.user.usecase.query.AuthenticateUserQuery;
 import com.projetoresgate.projetoresgate_api.core.user.usecase.query.FindUserByIdQuery;
+import com.projetoresgate.projetoresgate_api.infrastructure.security.UserDetailsImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -78,8 +74,8 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "E-mail de redefinição enviado (se o usuário existir)")
     })
-    public ResponseEntity<Void> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
-        requestPasswordResetUseCase.handle(request.email());
+    public ResponseEntity<Void> forgotPassword(@RequestBody @Valid ForgotPasswordCommand command) {
+        requestPasswordResetUseCase.handle(command.email());
         return ResponseEntity.ok().build();
     }
 
@@ -89,8 +85,8 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "Senha redefinida com sucesso"),
             @ApiResponse(responseCode = "400", description = "Token inválido ou expirado")
     })
-    public ResponseEntity<Void> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
-        resetPasswordUseCase.handle(request.token(), request.newPassword());
+    public ResponseEntity<Void> resetPassword(@RequestBody @Valid ResetPasswordCommand command) {
+        resetPasswordUseCase.handle(command.token(), command.newPassword());
         return ResponseEntity.ok().build();
     }
 
@@ -99,8 +95,8 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "E-mail de confirmação enviado")
     })
-    public ResponseEntity<Void> requestEmailConfirmation(@RequestBody @Valid ForgotPasswordRequest request) {
-        requestEmailConfirmationUseCase.handle(request.email());
+    public ResponseEntity<Void> requestEmailConfirmation(@RequestBody @Valid ForgotPasswordCommand command) {
+        requestEmailConfirmationUseCase.handle(command.email());
         return ResponseEntity.ok().build();
     }
 
@@ -123,7 +119,7 @@ public class UserController {
     })
     public ResponseEntity<UserResponse> findUser(@PathVariable UUID id) {
         User user = findUserUseCase.handle(new FindUserByIdQuery(id));
-        return ResponseEntity.ok(new UserResponse(user));
+        return ResponseEntity.ok(UserResponse.fromEntity(user));
     }
 
 
@@ -146,8 +142,8 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos")
     })
-    public ResponseEntity<Void> update(@RequestBody UpdateUserCommand cmd, @AuthenticationPrincipal User user) {
-        updateUserUseCase.handle(cmd.withId(user.getId()));
+    public ResponseEntity<Void> update(@RequestBody UpdateUserCommand cmd, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        updateUserUseCase.handle(cmd.withId(userDetails.getUser().getId()));
         return ResponseEntity.ok().build();
     }
 
@@ -156,8 +152,8 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Usuário deletado com sucesso")
     })
-    public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal User user) {
-        softDeleteUserUseCase.handle(new SoftDeleteUserCommand(user.getId()));
+    public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        softDeleteUserUseCase.handle(new SoftDeleteUserCommand(userDetails.getUser().getId()));
         return ResponseEntity.noContent().build();
     }
 }

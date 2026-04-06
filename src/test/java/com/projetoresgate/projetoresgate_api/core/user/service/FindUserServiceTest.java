@@ -34,7 +34,7 @@ class FindUserServiceTest {
 
         UUID userId = UUID.randomUUID();
         FindUserByIdQuery query = new FindUserByIdQuery(userId);
-        User expectedUser = User.create("test@example.com", "password", "Test User");
+        User expectedUser = User.create("test@example.com", "password", "Test User", "tester");
         expectedUser.setId(userId);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(expectedUser));

@@ -41,13 +41,13 @@ class UpdateUserServiceTest {
     @BeforeEach
     void setUp() {
         userId = UUID.randomUUID();
-        existingUser = User.create("test@example.com", "encodedCurrentPassword", "Old Name");
+        existingUser = User.create("test@example.com", "encodedCurrentPassword", "Old Name", "oldnick");
     }
 
     @Test
     @DisplayName("Deve lançar exceção quando o usuário não for encontrado")
     void handle_shouldThrowException_whenUserNotFound() {
-        UpdateUserCommand command = new UpdateUserCommand(userId, "New Name", null, null);
+        UpdateUserCommand command = new UpdateUserCommand(userId, "New Name", "newnick", null, null);
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         InternalException exception = assertThrows(InternalException.class, () -> updateUserService.handle(command));
@@ -58,7 +58,7 @@ class UpdateUserServiceTest {
     @Test
     @DisplayName("Deve atualizar apenas o nome do usuário com sucesso")
     void handle_shouldUpdateOnlyName_successfully() {
-        UpdateUserCommand command = new UpdateUserCommand(userId, "New Name", null, null);
+        UpdateUserCommand command = new UpdateUserCommand(userId, "New Name", null, null, null);
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
 
         updateUserService.handle(command);
@@ -68,13 +68,29 @@ class UpdateUserServiceTest {
         User savedUser = userCaptor.getValue();
 
         assertEquals("New Name", savedUser.getName());
-        assertEquals("encodedCurrentPassword", savedUser.getPassword());
+        assertEquals("oldnick", savedUser.getNickname());
+    }
+
+    @Test
+    @DisplayName("Deve atualizar apenas o nickname do usuário com sucesso")
+    void handle_shouldUpdateOnlyNickname_successfully() {
+        UpdateUserCommand command = new UpdateUserCommand(userId, null, "newnick", null, null);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+
+        updateUserService.handle(command);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        User savedUser = userCaptor.getValue();
+
+        assertEquals("Old Name", savedUser.getName());
+        assertEquals("newnick", savedUser.getNickname());
     }
 
     @Test
     @DisplayName("Não deve atualizar o nome se o nome fornecido for em branco")
     void handle_shouldNotUpdateName_whenNameIsBlank() {
-        UpdateUserCommand command = new UpdateUserCommand(userId, "   ", null, null);
+        UpdateUserCommand command = new UpdateUserCommand(userId, "   ", null, null, null);
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
 
         updateUserService.handle(command);
@@ -89,7 +105,7 @@ class UpdateUserServiceTest {
     @Test
     @DisplayName("Não deve atualizar a senha se a nova senha for em branco")
     void handle_shouldNotUpdatePassword_whenPasswordIsBlank() {
-        UpdateUserCommand command = new UpdateUserCommand(userId, null, "   ", "correctCurrentPassword");
+        UpdateUserCommand command = new UpdateUserCommand(userId, null, null, "   ", "correctCurrentPassword");
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
 
         updateUserService.handle(command);
@@ -106,7 +122,7 @@ class UpdateUserServiceTest {
     @Test
     @DisplayName("Deve lançar exceção ao atualizar a senha sem a senha atual (null)")
     void handle_shouldThrowException_whenPasswordUpdateWithoutCurrentPasswordAsNull() {
-        UpdateUserCommand command = new UpdateUserCommand(userId, null, "newPassword", null);
+        UpdateUserCommand command = new UpdateUserCommand(userId, null, null, "newPassword", null);
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
 
         InternalException exception = assertThrows(InternalException.class, () -> updateUserService.handle(command));
@@ -117,7 +133,7 @@ class UpdateUserServiceTest {
     @Test
     @DisplayName("Deve lançar exceção ao atualizar a senha sem a senha atual (blank)")
     void handle_shouldThrowException_whenPasswordUpdateWithoutCurrentPasswordAsBlank() {
-        UpdateUserCommand command = new UpdateUserCommand(userId, null, "newPassword", "   ");
+        UpdateUserCommand command = new UpdateUserCommand(userId, null, null, "newPassword", "   ");
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
 
         InternalException exception = assertThrows(InternalException.class, () -> updateUserService.handle(command));
@@ -128,7 +144,7 @@ class UpdateUserServiceTest {
     @Test
     @DisplayName("Deve lançar exceção quando a senha atual não corresponde")
     void handle_shouldThrowException_whenCurrentPasswordDoesNotMatch() {
-        UpdateUserCommand command = new UpdateUserCommand(userId, null, "newPassword", "wrongCurrentPassword");
+        UpdateUserCommand command = new UpdateUserCommand(userId, null, null, "newPassword", "wrongCurrentPassword");
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches("wrongCurrentPassword", "encodedCurrentPassword")).thenReturn(false);
 
@@ -140,7 +156,7 @@ class UpdateUserServiceTest {
     @Test
     @DisplayName("Deve atualizar a senha com sucesso quando a senha atual corresponde")
     void handle_shouldUpdatePassword_successfully() {
-        UpdateUserCommand command = new UpdateUserCommand(userId, null, "newPassword", "correctCurrentPassword");
+        UpdateUserCommand command = new UpdateUserCommand(userId, null, null, "newPassword", "correctCurrentPassword");
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches("correctCurrentPassword", "encodedCurrentPassword")).thenReturn(true);
         when(passwordEncoder.encode("newPassword")).thenReturn("encodedNewPassword");
@@ -156,9 +172,9 @@ class UpdateUserServiceTest {
     }
 
     @Test
-    @DisplayName("Deve atualizar nome e senha com sucesso")
-    void handle_shouldUpdateNameAndPassword_successfully() {
-        UpdateUserCommand command = new UpdateUserCommand(userId, "New Name", "newPassword", "correctCurrentPassword");
+    @DisplayName("Deve atualizar nome, nickname e senha com sucesso")
+    void handle_shouldUpdateNameNicknameAndPassword_successfully() {
+        UpdateUserCommand command = new UpdateUserCommand(userId, "New Name", "newnick", "newPassword", "correctCurrentPassword");
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches("correctCurrentPassword", "encodedCurrentPassword")).thenReturn(true);
         when(passwordEncoder.encode("newPassword")).thenReturn("encodedNewPassword");
@@ -170,6 +186,7 @@ class UpdateUserServiceTest {
         User savedUser = userCaptor.getValue();
 
         assertEquals("New Name", savedUser.getName());
+        assertEquals("newnick", savedUser.getNickname());
         assertEquals("encodedNewPassword", savedUser.getPassword());
     }
 }

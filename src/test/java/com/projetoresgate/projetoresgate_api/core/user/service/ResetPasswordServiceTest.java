@@ -47,7 +47,7 @@ class ResetPasswordServiceTest {
 
     @BeforeEach
     void setUp() {
-        user = User.create("test@example.com", "oldPassword", "Test User");
+        user = User.create("test@example.com", "oldPassword", "Test User", "tester");
         user.setId(UUID.randomUUID());
 
         plainTextToken = TokenUtils.generateSecureToken();

@@ -47,7 +47,7 @@ class RequestEmailConfirmationServiceTest {
     @BeforeEach
     void setUp() {
         userEmail = "test@example.com";
-        existingUser = User.create(userEmail, "password", "Test User");
+        existingUser = User.create(userEmail, "password", "Test User", "tester");
         existingUser.setId(UUID.randomUUID());
         existingUser.setIsEmailVerified(false);
     }
@@ -55,7 +55,7 @@ class RequestEmailConfirmationServiceTest {
     @Test
     @DisplayName("Não deve fazer nada se o e-mail do usuário não existir")
     void handle_shouldDoNothing_whenUserEmailDoesNotExist() {
-        when(userRepository.findUserByEmail(userEmail)).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.empty());
 
         requestEmailConfirmationService.handle(userEmail);
 
@@ -66,7 +66,7 @@ class RequestEmailConfirmationServiceTest {
     @DisplayName("Não deve fazer nada se o e-mail do usuário já estiver verificado")
     void handle_shouldDoNothing_whenUserEmailIsAlreadyVerified() {
         existingUser.setIsEmailVerified(true);
-        when(userRepository.findUserByEmail(userEmail)).thenReturn(Optional.of(existingUser));
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(existingUser));
 
         requestEmailConfirmationService.handle(userEmail);
 
@@ -83,7 +83,7 @@ class RequestEmailConfirmationServiceTest {
             mockedTokenUtils.when(TokenUtils::generateSecureToken).thenReturn(plainTextToken);
             mockedTokenUtils.when(() -> TokenUtils.hashToken(plainTextToken)).thenReturn(expectedTokenHash);
 
-            when(userRepository.findUserByEmail(userEmail)).thenReturn(Optional.of(existingUser));
+            when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(existingUser));
 
             ArgumentCaptor<EmailConfirmationToken> tokenCaptor = ArgumentCaptor.forClass(EmailConfirmationToken.class);
             ArgumentCaptor<String> htmlCaptor = ArgumentCaptor.forClass(String.class);

@@ -30,6 +30,10 @@ public class UpdateUserService implements UpdateUserUseCase {
             user.setName(cmd.name());
         }
 
+        if (nonNull(cmd.nickname())) {
+            user.setNickname(cmd.nickname());
+        }
+
         if (nonNull(cmd.password()) && !cmd.password().isBlank()) {
             if (!StringUtils.hasText(cmd.currentPassword())) {
                  throw new InternalException("A senha atual é obrigatória para alterar a senha.");

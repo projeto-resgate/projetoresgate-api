@@ -24,7 +24,7 @@ public class CreateUserService implements CreateUserUseCase {
     }
 
     public User handle(CreateUserCommand cmd) {
-        if (repository.findUserByEmail(cmd.email()).isPresent()) {
+        if (repository.findByEmail(cmd.email()).isPresent()) {
             throw new InternalException("Este e-mail já está cadastrado.");
         }
 

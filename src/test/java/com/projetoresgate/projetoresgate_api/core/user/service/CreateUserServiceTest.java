@@ -40,11 +40,11 @@ class CreateUserServiceTest {
     @Test
     @DisplayName("Deve criar usuário com senha com sucesso")
     void handle_shouldCreateUserWithPassword_successfully() {
-        CreateUserCommand command = new CreateUserCommand("Test User", "test@example.com", "password123");
-        when(userRepository.findUserByEmail(command.email())).thenReturn(Optional.empty());
+        CreateUserCommand command = new CreateUserCommand("Test User", "test@example.com", "tester", "password123");
+        when(userRepository.findByEmail(command.email())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(command.password())).thenReturn("encodedPassword");
         
-        User savedUser = User.create(command.email(), "encodedPassword", command.name());
+        User savedUser = User.create(command.email(), "encodedPassword", command.name(), command.nickname());
         savedUser.setId(UUID.randomUUID());
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
@@ -55,6 +55,7 @@ class CreateUserServiceTest {
         User capturedUser = userCaptor.getValue();
 
         assertEquals("encodedPassword", capturedUser.getPassword());
+        assertEquals("tester", capturedUser.getNickname());
         verify(passwordEncoder).encode("password123");
         verify(requestEmailConfirmationUseCase).handle(command.email());
     }
@@ -62,10 +63,10 @@ class CreateUserServiceTest {
     @Test
     @DisplayName("Deve criar usuário sem senha com sucesso")
     void handle_shouldCreateUserWithoutPassword_successfully() {
-        CreateUserCommand command = new CreateUserCommand("Test User", "test@example.com", null);
-        when(userRepository.findUserByEmail(command.email())).thenReturn(Optional.empty());
+        CreateUserCommand command = new CreateUserCommand("Test User", "test@example.com", null, null);
+        when(userRepository.findByEmail(command.email())).thenReturn(Optional.empty());
 
-        User savedUser = User.create(command.email(), null, command.name());
+        User savedUser = User.create(command.email(), null, command.name(), null);
         savedUser.setId(UUID.randomUUID());
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
@@ -76,6 +77,7 @@ class CreateUserServiceTest {
         User capturedUser = userCaptor.getValue();
 
         assertNull(capturedUser.getPassword());
+        assertNull(capturedUser.getNickname());
         verify(passwordEncoder, never()).encode(any());
         verify(requestEmailConfirmationUseCase).handle(command.email());
     }
@@ -83,8 +85,8 @@ class CreateUserServiceTest {
     @Test
     @DisplayName("Deve lançar exceção se a senha for inválida (curta)")
     void handle_shouldThrowException_whenPasswordIsInvalid() {
-        CreateUserCommand command = new CreateUserCommand("Test User", "test@example.com", "123");
-        when(userRepository.findUserByEmail(command.email())).thenReturn(Optional.empty());
+        CreateUserCommand command = new CreateUserCommand("Test User", "test@example.com", null, "123");
+        when(userRepository.findByEmail(command.email())).thenReturn(Optional.empty());
 
         InternalException exception = assertThrows(InternalException.class, () -> {
             createUserService.handle(command);
@@ -97,8 +99,8 @@ class CreateUserServiceTest {
     @Test
     @DisplayName("Deve lançar InternalException quando o e-mail já está em uso")
     void handle_shouldThrowException_whenEmailIsInUse() {
-        CreateUserCommand command = new CreateUserCommand("Test User", "test@example.com", "password123");
-        when(userRepository.findUserByEmail(command.email())).thenReturn(Optional.of(new User()));
+        CreateUserCommand command = new CreateUserCommand("Test User", "test@example.com", null, "password123");
+        when(userRepository.findByEmail(command.email())).thenReturn(Optional.of(new User()));
 
         InternalException exception = assertThrows(InternalException.class, () -> {
             createUserService.handle(command);
