@@ -5,6 +5,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import org.springframework.util.StringUtils;
 
+import java.util.Objects;
+
 @Embeddable
 public class Rg {
 
@@ -31,5 +33,18 @@ public class Rg {
 
     public String getValue() {
         return value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Rg rg = (Rg) o;
+        return Objects.equals(value, rg.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(value);
     }
 }

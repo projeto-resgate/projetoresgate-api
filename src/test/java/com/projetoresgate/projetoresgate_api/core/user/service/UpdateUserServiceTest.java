@@ -154,6 +154,18 @@ class UpdateUserServiceTest {
     }
 
     @Test
+    @DisplayName("Deve lançar exceção quando a nova senha for curta")
+    void handle_shouldThrowException_whenNewPasswordIsTooShort() {
+        UpdateUserCommand command = new UpdateUserCommand(userId, null, null, "12345", "correctCurrentPassword");
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(passwordEncoder.matches("correctCurrentPassword", "encodedCurrentPassword")).thenReturn(true);
+
+        InternalException exception = assertThrows(InternalException.class, () -> updateUserService.handle(command));
+        assertEquals("A nova senha deve ter no mínimo 6 caracteres.", exception.getMessage());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("Deve atualizar a senha com sucesso quando a senha atual corresponde")
     void handle_shouldUpdatePassword_successfully() {
         UpdateUserCommand command = new UpdateUserCommand(userId, null, null, "newPassword", "correctCurrentPassword");
