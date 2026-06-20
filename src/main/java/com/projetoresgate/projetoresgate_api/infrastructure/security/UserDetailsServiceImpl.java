@@ -1,6 +1,6 @@
 package com.projetoresgate.projetoresgate_api.infrastructure.security;
 
-import com.projetoresgate.projetoresgate_api.core.user.repository.UserRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

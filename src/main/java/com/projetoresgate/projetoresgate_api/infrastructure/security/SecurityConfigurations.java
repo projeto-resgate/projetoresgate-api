@@ -43,10 +43,12 @@ public class SecurityConfigurations {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/user/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/user").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/user/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user/forgot-password").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user/reset-password").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/user/confirm-email/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/user/confirm-email/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/natural-person").permitAll()
+
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
@@ -54,6 +56,7 @@ public class SecurityConfigurations {
                                 "/swagger-resources/**",
                                 "/webjars/**"
                         ).permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)

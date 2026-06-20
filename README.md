@@ -162,19 +162,6 @@ Acesse a documentação interativa com a aplicação rodando:
 4.  No Swagger, clique no botão **Authorize** (cadeado).
 5.  Cole o token `Bearer seu_token`.
 
-</details>
-
-<details>
-<summary><strong style="font-size:1.5em">📈 Diagramas e Documentação Visual</strong></summary>
-
-Utilizamos **PlantUML** para gerar diagramas diretamente do código, mantendo a documentação visual sempre sincronizada com a arquitetura.
-
-### Diagrama de Classes
-O principal diagrama que representa nosso modelo de domínio completo está localizado em:
-*   [`docs/class-diagram.puml`](docs/class-diagram.puml)
-
-Este arquivo descreve as entidades, seus atributos e os relacionamentos entre elas, servindo como uma referência central para entender a estrutura do banco de dados e das classes de domínio.
-
 ### 🔧 Como Visualizar os Diagramas (.puml)
 
 Para visualizar e editar os arquivos `.puml` diretamente na sua IDE, é necessário instalar um plugin.

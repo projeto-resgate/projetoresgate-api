@@ -1,10 +1,11 @@
 package com.projetoresgate.projetoresgate_api.core.user.service;
 
-import com.projetoresgate.projetoresgate_api.core.user.domain.EmailConfirmationToken;
-import com.projetoresgate.projetoresgate_api.core.user.domain.User;
-import com.projetoresgate.projetoresgate_api.core.user.repository.EmailConfirmationTokenRepository;
-import com.projetoresgate.projetoresgate_api.core.user.repository.UserRepository;
-import com.projetoresgate.projetoresgate_api.core.user.usecase.command.ConfirmEmailCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.user.domain.EmailConfirmationToken;
+import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
+import com.projetoresgate.projetoresgate_api.core.identity.user.repository.EmailConfirmationTokenRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.user.service.ConfirmEmailService;
+import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.command.ConfirmEmailCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,8 +43,6 @@ class ConfirmEmailServiceTest {
     @BeforeEach
     void setUp() {
         user = User.create("test@example.com", "password", "Test User", "tester");
-        user.setId(UUID.randomUUID());
-        user.setIsEmailVerified(false);
 
         plainTextToken = TokenUtils.generateSecureToken();
         String tokenHash = TokenUtils.hashToken(plainTextToken);
@@ -96,7 +94,7 @@ class ConfirmEmailServiceTest {
     @DisplayName("Não deve fazer nada se o e-mail já estiver verificado")
     void handle_shouldDoNothing_whenEmailIsAlreadyVerified() {
         ConfirmEmailCommand command = new ConfirmEmailCommand(plainTextToken);
-        user.setIsEmailVerified(true);
+        user.confirmEmail();
         String expectedHash = TokenUtils.hashToken(plainTextToken);
         when(emailConfirmationTokenRepository.findByTokenHash(expectedHash)).thenReturn(Optional.of(confirmationToken));
 

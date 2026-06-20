@@ -1,8 +1,8 @@
-CREATE TABLE IF NOT EXISTS physical_persons (
+CREATE TABLE IF NOT EXISTS natural_person (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL UNIQUE,
-    cpf VARCHAR(14) NOT NULL UNIQUE,
-    rg VARCHAR(20),
+    cpf VARCHAR(11) UNIQUE,
+    rg VARCHAR(20) UNIQUE,
     birth_date DATE,
     gender VARCHAR(20),
     phone VARCHAR(20),
@@ -10,8 +10,8 @@ CREATE TABLE IF NOT EXISTS physical_persons (
     date_created TIMESTAMP,
     date_updated TIMESTAMP,
     deleted_at TIMESTAMP,
-    CONSTRAINT fk_physical_persons_user FOREIGN KEY (user_id) REFERENCES users(id)
+    CONSTRAINT fk_natural_person_user FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_physical_persons_cpf ON physical_persons(cpf);
-CREATE INDEX IF NOT EXISTS idx_physical_persons_user_id ON physical_persons(user_id);
+CREATE INDEX IF NOT EXISTS idx_natural_person_cpf ON natural_person(cpf);
+CREATE INDEX IF NOT EXISTS idx_natural_person_user_id ON natural_person(user_id);

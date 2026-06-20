@@ -1,6 +1,6 @@
 package com.projetoresgate.projetoresgate_api.infrastructure.security;
 
-import com.projetoresgate.projetoresgate_api.core.user.repository.UserRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.services.TokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -39,7 +40,8 @@ public class SecurityFilter extends OncePerRequestFilter {
             String token = this.recoverToken(request);
             if (nonNull(token)) {
                 String subject = tokenService.validateToken(token);
-                UserDetails userDetails = userRepository.findByEmail(subject)
+
+                UserDetails userDetails = userRepository.findById(UUID.fromString(subject))
                         .map(UserDetailsImpl::new)
                         .orElse(null);
 
