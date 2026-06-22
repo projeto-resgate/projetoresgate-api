@@ -8,7 +8,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.query.Au
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.query.RefreshTokenQuery;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.infrastructure.security.UserDetailsImpl;
-import com.projetoresgate.projetoresgate_api.infrastructure.services.CookieService;
+import com.projetoresgate.projetoresgate_api.infrastructure.services.ICookieService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -35,7 +35,7 @@ public class UserController {
     private final RefreshTokenUseCase refreshTokenUseCase;
     private final LogoutUseCase logoutUseCase;
     private final LogoutAllUseCase logoutAllUseCase;
-    private final CookieService cookieService;
+    private final ICookieService cookieService;
 
     @Autowired
     public UserController(AuthenticateUserUseCase authenticateUserUseCase,
@@ -46,7 +46,7 @@ public class UserController {
                           RefreshTokenUseCase refreshTokenUseCase,
                           LogoutUseCase logoutUseCase,
                           LogoutAllUseCase logoutAllUseCase,
-                          CookieService cookieService) {
+                          ICookieService cookieService) {
         this.authenticateUserUseCase = authenticateUserUseCase;
         this.requestPasswordResetUseCase = requestPasswordResetUseCase;
         this.resetPasswordUseCase = resetPasswordUseCase;
@@ -100,7 +100,7 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "E-mail de confirmação enviado")
     })
-    public ResponseEntity<Void> requestEmailConfirmation(@RequestBody @Valid ForgotPasswordCommand command) {
+    public ResponseEntity<Void> requestEmailConfirmation(@RequestBody @Valid RequestEmailConfirmationCommand command) {
         requestEmailConfirmationUseCase.handle(command.email());
         return ResponseEntity.ok().build();
     }

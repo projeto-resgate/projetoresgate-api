@@ -5,8 +5,8 @@ import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.user.service.AuthenticateUserService;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.query.AuthenticateUserQuery;
-import com.projetoresgate.projetoresgate_api.infrastructure.services.RefreshTokenService;
-import com.projetoresgate.projetoresgate_api.infrastructure.services.TokenService;
+import com.projetoresgate.projetoresgate_api.infrastructure.services.IRefreshTokenService;
+import com.projetoresgate.projetoresgate_api.infrastructure.services.ITokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,10 +34,10 @@ class AuthenticateUserServiceTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private TokenService tokenService;
+    private ITokenService tokenService;
 
     @Mock
-    private RefreshTokenService refreshTokenService;
+    private IRefreshTokenService refreshTokenService;
 
     @InjectMocks
     private AuthenticateUserService authenticateUserService;

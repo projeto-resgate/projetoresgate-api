@@ -36,13 +36,11 @@ class UserTest {
     }
 
     @Test
-    @DisplayName("Deve lançar exceção na validação quando a senha for menor que 6 caracteres")
-    void shouldThrowExceptionWhenPasswordIsTooShort() {
-        InternalException exception = assertThrows(InternalException.class, () -> {
-            User.create("test@example.com", "12345", "Test User", null);
-        });
-
-        assertEquals("A senha deve ter no mínimo 6 caracteres.", exception.getMessage());
+    @DisplayName("Deve aceitar senha curta pois a validação de tamanho é feita no serviço antes do encoding")
+    void shouldAcceptShortPassword() {
+        User user = User.create("test@example.com", "12345", "Test User", null);
+        assertNotNull(user);
+        assertEquals("12345", user.getPassword());
     }
 
     @Test

@@ -6,7 +6,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CookieService {
+public class CookieService implements ICookieService {
 
     @Value("${api.security.refresh-token.duration:604800}")
     private long refreshTokenDuration;

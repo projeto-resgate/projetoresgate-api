@@ -11,7 +11,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase
 import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.security.SecurityConfigurations;
-import com.projetoresgate.projetoresgate_api.infrastructure.services.TokenService;
+import com.projetoresgate.projetoresgate_api.infrastructure.services.ITokenService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +68,7 @@ class NaturalPersonControllerTest {
     private UserDetailsService userDetailsService;
 
     @MockitoBean
-    private TokenService tokenService;
+    private ITokenService tokenService;
 
     @MockitoBean
     private UserRepository userRepository;

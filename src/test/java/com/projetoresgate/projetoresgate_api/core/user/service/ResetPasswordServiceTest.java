@@ -87,16 +87,16 @@ class ResetPasswordServiceTest {
     @Test
     @DisplayName("Deve lançar exceção e deletar o token quando estiver expirado")
     void handle_shouldThrowExceptionAndDeletesToken_whenTokenIsExpired() {
-        resetToken.setExpiryDate(LocalDateTime.now().minusMinutes(1));
-        String expectedHash = TokenUtils.hashToken(plainTextToken);
-        when(passwordResetTokenRepository.findByTokenHash(expectedHash)).thenReturn(Optional.of(resetToken));
+        String tokenHash = TokenUtils.hashToken(plainTextToken);
+        PasswordResetToken expiredToken = new PasswordResetToken(tokenHash, user, LocalDateTime.now().minusMinutes(1));
+        when(passwordResetTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(expiredToken));
 
         InternalException exception = assertThrows(InternalException.class, () -> {
             resetPasswordService.handle(plainTextToken, newPassword);
         });
 
         assertEquals("O token expirou. Solicite uma nova redefinição de senha.", exception.getMessage());
-        verify(passwordResetTokenRepository).delete(resetToken);
+        verify(passwordResetTokenRepository).delete(expiredToken);
         verify(userRepository, never()).save(any());
     }
 }

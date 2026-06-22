@@ -39,24 +39,12 @@ public class EmailConfirmationToken {
         return tokenHash;
     }
 
-    public void setTokenHash(String tokenHash) {
-        this.tokenHash = tokenHash;
-    }
-
     public User getUser() {
         return user;
     }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
-
     public LocalDateTime getExpiryDate() {
         return expiryDate;
-    }
-
-    public void setExpiryDate(LocalDateTime expiryDate) {
-        this.expiryDate = expiryDate;
     }
 
     public boolean isExpired() {

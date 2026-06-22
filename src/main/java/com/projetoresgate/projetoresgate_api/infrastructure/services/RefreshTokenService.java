@@ -14,20 +14,18 @@ import java.util.Optional;
 import static java.util.Objects.isNull;
 
 @Service
-public class RefreshTokenService {
+public class RefreshTokenService implements IRefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
-    private final TokenService tokenService;
+    private final ITokenService tokenService;
 
-    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, TokenService tokenService) {
+    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, ITokenService tokenService) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.tokenService = tokenService;
     }
 
     @Transactional
     public String createRefreshToken(User user) {
-        refreshTokenRepository.deleteByUser(user);
-
         String plainTextToken = TokenUtils.generateSecureToken();
         String tokenHash = TokenUtils.hashToken(plainTextToken);
 

@@ -1,10 +1,10 @@
 package com.projetoresgate.projetoresgate_api.infrastructure.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
-import java.util.logging.Logger;
 
 @Service
 @ConditionalOnProperty(
@@ -14,22 +14,22 @@ import java.util.logging.Logger;
 )
 public class RefreshTokenCleanupTask {
 
-    private static final Logger logger = Logger.getLogger(RefreshTokenCleanupTask.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(RefreshTokenCleanupTask.class);
 
-    private final RefreshTokenService refreshTokenService;
+    private final IRefreshTokenService refreshTokenService;
 
-    public RefreshTokenCleanupTask(RefreshTokenService refreshTokenService) {
+    public RefreshTokenCleanupTask(IRefreshTokenService refreshTokenService) {
         this.refreshTokenService = refreshTokenService;
     }
 
     @Scheduled(fixedRateString = "${api.security.refresh-token.cleanup.rate:3600000}")
     public void cleanupExpiredRefreshTokens() {
         try {
-            logger.info("Iniciando limpeza de tokens de renovação expirados");
+            log.info("Iniciando limpeza de tokens de renovação expirados");
             refreshTokenService.cleanupExpiredTokens();
-            logger.info("Limpeza de tokens de renovação concluída com sucesso");
+            log.info("Limpeza de tokens de renovação concluída com sucesso");
         } catch (Exception e) {
-            logger.severe("Erro ao limpar tokens de renovação expirados: " + e.getMessage());
+            log.error("Erro ao limpar tokens de renovação expirados", e);
         }
     }
 }

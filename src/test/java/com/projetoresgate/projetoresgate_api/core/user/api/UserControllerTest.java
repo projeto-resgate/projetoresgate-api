@@ -8,16 +8,13 @@ import com.projetoresgate.projetoresgate_api.core.identity.user.api.dto.RefreshT
 import com.projetoresgate.projetoresgate_api.core.identity.user.domain.enums.UserRole;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.*;
-import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.command.ConfirmEmailCommand;
-import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.command.ForgotPasswordCommand;
-import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.command.LogoutCommand;
-import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.command.ResetPasswordCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.command.*;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.query.AuthenticateUserQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.query.RefreshTokenQuery;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.infrastructure.security.SecurityConfigurations;
-import com.projetoresgate.projetoresgate_api.infrastructure.services.CookieService;
-import com.projetoresgate.projetoresgate_api.infrastructure.services.TokenService;
+import com.projetoresgate.projetoresgate_api.infrastructure.services.ICookieService;
+import com.projetoresgate.projetoresgate_api.infrastructure.services.ITokenService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
@@ -73,7 +70,7 @@ class UserControllerTest {
     private UserDetailsService userDetailsService;
 
     @MockitoBean
-    private TokenService tokenService;
+    private ITokenService tokenService;
 
     @MockitoBean
     private UserRepository userRepository;
@@ -88,7 +85,7 @@ class UserControllerTest {
     private LogoutAllUseCase logoutAllUseCase;
 
     @MockitoBean
-    private CookieService cookieService;
+    private ICookieService cookieService;
 
     @Test
     @DisplayName("POST /user/login - Deve retornar 200 OK com token em login bem-sucedido")
@@ -219,7 +216,7 @@ class UserControllerTest {
     @WithMockCustomUser
     @DisplayName("POST /user/request-email-confirmation - Deve retornar 200 OK")
     void requestEmailConfirmation_shouldReturn200Ok() throws Exception {
-        ForgotPasswordCommand command = new ForgotPasswordCommand("test@example.com");
+        RequestEmailConfirmationCommand command = new RequestEmailConfirmationCommand("test@example.com");
         doNothing().when(requestEmailConfirmationUseCase).handle(anyString());
 
         mockMvc.perform(post("/user/request-email-confirmation")

@@ -31,7 +31,12 @@ public class UserRegistrationService {
             throw new InternalException("Este e-mail já está cadastrado.");
         }
 
-        String encodedPassword = nonNull(command.password()) ? passwordEncoder.encode(command.password()) : null;
+        String rawPassword = command.password();
+        if (nonNull(rawPassword) && rawPassword.length() < 6) {
+            throw new InternalException("A senha deve ter no mínimo 6 caracteres.");
+        }
+
+        String encodedPassword = nonNull(rawPassword) ? passwordEncoder.encode(rawPassword) : null;
 
         User newUser = User.create(command.email(), encodedPassword, command.name(), command.nickname());
         newUser.addRole(initialRole);

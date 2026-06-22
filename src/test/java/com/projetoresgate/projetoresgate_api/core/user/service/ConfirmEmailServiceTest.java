@@ -81,9 +81,9 @@ class ConfirmEmailServiceTest {
     @DisplayName("Deve lançar exceção quando o token está expirado")
     void handle_shouldThrowException_whenTokenIsExpired() {
         ConfirmEmailCommand command = new ConfirmEmailCommand(plainTextToken);
-        confirmationToken.setExpiryDate(LocalDateTime.now().minusHours(1));
-        String expectedHash = TokenUtils.hashToken(plainTextToken);
-        when(emailConfirmationTokenRepository.findByTokenHash(expectedHash)).thenReturn(Optional.of(confirmationToken));
+        String tokenHash = TokenUtils.hashToken(plainTextToken);
+        EmailConfirmationToken expiredToken = new EmailConfirmationToken(tokenHash, user, LocalDateTime.now().minusHours(1));
+        when(emailConfirmationTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(expiredToken));
 
         InternalException exception = assertThrows(InternalException.class, () -> confirmEmailService.handle(command));
         assertEquals("O token expirou. Solicite um novo.", exception.getMessage());

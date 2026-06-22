@@ -4,6 +4,8 @@ import com.projetoresgate.projetoresgate_api.core.identity.user.domain.enums.Use
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.shared.entity.AuditableEntity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.util.StringUtils;
 
 import java.util.HashSet;
@@ -12,6 +14,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "users")
+@SQLDelete(sql = "UPDATE users SET deleted_at = now() WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 public class User extends AuditableEntity {
 
     @Id
@@ -25,7 +29,7 @@ public class User extends AuditableEntity {
 
     private String nickname;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
@@ -69,9 +73,6 @@ public class User extends AuditableEntity {
         }
         if (!StringUtils.hasText(this.name)) {
             throw new InternalException("O nome não pode ser vazio.");
-        }
-        if (StringUtils.hasText(this.password) && this.password.length() < 6) {
-            throw new InternalException("A senha deve ter no mínimo 6 caracteres.");
         }
     }
 

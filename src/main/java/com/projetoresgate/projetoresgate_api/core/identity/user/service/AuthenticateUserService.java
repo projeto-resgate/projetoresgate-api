@@ -5,11 +5,12 @@ import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.AuthenticateUserUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.query.AuthenticateUserQuery;
-import com.projetoresgate.projetoresgate_api.infrastructure.services.RefreshTokenService;
-import com.projetoresgate.projetoresgate_api.infrastructure.services.TokenService;
+import com.projetoresgate.projetoresgate_api.infrastructure.services.IRefreshTokenService;
+import com.projetoresgate.projetoresgate_api.infrastructure.services.ITokenService;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import static java.util.Objects.isNull;
 
@@ -18,13 +19,13 @@ public class AuthenticateUserService implements AuthenticateUserUseCase {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final TokenService tokenService;
-    private final RefreshTokenService refreshTokenService;
+    private final ITokenService tokenService;
+    private final IRefreshTokenService refreshTokenService;
 
     public AuthenticateUserService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            TokenService tokenService, RefreshTokenService refreshTokenService) {
+            ITokenService tokenService, IRefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
@@ -32,6 +33,7 @@ public class AuthenticateUserService implements AuthenticateUserUseCase {
     }
 
     @Override
+    @Transactional
     public AuthenticationResponse handle(AuthenticateUserQuery query) {
         User user = userRepository.findByEmail(query.email())
                 .orElse(null);

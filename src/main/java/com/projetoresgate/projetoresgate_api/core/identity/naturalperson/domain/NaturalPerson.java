@@ -5,6 +5,8 @@ import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.shared.entity.AuditableEntity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
@@ -15,6 +17,8 @@ import static java.util.Objects.nonNull;
 
 @Entity
 @Table(name = "natural_person")
+@SQLDelete(sql = "UPDATE natural_person SET deleted_at = now() WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 public class NaturalPerson extends AuditableEntity {
 
     @Id
