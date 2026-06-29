@@ -43,10 +43,13 @@ public class SecurityConfigurations {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/user/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/user").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/user/request-email-confirmation").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/user/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user/forgot-password").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user/reset-password").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/user/confirm-email/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/user/confirm-email/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/natural-person").permitAll()
+
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
@@ -54,6 +57,7 @@ public class SecurityConfigurations {
                                 "/swagger-resources/**",
                                 "/webjars/**"
                         ).permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
@@ -64,10 +68,10 @@ public class SecurityConfigurations {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         var configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedOriginPatterns(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(false);
+        configuration.setAllowCredentials(true);
 
         var source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

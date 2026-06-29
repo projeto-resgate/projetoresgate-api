@@ -1,26 +1,23 @@
 package com.projetoresgate.projetoresgate_api.core.user.service;
 
-import com.projetoresgate.projetoresgate_api.core.user.domain.PasswordResetToken;
-import com.projetoresgate.projetoresgate_api.core.user.domain.User;
-import com.projetoresgate.projetoresgate_api.core.user.repository.PasswordResetTokenRepository;
-import com.projetoresgate.projetoresgate_api.core.user.repository.UserRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.user.domain.PasswordResetToken;
+import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
+import com.projetoresgate.projetoresgate_api.core.identity.user.repository.PasswordResetTokenRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.user.service.RequestPasswordResetService;
 import com.projetoresgate.projetoresgate_api.infrastructure.email.JavaMailEmailService;
 import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
-import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -48,7 +45,6 @@ class RequestPasswordResetServiceTest {
     void setUp() {
         userEmail = "test@example.com";
         existingUser = User.create(userEmail, "password", "Test User", "tester");
-        existingUser.setId(UUID.randomUUID());
     }
 
     @Test

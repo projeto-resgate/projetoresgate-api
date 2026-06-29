@@ -1,9 +1,10 @@
 package com.projetoresgate.projetoresgate_api.core.user.service;
 
-import com.projetoresgate.projetoresgate_api.core.user.domain.PasswordResetToken;
-import com.projetoresgate.projetoresgate_api.core.user.domain.User;
-import com.projetoresgate.projetoresgate_api.core.user.repository.PasswordResetTokenRepository;
-import com.projetoresgate.projetoresgate_api.core.user.repository.UserRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.user.domain.PasswordResetToken;
+import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
+import com.projetoresgate.projetoresgate_api.core.identity.user.repository.PasswordResetTokenRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.user.service.ResetPasswordService;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +18,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -48,12 +48,9 @@ class ResetPasswordServiceTest {
     @BeforeEach
     void setUp() {
         user = User.create("test@example.com", "oldPassword", "Test User", "tester");
-        user.setId(UUID.randomUUID());
-
         plainTextToken = TokenUtils.generateSecureToken();
         String tokenHash = TokenUtils.hashToken(plainTextToken);
         newPassword = "newStrongPassword";
-
         resetToken = new PasswordResetToken(tokenHash, user, LocalDateTime.now().plusHours(1));
     }
 
@@ -90,16 +87,16 @@ class ResetPasswordServiceTest {
     @Test
     @DisplayName("Deve lançar exceção e deletar o token quando estiver expirado")
     void handle_shouldThrowExceptionAndDeletesToken_whenTokenIsExpired() {
-        resetToken.setExpiryDate(LocalDateTime.now().minusMinutes(1));
-        String expectedHash = TokenUtils.hashToken(plainTextToken);
-        when(passwordResetTokenRepository.findByTokenHash(expectedHash)).thenReturn(Optional.of(resetToken));
+        String tokenHash = TokenUtils.hashToken(plainTextToken);
+        PasswordResetToken expiredToken = new PasswordResetToken(tokenHash, user, LocalDateTime.now().minusMinutes(1));
+        when(passwordResetTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(expiredToken));
 
         InternalException exception = assertThrows(InternalException.class, () -> {
             resetPasswordService.handle(plainTextToken, newPassword);
         });
 
         assertEquals("O token expirou. Solicite uma nova redefinição de senha.", exception.getMessage());
-        verify(passwordResetTokenRepository).delete(resetToken);
+        verify(passwordResetTokenRepository).delete(expiredToken);
         verify(userRepository, never()).save(any());
     }
 }

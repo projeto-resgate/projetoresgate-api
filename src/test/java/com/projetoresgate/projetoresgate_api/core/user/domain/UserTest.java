@@ -1,6 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.user.domain;
 
-import com.projetoresgate.projetoresgate_api.core.user.domain.enums.UserRole;
+import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
+import com.projetoresgate.projetoresgate_api.core.identity.user.domain.enums.UserRole;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,7 +26,7 @@ class UserTest {
     }
 
     @Test
-    @DisplayName("Deve lançar exceção quando o e-mail for vazio")
+    @DisplayName("Deve lançar exceção na validação quando o e-mail for vazio")
     void shouldThrowExceptionWhenEmailIsEmpty() {
         InternalException exception = assertThrows(InternalException.class, () -> {
             User.create("", "password123", "Test User", null);
@@ -35,29 +36,37 @@ class UserTest {
     }
 
     @Test
-    @DisplayName("Deve lançar exceção quando a senha for curta")
-    void shouldThrowExceptionWhenPasswordIsTooShort() {
-        InternalException exception = assertThrows(InternalException.class, () -> {
-            User.create("test@example.com", "12345", "Test User", null);
-        });
-
-        assertEquals("A senha deve ter no mínimo 6 caracteres.", exception.getMessage());
+    @DisplayName("Deve aceitar senha curta pois a validação de tamanho é feita no serviço antes do encoding")
+    void shouldAcceptShortPassword() {
+        User user = User.create("test@example.com", "12345", "Test User", null);
+        assertNotNull(user);
+        assertEquals("12345", user.getPassword());
     }
 
     @Test
-    @DisplayName("Deve lançar exceção na validação se o nome for vazio")
-    void validate_ShouldFailIfNameIsEmpty() {
-        User user = User.create("test@example.com", "password123", "Test User", "tester");
-        
-        InternalException exception = assertThrows(InternalException.class, () -> user.updateInfo("", "newnick"));
+    @DisplayName("Deve lançar exceção na validação quando o nome for nulo ou vazio")
+    void validate_ShouldFailIfNameIsEmptyOnCreation() {
+        InternalException exception = assertThrows(InternalException.class, () -> {
+            User.create("test@example.com", "password123", "", null);
+        });
+
         assertEquals("O nome não pode ser vazio.", exception.getMessage());
     }
 
     @Test
-    @DisplayName("Deve atualizar informações do usuário com sucesso")
+    @DisplayName("Deve lançar exceção na validação se o nome for apagado na atualização")
+    void validate_ShouldFailIfNameIsBlankedOnUpdate() {
+        User user = User.create("test@example.com", "password123", "Test User", "tester");
+
+        InternalException exception = assertThrows(InternalException.class, () -> user.update().name("").nickname("newnick").apply());
+        assertEquals("O nome não pode ser vazio.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Deve atualizar informações do usuário com sucesso via Updater")
     void updateInfo_ShouldUpdateFields() {
         User user = User.create("test@example.com", "password123", "Test User", "tester");
-        user.updateInfo("New Name", "newnick");
+        user.update().name("New Name").nickname("newnick").apply();
 
         assertEquals("New Name", user.getName());
         assertEquals("newnick", user.getNickname());
@@ -94,10 +103,10 @@ class UserTest {
     }
 
     @Test
-    @DisplayName("Deve verificar e-mail")
+    @DisplayName("Deve confirmar e-mail do usuário")
     void shouldVerifyEmail() {
         User user = User.create("test@example.com", "password123", "Test User", null);
-        user.setIsEmailVerified(true);
+        user.confirmEmail();
 
         assertTrue(user.isEmailVerified());
     }

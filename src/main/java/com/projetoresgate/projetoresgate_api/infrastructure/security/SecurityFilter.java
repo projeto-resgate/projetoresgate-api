@@ -1,11 +1,13 @@
 package com.projetoresgate.projetoresgate_api.infrastructure.security;
 
-import com.projetoresgate.projetoresgate_api.core.user.repository.UserRepository;
-import com.projetoresgate.projetoresgate_api.infrastructure.services.TokenService;
+import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
+import com.projetoresgate.projetoresgate_api.infrastructure.services.ITokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -22,11 +25,13 @@ import static java.util.Objects.nonNull;
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
 
-    private final TokenService tokenService;
+    private static final Logger log = LoggerFactory.getLogger(SecurityFilter.class);
+
+    private final ITokenService tokenService;
     private final UserRepository userRepository;
 
     @Autowired
-    public SecurityFilter(TokenService tokenService, UserRepository userRepository) {
+    public SecurityFilter(ITokenService tokenService, UserRepository userRepository) {
         this.tokenService = tokenService;
         this.userRepository = userRepository;
     }
@@ -39,7 +44,8 @@ public class SecurityFilter extends OncePerRequestFilter {
             String token = this.recoverToken(request);
             if (nonNull(token)) {
                 String subject = tokenService.validateToken(token);
-                UserDetails userDetails = userRepository.findByEmail(subject)
+
+                UserDetails userDetails = userRepository.findByIdWithRoles(UUID.fromString(subject))
                         .map(UserDetailsImpl::new)
                         .orElse(null);
 
@@ -49,6 +55,7 @@ public class SecurityFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
+            log.warn("Falha ao validar token JWT: {}", e.getMessage());
             SecurityContextHolder.clearContext();
         }
 

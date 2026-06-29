@@ -10,6 +10,10 @@ CREATE TABLE IF NOT EXISTS users (
     is_email_verified BOOLEAN NOT NULL DEFAULT FALSE
 );
 
+CREATE INDEX IF NOT EXISTS idx_users_name ON users(name);
+CREATE INDEX IF NOT EXISTS idx_users_nickname ON users(nickname);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
 CREATE TABLE IF NOT EXISTS user_roles (
     user_id UUID NOT NULL,
     role VARCHAR(255) NOT NULL,
