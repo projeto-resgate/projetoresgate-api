@@ -12,7 +12,7 @@ import java.util.UUID;
 public interface EmailConfirmationTokenRepository extends JpaRepository<EmailConfirmationToken, UUID> {
     Optional<EmailConfirmationToken> findByTokenHash(String tokenHash);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("delete from EmailConfirmationToken t where t.user = ?1")
     void deleteByUser(User user);
 }

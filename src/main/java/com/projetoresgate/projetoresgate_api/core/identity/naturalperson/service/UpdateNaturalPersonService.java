@@ -8,6 +8,8 @@ import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalEx
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static java.util.Objects.nonNull;
+
 @Service
 public class UpdateNaturalPersonService implements UpdateNaturalPersonUseCase {
 
@@ -22,7 +24,8 @@ public class UpdateNaturalPersonService implements UpdateNaturalPersonUseCase {
     public NaturalPerson handle(UpdateNaturalPersonCommand command) {
         NaturalPerson person = repository.findByIdOrThrow(command.id());
 
-        if (repository.existsByCpfAndIdNot(command.cpf(), person.getId())) {
+        String cpf = command.cpf();
+        if (nonNull(cpf) && !cpf.isBlank() && repository.existsByCpfAndIdNot(cpf, person.getId())) {
             throw new InternalException("Já existe uma pessoa cadastrada com este CPF.");
         }
 

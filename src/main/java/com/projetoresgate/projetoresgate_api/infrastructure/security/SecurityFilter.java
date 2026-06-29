@@ -45,7 +45,7 @@ public class SecurityFilter extends OncePerRequestFilter {
             if (nonNull(token)) {
                 String subject = tokenService.validateToken(token);
 
-                UserDetails userDetails = userRepository.findById(UUID.fromString(subject))
+                UserDetails userDetails = userRepository.findByIdWithRoles(UUID.fromString(subject))
                         .map(UserDetailsImpl::new)
                         .orElse(null);
 

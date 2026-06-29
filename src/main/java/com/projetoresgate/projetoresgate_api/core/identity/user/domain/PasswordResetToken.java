@@ -25,7 +25,6 @@ public class PasswordResetToken {
     }
 
     public PasswordResetToken(String tokenHash, User user, LocalDateTime expiryDate) {
-        this.id = UUID.randomUUID();
         this.tokenHash = tokenHash;
         this.user = user;
         this.expiryDate = expiryDate;

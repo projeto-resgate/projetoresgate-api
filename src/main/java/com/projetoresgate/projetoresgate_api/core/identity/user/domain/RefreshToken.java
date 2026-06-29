@@ -1,6 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.identity.user.domain;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -10,7 +11,6 @@ import java.util.UUID;
 public class RefreshToken {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     private String tokenHash;
@@ -21,6 +21,8 @@ public class RefreshToken {
 
     private LocalDateTime expiryDate;
 
+    @CreationTimestamp
+    private LocalDateTime dateCreated;
 
     public RefreshToken() {
     }

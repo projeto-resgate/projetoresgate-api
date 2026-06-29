@@ -43,6 +43,7 @@ public class SecurityConfigurations {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/user/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/user/request-email-confirmation").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user/forgot-password").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user/reset-password").permitAll()

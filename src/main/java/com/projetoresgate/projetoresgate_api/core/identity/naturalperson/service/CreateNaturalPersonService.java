@@ -12,6 +12,8 @@ import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalEx
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static java.util.Objects.nonNull;
+
 @Service
 public class CreateNaturalPersonService implements CreateNaturalPersonUseCase {
 
@@ -29,7 +31,7 @@ public class CreateNaturalPersonService implements CreateNaturalPersonUseCase {
     public NaturalPerson handle(CreateNaturalPersonCommand command) {
         String cpf = command.cpf();
 
-        if (repository.existsByCpf(cpf)) {
+        if (nonNull(cpf) && !cpf.isBlank() && repository.existsByCpf(cpf)) {
             throw new InternalException("Já existe uma pessoa cadastrada com este CPF.");
         }
 
@@ -37,7 +39,7 @@ public class CreateNaturalPersonService implements CreateNaturalPersonUseCase {
                 command.name(),
                 command.email(),
                 command.nickname(),
-                "12345678" //TODO: Senha temporária, no futuro os cadastros de administrador e secretária terão fluxo para criação de senha.
+                "123456" //TODO: Senha temporária, no futuro os cadastros de administrador e secretária terão fluxo para criação de senha.
         );
 
         User newUser = userRegistrationService.registerNewUser(createUserCommand, UserRole.NATURAL_PERSON);
