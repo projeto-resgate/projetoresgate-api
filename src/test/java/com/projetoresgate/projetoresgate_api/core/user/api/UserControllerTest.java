@@ -5,11 +5,13 @@ import com.projetoresgate.projetoresgate_api.config.security.WithMockCustomUser;
 import com.projetoresgate.projetoresgate_api.core.identity.user.api.UserController;
 import com.projetoresgate.projetoresgate_api.core.identity.user.api.dto.AuthenticationResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.user.api.dto.RefreshTokenResponse;
+import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.identity.user.domain.enums.UserRole;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.*;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.command.*;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.query.AuthenticateUserQuery;
+import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.query.FindUserByIdQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.query.RefreshTokenQuery;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.infrastructure.security.SecurityConfigurations;
@@ -37,7 +39,9 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = UserController.class)
@@ -61,12 +65,6 @@ class UserControllerTest {
     private ResetPasswordUseCase resetPasswordUseCase;
 
     @MockitoBean
-    private RequestEmailConfirmationUseCase requestEmailConfirmationUseCase;
-
-    @MockitoBean
-    private ConfirmEmailUseCase confirmEmailUseCase;
-
-    @MockitoBean
     private UserDetailsService userDetailsService;
 
     @MockitoBean
@@ -85,6 +83,18 @@ class UserControllerTest {
     private LogoutAllUseCase logoutAllUseCase;
 
     @MockitoBean
+    private CreateUserUseCase createUserUseCase;
+
+    @MockitoBean
+    private UpdateUserUseCase updateUserUseCase;
+
+    @MockitoBean
+    private SoftDeleteUserUseCase softDeleteUserUseCase;
+
+    @MockitoBean
+    private FindUserUseCase findUserUseCase;
+
+    @MockitoBean
     private ICookieService cookieService;
 
     @Test
@@ -99,8 +109,7 @@ class UserControllerTest {
                 UUID.randomUUID().toString(),
                 "Test User",
                 "test@example.com",
-                Set.of(UserRole.USER),
-                true
+                Set.of(UserRole.USER)
         );
 
         when(authenticateUserUseCase.handle(any(AuthenticateUserQuery.class))).thenReturn(authResponse);
@@ -147,6 +156,95 @@ class UserControllerTest {
         mockMvc.perform(delete("/user")
                         .with(csrf()))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("POST /user - Deve retornar 201 Created com o ID e Location ao criar usuário")
+    void createUser_shouldReturn201CreatedWithIdAndLocation() throws Exception {
+        CreateUserCommand command = new CreateUserCommand("John Doe", "john@test.com", "johny", "password123");
+        User user = User.create("john@test.com", "encoded-password", "John Doe", "johny");
+
+        when(createUserUseCase.handle(any(CreateUserCommand.class))).thenReturn(user);
+
+        mockMvc.perform(post("/user")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(command)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$").value(user.getId().toString()))
+                .andExpect(header().string("Location", containsString("/user/" + user.getId())));
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("GET /user/{id} - Deve retornar 200 OK com os dados do usuário")
+    void findUser_shouldReturn200OkWithUser() throws Exception {
+        User user = User.create("john@test.com", "encoded-password", "John Doe", "johny");
+
+        when(findUserUseCase.handle(any(FindUserByIdQuery.class))).thenReturn(user);
+
+        mockMvc.perform(get("/user/{id}", user.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(user.getId().toString()))
+                .andExpect(jsonPath("$.email").value("john@test.com"))
+                .andExpect(jsonPath("$.name").value("John Doe"))
+                .andExpect(jsonPath("$.nickname").value("johny"));
+    }
+
+    @Test
+    @DisplayName("POST /user - Deve retornar 400 Bad Request quando a senha estiver vazia")
+    void createUser_shouldReturn400_whenPasswordIsBlank() throws Exception {
+        CreateUserCommand command = new CreateUserCommand("John Doe", "john@test.com", "johny", "");
+
+        mockMvc.perform(post("/user")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(command)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(containsString("A senha não pode ser vazia.")));
+
+        verify(createUserUseCase, never()).handle(any());
+    }
+
+    @Test
+    @DisplayName("POST /user - Deve retornar 400 Bad Request quando a senha tiver menos de 6 caracteres")
+    void createUser_shouldReturn400_whenPasswordTooShort() throws Exception {
+        CreateUserCommand command = new CreateUserCommand("John Doe", "john@test.com", "johny", "123");
+
+        mockMvc.perform(post("/user")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(command)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(containsString("A senha deve ter no mínimo 6 caracteres.")));
+
+        verify(createUserUseCase, never()).handle(any());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("PUT /user - Deve retornar 200 OK ao atualizar usuário autenticado")
+    void updateUser_shouldReturn200Ok() throws Exception {
+        UpdateUserCommand command = new UpdateUserCommand(null, "New Name", "newnick", null, null);
+
+        mockMvc.perform(put("/user")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(command)))
+                .andExpect(status().isOk());
+
+        verify(updateUserUseCase).handle(any(UpdateUserCommand.class));
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("DELETE /user - Deve retornar 204 No Content ao deletar usuário autenticado")
+    void deleteUser_shouldReturn204NoContent() throws Exception {
+        mockMvc.perform(delete("/user")
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        verify(softDeleteUserUseCase).handle(any(SoftDeleteUserCommand.class));
     }
 
     @Test
@@ -209,40 +307,6 @@ class UserControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(command)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    @WithMockCustomUser
-    @DisplayName("POST /user/request-email-confirmation - Deve retornar 200 OK")
-    void requestEmailConfirmation_shouldReturn200Ok() throws Exception {
-        RequestEmailConfirmationCommand command = new RequestEmailConfirmationCommand("test@example.com");
-        doNothing().when(requestEmailConfirmationUseCase).handle(anyString());
-
-        mockMvc.perform(post("/user/request-email-confirmation")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(command)))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    @DisplayName("POST /user/confirm-email/{token} - Deve retornar 200 OK em sucesso")
-    void confirmEmail_shouldReturn200Ok() throws Exception {
-        String token = "valid-token";
-        doNothing().when(confirmEmailUseCase).handle(any(ConfirmEmailCommand.class));
-
-        mockMvc.perform(post("/user/confirm-email/{token}", token))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    @DisplayName("POST /user/confirm-email/{token} - Deve retornar 400 Bad Request em falha")
-    void confirmEmail_shouldReturn400BadRequest_onFailure() throws Exception {
-        String token = "invalid-token";
-        doThrow(new InternalException("Token inválido")).when(confirmEmailUseCase).handle(any(ConfirmEmailCommand.class));
-
-        mockMvc.perform(post("/user/confirm-email/{token}", token))
                 .andExpect(status().isBadRequest());
     }
 

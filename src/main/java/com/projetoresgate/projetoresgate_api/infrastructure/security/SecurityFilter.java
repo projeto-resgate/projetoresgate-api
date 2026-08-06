@@ -1,5 +1,6 @@
 package com.projetoresgate.projetoresgate_api.infrastructure.security;
 
+import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.services.ITokenService;
 import jakarta.servlet.FilterChain;
@@ -12,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -45,11 +45,11 @@ public class SecurityFilter extends OncePerRequestFilter {
             if (nonNull(token)) {
                 String subject = tokenService.validateToken(token);
 
-                UserDetails userDetails = userRepository.findByIdWithRoles(UUID.fromString(subject))
-                        .map(UserDetailsImpl::new)
+                User user = userRepository.findByIdWithRoles(UUID.fromString(subject))
                         .orElse(null);
 
-                if (nonNull(userDetails)) {
+                if (nonNull(user) && tokenService.getTokenVersion(token) == user.getTokenVersion()) {
+                    UserDetailsImpl userDetails = new UserDetailsImpl(user);
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }

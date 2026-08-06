@@ -4,9 +4,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.SearchNaturalPersonUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.SearchNaturalPersonQuery;
-import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.shared.specification.SpecificationBuilder;
-import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
@@ -47,11 +45,10 @@ public class SearchNaturalPersonService implements SearchNaturalPersonUseCase {
 
         return (root, criteriaQuery, cb) -> {
             String textSearch = "%" + searchTerm.toLowerCase() + "%";
-            Join<NaturalPerson, User> userJoin = root.join("user");
 
             List<Predicate> orPredicates = new ArrayList<>();
-            orPredicates.add(cb.like(cb.lower(userJoin.get("name")), textSearch));
-            orPredicates.add(cb.like(cb.lower(userJoin.get("nickname")), textSearch));
+            orPredicates.add(cb.like(cb.lower(root.get("name")), textSearch));
+            orPredicates.add(cb.like(cb.lower(root.get("nickname")), textSearch));
 
             String digits = searchTerm.replaceAll("\\D", "");
             if (StringUtils.hasText(digits)) {

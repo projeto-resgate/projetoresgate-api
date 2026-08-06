@@ -32,6 +32,7 @@ public class UpdateNaturalPersonService implements UpdateNaturalPersonUseCase {
         return repository.save(
                 person.update()
                         .name(command.name())
+                        .email(command.email())
                         .nickname(command.nickname())
                         .cpf(command.cpf())
                         .rg(command.rg())

@@ -9,6 +9,7 @@ public interface ITokenService {
     String generateAccessToken(User user);
     String validateToken(String token);
     String validateAccessToken(String token);
+    long getTokenVersion(String token);
     LocalDateTime getRefreshTokenExpiryDate();
     long getAccessTokenDurationSeconds();
 }

@@ -1,7 +1,7 @@
-package com.projetoresgate.projetoresgate_api.core.identity.user.repository;
+package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository;
 
-import com.projetoresgate.projetoresgate_api.core.identity.user.domain.EmailConfirmationToken;
-import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.EmailConfirmationToken;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,6 +13,6 @@ public interface EmailConfirmationTokenRepository extends JpaRepository<EmailCon
     Optional<EmailConfirmationToken> findByTokenHash(String tokenHash);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("delete from EmailConfirmationToken t where t.user = ?1")
-    void deleteByUser(User user);
+    @Query("delete from EmailConfirmationToken t where t.naturalPerson = ?1")
+    void deleteByNaturalPerson(NaturalPerson naturalPerson);
 }

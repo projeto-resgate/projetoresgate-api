@@ -12,19 +12,14 @@ import java.util.UUID;
 @Repository
 public interface NaturalPersonRepository extends JpaRepository<NaturalPerson, UUID>, JpaSpecificationExecutor<NaturalPerson> {
 
-    Optional<NaturalPerson> findByUserId(UUID userId);
-
     boolean existsByCpf(String cpf);
 
     boolean existsByCpfAndIdNot(String cpf, UUID id);
 
+    Optional<NaturalPerson> findByEmail(String email);
+
     default NaturalPerson findByIdOrThrow(UUID id) {
         return findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Pessoa física não encontrada com ID: " + id));
-    }
-
-    default NaturalPerson findByUserIdOrThrow(UUID userId) {
-        return findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Pessoa física não encontrada para o usuário com ID: " + userId));
     }
 }

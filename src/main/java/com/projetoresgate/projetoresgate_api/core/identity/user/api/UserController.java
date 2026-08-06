@@ -2,9 +2,12 @@ package com.projetoresgate.projetoresgate_api.core.identity.user.api;
 
 import com.projetoresgate.projetoresgate_api.core.identity.user.api.dto.AuthenticationResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.user.api.dto.RefreshTokenResponse;
+import com.projetoresgate.projetoresgate_api.core.identity.user.api.dto.UserResponse;
+import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.*;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.command.*;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.query.AuthenticateUserQuery;
+import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.query.FindUserByIdQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.query.RefreshTokenQuery;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.infrastructure.security.UserDetailsImpl;
@@ -19,6 +22,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
+import java.util.UUID;
 
 import static java.util.Objects.nonNull;
 
@@ -30,31 +37,37 @@ public class UserController {
     private final AuthenticateUserUseCase authenticateUserUseCase;
     private final RequestPasswordResetUseCase requestPasswordResetUseCase;
     private final ResetPasswordUseCase resetPasswordUseCase;
-    private final RequestEmailConfirmationUseCase requestEmailConfirmationUseCase;
-    private final ConfirmEmailUseCase confirmEmailUseCase;
     private final RefreshTokenUseCase refreshTokenUseCase;
     private final LogoutUseCase logoutUseCase;
     private final LogoutAllUseCase logoutAllUseCase;
+    private final CreateUserUseCase createUserUseCase;
+    private final UpdateUserUseCase updateUserUseCase;
+    private final SoftDeleteUserUseCase softDeleteUserUseCase;
+    private final FindUserUseCase findUserUseCase;
     private final ICookieService cookieService;
 
     @Autowired
     public UserController(AuthenticateUserUseCase authenticateUserUseCase,
                           RequestPasswordResetUseCase requestPasswordResetUseCase,
                           ResetPasswordUseCase resetPasswordUseCase,
-                          RequestEmailConfirmationUseCase requestEmailConfirmationUseCase,
-                          ConfirmEmailUseCase confirmEmailUseCase,
                           RefreshTokenUseCase refreshTokenUseCase,
                           LogoutUseCase logoutUseCase,
                           LogoutAllUseCase logoutAllUseCase,
+                          CreateUserUseCase createUserUseCase,
+                          UpdateUserUseCase updateUserUseCase,
+                          SoftDeleteUserUseCase softDeleteUserUseCase,
+                          FindUserUseCase findUserUseCase,
                           ICookieService cookieService) {
         this.authenticateUserUseCase = authenticateUserUseCase;
         this.requestPasswordResetUseCase = requestPasswordResetUseCase;
         this.resetPasswordUseCase = resetPasswordUseCase;
-        this.requestEmailConfirmationUseCase = requestEmailConfirmationUseCase;
-        this.confirmEmailUseCase = confirmEmailUseCase;
         this.refreshTokenUseCase = refreshTokenUseCase;
         this.logoutUseCase = logoutUseCase;
         this.logoutAllUseCase = logoutAllUseCase;
+        this.createUserUseCase = createUserUseCase;
+        this.updateUserUseCase = updateUserUseCase;
+        this.softDeleteUserUseCase = softDeleteUserUseCase;
+        this.findUserUseCase = findUserUseCase;
         this.cookieService = cookieService;
     }
 
@@ -92,27 +105,6 @@ public class UserController {
     })
     public ResponseEntity<Void> resetPassword(@RequestBody @Valid ResetPasswordCommand command) {
         resetPasswordUseCase.handle(command.token(), command.newPassword());
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/request-email-confirmation")
-    @Operation(summary = "Solicitar confirmação de e-mail", description = "Reenvia o e-mail de confirmação de conta.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "E-mail de confirmação enviado")
-    })
-    public ResponseEntity<Void> requestEmailConfirmation(@RequestBody @Valid RequestEmailConfirmationCommand command) {
-        requestEmailConfirmationUseCase.handle(command.email());
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/confirm-email/{token}")
-    @Operation(summary = "Confirmar e-mail", description = "Confirma o e-mail do usuário usando o token recebido por link.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "E-mail confirmado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Token inválido ou expirado")
-    })
-    public ResponseEntity<Void> confirmEmail(@PathVariable String token) {
-        confirmEmailUseCase.handle(new ConfirmEmailCommand(token));
         return ResponseEntity.ok().build();
     }
 
@@ -172,6 +164,52 @@ public class UserController {
 
         cookieService.removeRefreshTokenCookie(httpResponse);
 
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Buscar usuário por ID", description = "Retorna os detalhes de um usuário específico.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
+    public ResponseEntity<UserResponse> findUser(@PathVariable UUID id) {
+        User user = findUserUseCase.handle(new FindUserByIdQuery(id));
+        return ResponseEntity.ok(UserResponse.fromEntity(user));
+    }
+
+    @PostMapping
+    @Operation(summary = "Criar usuário", description = "Cria um novo usuário no sistema.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos ou e-mail já existente")
+    })
+    public ResponseEntity<UUID> create(@Valid @RequestBody CreateUserCommand cmd) {
+        UUID userId = createUserUseCase.handle(cmd).getId();
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+                .buildAndExpand(userId).toUri();
+        return ResponseEntity.created(uri).body(userId);
+    }
+
+    @PutMapping
+    @Operation(summary = "Atualizar usuário", description = "Atualiza os dados do usuário autenticado.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos")
+    })
+    public ResponseEntity<Void> update(@RequestBody UpdateUserCommand cmd,
+                                       @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        updateUserUseCase.handle(cmd.withId(userDetails.getUser().getId()));
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping
+    @Operation(summary = "Deletar usuário", description = "Realiza a exclusão lógica do usuário autenticado.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Usuário deletado com sucesso")
+    })
+    public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        softDeleteUserUseCase.handle(new SoftDeleteUserCommand(userDetails.getUser().getId()));
         return ResponseEntity.noContent().build();
     }
 }

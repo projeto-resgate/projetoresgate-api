@@ -5,7 +5,6 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service.SearchNaturalPersonService;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.SearchNaturalPersonQuery;
-import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import jakarta.persistence.criteria.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,6 +25,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -44,9 +45,6 @@ class SearchNaturalPersonServiceTest {
 
     @Mock
     private CriteriaBuilder cb;
-
-    @Mock
-    private Join<NaturalPerson, User> userJoin;
 
     @Mock
     private Path<Object> path;
@@ -85,8 +83,6 @@ class SearchNaturalPersonServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
         SearchNaturalPersonQuery searchQuery = new SearchNaturalPersonQuery("Ana 123", null, null, null, null, pageable);
 
-        doReturn(userJoin).when(root).join("user");
-        doReturn(path).when(userJoin).get(anyString());
         doReturn(path).when(root).get(anyString());
 
         lenient().doReturn(path).when(path).get(anyString());

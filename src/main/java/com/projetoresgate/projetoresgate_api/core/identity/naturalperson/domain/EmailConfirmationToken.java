@@ -1,4 +1,4 @@
-package com.projetoresgate.projetoresgate_api.core.identity.user.domain;
+package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain;
 
 import jakarta.persistence.*;
 
@@ -14,19 +14,19 @@ public class EmailConfirmationToken {
 
     private String tokenHash;
 
-    @OneToOne(targetEntity = User.class, fetch = FetchType.EAGER)
-    @JoinColumn(nullable = false, name = "user_id")
-    private User user;
+    @OneToOne(targetEntity = NaturalPerson.class, fetch = FetchType.EAGER)
+    @JoinColumn(nullable = false, name = "natural_person_id")
+    private NaturalPerson naturalPerson;
 
     private LocalDateTime expiryDate;
 
     public EmailConfirmationToken() {
     }
 
-    public EmailConfirmationToken(String tokenHash, User user, LocalDateTime expiryDate) {
+    public EmailConfirmationToken(String tokenHash, NaturalPerson naturalPerson, LocalDateTime expiryDate) {
         this.id = UUID.randomUUID();
         this.tokenHash = tokenHash;
-        this.user = user;
+        this.naturalPerson = naturalPerson;
         this.expiryDate = expiryDate;
     }
 
@@ -38,8 +38,8 @@ public class EmailConfirmationToken {
         return tokenHash;
     }
 
-    public User getUser() {
-        return user;
+    public NaturalPerson getNaturalPerson() {
+        return naturalPerson;
     }
 
     public LocalDateTime getExpiryDate() {

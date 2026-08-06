@@ -60,11 +60,16 @@ public class RefreshTokenService implements IRefreshTokenService {
     }
 
     @Transactional
-    public void revokeRefreshToken(String plainTextToken) {
+    public Optional<User> revokeRefreshToken(String plainTextToken) {
         String tokenHash = TokenUtils.hashToken(plainTextToken);
         Optional<RefreshToken> refreshTokenOpt = refreshTokenRepository.findByTokenHash(tokenHash);
 
-        refreshTokenOpt.ifPresent(refreshTokenRepository::delete);
+        refreshTokenOpt.ifPresent(token -> {
+            User user = token.getUser();
+            refreshTokenRepository.delete(token);
+        });
+
+        return refreshTokenOpt.map(RefreshToken::getUser);
     }
 
     @Transactional

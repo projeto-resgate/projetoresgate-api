@@ -1,10 +1,10 @@
-package com.projetoresgate.projetoresgate_api.core.identity.user.service;
+package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service;
 
-import com.projetoresgate.projetoresgate_api.core.identity.user.domain.EmailConfirmationToken;
-import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
-import com.projetoresgate.projetoresgate_api.core.identity.user.repository.EmailConfirmationTokenRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.RequestEmailConfirmationUseCase;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.EmailConfirmationToken;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.EmailConfirmationTokenRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.RequestEmailConfirmationUseCase;
 import com.projetoresgate.projetoresgate_api.infrastructure.email.JavaMailEmailService;
 import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
 import org.springframework.stereotype.Service;
@@ -16,14 +16,14 @@ import java.util.Optional;
 @Service
 public class RequestEmailConfirmationService implements RequestEmailConfirmationUseCase {
 
-    private final UserRepository userRepository;
+    private final NaturalPersonRepository naturalPersonRepository;
     private final EmailConfirmationTokenRepository emailConfirmationTokenRepository;
     private final JavaMailEmailService javaMailEmailService;
 
-    public RequestEmailConfirmationService(UserRepository userRepository,
+    public RequestEmailConfirmationService(NaturalPersonRepository naturalPersonRepository,
                                            EmailConfirmationTokenRepository emailConfirmationTokenRepository,
                                            JavaMailEmailService javaMailEmailService) {
-        this.userRepository = userRepository;
+        this.naturalPersonRepository = naturalPersonRepository;
         this.emailConfirmationTokenRepository = emailConfirmationTokenRepository;
         this.javaMailEmailService = javaMailEmailService;
     }
@@ -31,26 +31,26 @@ public class RequestEmailConfirmationService implements RequestEmailConfirmation
     @Override
     @Transactional
     public void handle(String email) {
-        Optional<User> userOptional = userRepository.findByEmail(email);
-        if (userOptional.isEmpty()) {
+        Optional<NaturalPerson> personOptional = naturalPersonRepository.findByEmail(email);
+        if (personOptional.isEmpty()) {
             return;
         }
-        User user = userOptional.get();
+        NaturalPerson person = personOptional.get();
 
-        if (user.isEmailVerified()) {
+        if (person.isEmailVerified()) {
             return;
         }
 
-        emailConfirmationTokenRepository.deleteByUser(user);
+        emailConfirmationTokenRepository.deleteByNaturalPerson(person);
 
         String plainTextToken = TokenUtils.generateSecureToken();
         String tokenHash = TokenUtils.hashToken(plainTextToken);
 
-        EmailConfirmationToken myToken = new EmailConfirmationToken(tokenHash, user, LocalDateTime.now().plusHours(24));
+        EmailConfirmationToken myToken = new EmailConfirmationToken(tokenHash, person, LocalDateTime.now().plusHours(24));
         emailConfirmationTokenRepository.save(myToken);
 
         String htmlContent = getConfirmationEmailHtml(plainTextToken);
-        javaMailEmailService.sendHtml(user.getEmail(), "Confirme seu E-mail - Projeto Resgate", htmlContent);
+        javaMailEmailService.sendHtml(person.getEmail(), "Confirme seu E-mail - Projeto Resgate", htmlContent);
     }
 
     private String getConfirmationEmailHtml(String token) {

@@ -5,7 +5,6 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service.UpdateNaturalPersonService;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.UpdateNaturalPersonCommand;
-import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,23 +30,21 @@ class UpdateNaturalPersonServiceTest {
     @InjectMocks
     private UpdateNaturalPersonService service;
 
-    private User user;
     private NaturalPerson person;
     private UUID personId;
 
     @BeforeEach
     void setUp() {
-        user = User.create("email@test.com", "password", "Old Name", "nick");
-        person = NaturalPerson.create(user, "51086174968", null, null, null, null, null);
+        person = NaturalPerson.create("Old Name", "email@test.com", "nick", "51086174968", null, null, null, null, null);
         personId = person.getId();
     }
 
     @Test
-    @DisplayName("Deve atualizar nome do usuário e todos os campos de pessoa física com sucesso")
+    @DisplayName("Deve atualizar nome, e-mail, nickname e todos os campos de pessoa física com sucesso")
     void handle_ShouldUpdateAllFieldsSuccessfully() {
         LocalDate birthDate = LocalDate.of(1990, 1, 1);
         UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
-                personId, "New Name", "newnick", "1234567", "30274973081", birthDate, "1122223333", "11999998888", Gender.MALE);
+                personId, "New Name", "new@test.com", "newnick", "1234567", "30274973081", birthDate, "1122223333", "11999998888", Gender.MALE);
 
         when(repository.findByIdOrThrow(personId)).thenReturn(person);
         when(repository.existsByCpfAndIdNot(anyString(), eq(personId))).thenReturn(false);
@@ -55,8 +52,9 @@ class UpdateNaturalPersonServiceTest {
 
         service.handle(command);
 
-        assertEquals("New Name", user.getName());
-        assertEquals("newnick", user.getNickname());
+        assertEquals("New Name", person.getName());
+        assertEquals("new@test.com", person.getEmail());
+        assertEquals("newnick", person.getNickname());
         assertEquals("30274973081", person.getCpf());
         assertEquals("1234567", person.getRg());
         assertEquals(birthDate, person.getBirthDate());
@@ -71,7 +69,7 @@ class UpdateNaturalPersonServiceTest {
     void handle_ShouldFailWhenCpfExists() {
         String existingCpfValue = "12345678909";
         UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
-                personId, "Old Name", "nick", null, existingCpfValue, null, null, null, null);
+                personId, "Old Name", "email@test.com", "nick", null, existingCpfValue, null, null, null, null);
 
         when(repository.findByIdOrThrow(personId)).thenReturn(person);
         when(repository.existsByCpfAndIdNot(anyString(), eq(personId))).thenReturn(true);
@@ -86,7 +84,7 @@ class UpdateNaturalPersonServiceTest {
     @DisplayName("Deve permitir atualizar quando o CPF informado é o mesmo já cadastrado para a pessoa")
     void handle_ShouldAllowUpdateWhenCpfIsSame() {
         UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
-                personId, "Old Name", "nick", null, "51086174968", null, null, null, null);
+                personId, "Old Name", "email@test.com", "nick", null, "51086174968", null, null, null, null);
 
         when(repository.findByIdOrThrow(personId)).thenReturn(person);
         when(repository.existsByCpfAndIdNot(anyString(), eq(personId))).thenReturn(false);
@@ -103,7 +101,7 @@ class UpdateNaturalPersonServiceTest {
     @DisplayName("Deve lançar exceção na validação de domínio se o nome for apagado no comando")
     void handle_ShouldThrowExceptionWhenNameIsBlanked() {
         UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
-                personId, "", "nick", null, "51086174968", null, null, null, null);
+                personId, "", "email@test.com", "nick", null, "51086174968", null, null, null, null);
 
         when(repository.findByIdOrThrow(personId)).thenReturn(person);
 
@@ -117,16 +115,14 @@ class UpdateNaturalPersonServiceTest {
     @DisplayName("Deve atualizar campos não obrigatórios (como CPF, RG e Nickname) para null com sucesso")
     void handle_ShouldUpdateNonMandatoryFieldsToNull() {
         UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
-                personId, "Old Name", null, null, null, null, null, null, null);
+                personId, "Old Name", "email@test.com", null, null, null, null, null, null, null);
 
         when(repository.findByIdOrThrow(personId)).thenReturn(person);
-
-        when(repository.existsByCpfAndIdNot(any(), eq(personId))).thenReturn(false);
         when(repository.save(any())).thenReturn(person);
 
         service.handle(command);
 
-        assertNull(user.getNickname());
+        assertNull(person.getNickname());
         assertNull(person.getCpf());
         assertNull(person.getRg());
         verify(repository).save(person);

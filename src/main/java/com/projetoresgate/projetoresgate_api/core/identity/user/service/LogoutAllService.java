@@ -24,6 +24,8 @@ public class LogoutAllService implements LogoutAllUseCase {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         refreshTokenService.revokeAllUserTokens(user);
+        user.invalidateTokens();
+        userRepository.save(user);
     }
 }
 

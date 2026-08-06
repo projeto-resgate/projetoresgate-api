@@ -35,7 +35,8 @@ public class User extends AuditableEntity {
     @Column(name = "role")
     private Set<UserRole> roles = new HashSet<>();
 
-    private boolean isEmailVerified = false;
+    @Column(nullable = false)
+    private long tokenVersion;
 
     protected User() {
     }
@@ -47,7 +48,6 @@ public class User extends AuditableEntity {
         this.name = name;
         this.nickname = nickname;
         this.roles.add(UserRole.USER);
-        this.isEmailVerified = false;
         validate();
     }
 
@@ -63,8 +63,8 @@ public class User extends AuditableEntity {
         validate();
     }
 
-    public void confirmEmail() {
-        this.isEmailVerified = true;
+    public void invalidateTokens() {
+        this.tokenVersion++;
     }
 
     public void validate() {
@@ -120,8 +120,8 @@ public class User extends AuditableEntity {
         return roles;
     }
 
-    public boolean isEmailVerified() {
-        return isEmailVerified;
+    public long getTokenVersion() {
+        return tokenVersion;
     }
 
     public void addRole(UserRole role) {

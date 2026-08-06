@@ -16,7 +16,6 @@ public record AuthenticationResponse(
         String userId,
         String name,
         String email,
-        Set<UserRole> roles,
-        boolean isEmailVerified
+        Set<UserRole> roles
 ) {
 }

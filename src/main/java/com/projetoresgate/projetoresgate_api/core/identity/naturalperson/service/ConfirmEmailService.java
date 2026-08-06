@@ -1,11 +1,11 @@
-package com.projetoresgate.projetoresgate_api.core.identity.user.service;
+package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service;
 
-import com.projetoresgate.projetoresgate_api.core.identity.user.domain.EmailConfirmationToken;
-import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
-import com.projetoresgate.projetoresgate_api.core.identity.user.repository.EmailConfirmationTokenRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.ConfirmEmailUseCase;
-import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.command.ConfirmEmailCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.EmailConfirmationToken;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.EmailConfirmationTokenRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.ConfirmEmailUseCase;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.ConfirmEmailCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
 import org.springframework.stereotype.Service;
@@ -15,12 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class ConfirmEmailService implements ConfirmEmailUseCase {
 
     private final EmailConfirmationTokenRepository emailConfirmationTokenRepository;
-    private final UserRepository userRepository;
+    private final NaturalPersonRepository naturalPersonRepository;
 
     public ConfirmEmailService(EmailConfirmationTokenRepository emailConfirmationTokenRepository,
-                               UserRepository userRepository) {
+                               NaturalPersonRepository naturalPersonRepository) {
         this.emailConfirmationTokenRepository = emailConfirmationTokenRepository;
-        this.userRepository = userRepository;
+        this.naturalPersonRepository = naturalPersonRepository;
     }
 
     @Override
@@ -34,13 +34,13 @@ public class ConfirmEmailService implements ConfirmEmailUseCase {
             throw new InternalException("O token expirou. Solicite um novo.");
         }
 
-        User user = confirmationToken.getUser();
-        if (user.isEmailVerified()) {
+        NaturalPerson person = confirmationToken.getNaturalPerson();
+        if (person.isEmailVerified()) {
             return;
         }
 
-        user.confirmEmail();
-        userRepository.save(user);
+        person.confirmEmail();
+        naturalPersonRepository.save(person);
 
         emailConfirmationTokenRepository.delete(confirmationToken);
     }

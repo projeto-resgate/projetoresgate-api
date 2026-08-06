@@ -49,7 +49,6 @@ class AuthenticateUserServiceTest {
     void setUp() {
         authQuery = new AuthenticateUserQuery("test@example.com", "password123");
         existingUser = User.create("test@example.com", "encodedPassword", "Test User", "tester");
-        existingUser.confirmEmail();
     }
 
     @Test
@@ -68,7 +67,6 @@ class AuthenticateUserServiceTest {
         assertEquals(existingUser.getId().toString(), response.userId());
         assertEquals(existingUser.getName(), response.name());
         assertEquals(existingUser.getRoles(), response.roles());
-        assertTrue(response.isEmailVerified());
 
         verify(userRepository).findByEmail(authQuery.email());
         verify(passwordEncoder).matches(authQuery.password(), existingUser.getPassword());

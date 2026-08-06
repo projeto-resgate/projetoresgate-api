@@ -22,7 +22,6 @@ class UserTest {
         assertEquals("Test User", user.getName());
         assertEquals("tester", user.getNickname());
         assertTrue(user.getRoles().contains(UserRole.USER));
-        assertFalse(user.isEmailVerified());
     }
 
     @Test
@@ -100,14 +99,5 @@ class UserTest {
 
         assertTrue(user.getRoles().contains(UserRole.ADMIN));
         assertTrue(user.getRoles().contains(UserRole.USER));
-    }
-
-    @Test
-    @DisplayName("Deve confirmar e-mail do usuário")
-    void shouldVerifyEmail() {
-        User user = User.create("test@example.com", "password123", "Test User", null);
-        user.confirmEmail();
-
-        assertTrue(user.isEmailVerified());
     }
 }

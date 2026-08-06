@@ -15,6 +15,7 @@ public record UpdateNaturalPersonCommand(
         @JsonIgnore
         UUID id,
         String name,
+        String email,
         String nickname,
         @RG
         String rg,
@@ -31,6 +32,7 @@ public record UpdateNaturalPersonCommand(
         return new UpdateNaturalPersonCommand(
                 id,
                 this.name,
+                this.email,
                 this.nickname,
                 this.rg,
                 this.cpf,

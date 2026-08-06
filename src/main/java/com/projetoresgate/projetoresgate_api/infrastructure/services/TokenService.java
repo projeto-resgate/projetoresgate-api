@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +37,7 @@ public class TokenService implements ITokenService {
                     .withIssuer("projetoresgate_api")
                     .withSubject(user.getId().toString())
                     .withClaim("email", user.getEmail())
+                    .withClaim("tokenVersion", user.getTokenVersion())
                     .withExpiresAt(generateAccessTokenExpirationDate())
                     .sign(algorithm);
         } catch (JWTCreationException exception) {
@@ -55,6 +57,20 @@ public class TokenService implements ITokenService {
                     .build()
                     .verify(token)
                     .getSubject();
+        } catch (JWTVerificationException exception) {
+            throw new InternalException("Token inválido ou expirado.");
+        }
+    }
+
+    public long getTokenVersion(String token) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(secret);
+            DecodedJWT decodedJWT = JWT.require(algorithm)
+                    .withIssuer("projetoresgate_api")
+                    .build()
+                    .verify(token);
+            Long tokenVersion = decodedJWT.getClaim("tokenVersion").asLong();
+            return tokenVersion == null ? -1L : tokenVersion;
         } catch (JWTVerificationException exception) {
             throw new InternalException("Token inválido ou expirado.");
         }

@@ -4,7 +4,6 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.SoftDeleteNaturalPersonUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.SoftDeleteNaturalPersonCommand;
-import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,18 +11,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class SoftDeleteNaturalPersonService implements SoftDeleteNaturalPersonUseCase {
 
     private final NaturalPersonRepository naturalPersonRepository;
-    private final UserRepository userRepository;
 
-    public SoftDeleteNaturalPersonService(NaturalPersonRepository naturalPersonRepository, UserRepository userRepository) {
+    public SoftDeleteNaturalPersonService(NaturalPersonRepository naturalPersonRepository) {
         this.naturalPersonRepository = naturalPersonRepository;
-        this.userRepository = userRepository;
     }
 
     @Override
     @Transactional
     public void handle(SoftDeleteNaturalPersonCommand command) {
         NaturalPerson person = naturalPersonRepository.findByIdOrThrow(command.id());
-        userRepository.delete(person.getUser());
         naturalPersonRepository.delete(person);
     }
 }

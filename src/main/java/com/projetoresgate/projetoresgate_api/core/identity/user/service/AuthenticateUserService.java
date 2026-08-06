@@ -54,8 +54,7 @@ public class AuthenticateUserService implements AuthenticateUserUseCase {
                 user.getId().toString(),
                 user.getName(),
                 user.getEmail(),
-                user.getRoles(),
-                user.isEmailVerified()
+                user.getRoles()
         );
     }
 }

@@ -1,6 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.identity.user.usecase.command;
 
-public record ConfirmEmailCommand(
-        String token
-) {
+import java.util.UUID;
+
+public record SoftDeleteUserCommand(UUID id) {
 }

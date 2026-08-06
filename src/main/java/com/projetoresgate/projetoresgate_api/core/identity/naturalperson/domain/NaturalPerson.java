@@ -1,7 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain;
 
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
-import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.shared.entity.AuditableEntity;
 import jakarta.persistence.*;
@@ -12,7 +11,6 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @Entity
@@ -24,9 +22,11 @@ public class NaturalPerson extends AuditableEntity {
     @Id
     private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id", unique = true, nullable = false, updatable = false)
-    private User user;
+    private String name;
+
+    private String email;
+
+    private String nickname;
 
     private String cpf;
 
@@ -41,28 +41,40 @@ public class NaturalPerson extends AuditableEntity {
 
     private String cellphone;
 
+    private boolean isEmailVerified = false;
+
     protected NaturalPerson() {
     }
 
-    private NaturalPerson(UUID id, User user, String cpf, String rg, LocalDate birthDate, Gender gender, String phone, String cellphone) {
+    private NaturalPerson(UUID id, String name, String email, String nickname, String cpf, String rg, LocalDate birthDate, Gender gender, String phone, String cellphone) {
         this.id = id;
-        this.user = user;
+        this.name = name;
+        this.email = email;
+        this.nickname = nickname;
         this.cpf = cpf;
         this.rg = rg;
         this.birthDate = birthDate;
         this.gender = gender;
         this.phone = phone;
         this.cellphone = cellphone;
+        this.isEmailVerified = false;
         validate();
     }
 
-    public static NaturalPerson create(User user, String cpf, String rg, LocalDate birthDate, Gender gender, String phone, String cellphone) {
-        return new NaturalPerson(UUID.randomUUID(), user, cpf, rg, birthDate, gender, phone, cellphone);
+    public static NaturalPerson create(String name, String email, String nickname, String cpf, String rg, LocalDate birthDate, Gender gender, String phone, String cellphone) {
+        return new NaturalPerson(UUID.randomUUID(), name, email, nickname, cpf, rg, birthDate, gender, phone, cellphone);
+    }
+
+    public void confirmEmail() {
+        this.isEmailVerified = true;
     }
 
     public void validate() {
-        if (isNull(this.user)) {
-            throw new InternalException("O usuário é obrigatório.");
+        if (!StringUtils.hasText(this.name)) {
+            throw new InternalException("O nome não pode ser vazio.");
+        }
+        if (!StringUtils.hasText(this.email)) {
+            throw new InternalException("O e-mail não pode ser vazio.");
         }
         if (StringUtils.hasText(this.cpf) && this.cpf.length() > 11) {
             throw new InternalException("O CPF não pode exceder 11 caracteres.");
@@ -88,12 +100,17 @@ public class NaturalPerson extends AuditableEntity {
     public class Updater {
 
         public Updater name(String name) {
-            NaturalPerson.this.user.update().name(name).apply();
+            NaturalPerson.this.name = name;
+            return this;
+        }
+
+        public Updater email(String email) {
+            NaturalPerson.this.email = email;
             return this;
         }
 
         public Updater nickname(String nickname) {
-            NaturalPerson.this.user.update().nickname(nickname).apply();
+            NaturalPerson.this.nickname = nickname;
             return this;
         }
 
@@ -137,8 +154,16 @@ public class NaturalPerson extends AuditableEntity {
         return id;
     }
 
-    public User getUser() {
-        return user;
+    public String getName() {
+        return name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getNickname() {
+        return nickname;
     }
 
     public String getCpf() {
@@ -163,5 +188,9 @@ public class NaturalPerson extends AuditableEntity {
 
     public String getCellphone() {
         return cellphone;
+    }
+
+    public boolean isEmailVerified() {
+        return isEmailVerified;
     }
 }

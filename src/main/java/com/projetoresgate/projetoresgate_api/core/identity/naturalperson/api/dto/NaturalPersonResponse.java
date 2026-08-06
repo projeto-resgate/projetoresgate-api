@@ -8,7 +8,6 @@ import java.util.UUID;
 
 public record NaturalPersonResponse(
         UUID id,
-        UUID userId,
         String name,
         String email,
         String nickname,
@@ -22,10 +21,9 @@ public record NaturalPersonResponse(
     public static NaturalPersonResponse fromEntity(NaturalPerson entity) {
         return new NaturalPersonResponse(
                 entity.getId(),
-                entity.getUser().getId(),
-                entity.getUser().getName(),
-                entity.getUser().getEmail(),
-                entity.getUser().getNickname(),
+                entity.getName(),
+                entity.getEmail(),
+                entity.getNickname(),
                 entity.getRg(),
                 entity.getCpf(),
                 entity.getBirthDate(),

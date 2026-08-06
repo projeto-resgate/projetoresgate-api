@@ -1,4 +1,4 @@
-package com.projetoresgate.projetoresgate_api.core.identity.user.usecase.command;
+package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

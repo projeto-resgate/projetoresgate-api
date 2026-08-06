@@ -6,10 +6,12 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.api.Nat
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.*;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.ConfirmEmailCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.CreateNaturalPersonCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.RequestEmailConfirmationCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.UpdateNaturalPersonCommand;
-import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
+import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.infrastructure.security.SecurityConfigurations;
 import com.projetoresgate.projetoresgate_api.infrastructure.services.ITokenService;
 import org.junit.jupiter.api.DisplayName;
@@ -29,6 +31,10 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -59,10 +65,13 @@ class NaturalPersonControllerTest {
     private FindNaturalPersonByIdUseCase findByIdUseCase;
 
     @MockitoBean
-    private FindNaturalPersonByUserIdUseCase findByUserIdUseCase;
+    private SearchNaturalPersonUseCase searchUseCase;
 
     @MockitoBean
-    private SearchNaturalPersonUseCase searchUseCase;
+    private RequestEmailConfirmationUseCase requestEmailConfirmationUseCase;
+
+    @MockitoBean
+    private ConfirmEmailUseCase confirmEmailUseCase;
 
     @MockitoBean
     private UserDetailsService userDetailsService;
@@ -99,7 +108,7 @@ class NaturalPersonControllerTest {
     void update_ShouldReturn200() throws Exception {
         UUID id = UUID.randomUUID();
         UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
-                null, "Updated Name", "newnick", null, "51086174968", null, null, null, null);
+                null, "Updated Name", "updated@test.com", "newnick", null, "51086174968", null, null, null, null);
 
         NaturalPerson person = createMockPerson();
         when(updateUseCase.handle(any())).thenReturn(person);
@@ -138,20 +147,6 @@ class NaturalPersonControllerTest {
 
     @Test
     @WithMockCustomUser
-    @DisplayName("GET /natural-person/user/{userId} - Deve retornar 200 OK e a pessoa física")
-    void findByUserId_ShouldReturn200() throws Exception {
-        UUID userId = UUID.randomUUID();
-        NaturalPerson person = createMockPerson();
-
-        when(findByUserIdUseCase.handle(any())).thenReturn(person);
-
-        mockMvc.perform(get("/natural-person/user/{userId}", userId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.cpf").value("51086174968"));
-    }
-
-    @Test
-    @WithMockCustomUser
     @DisplayName("GET /natural-person - Deve retornar 200 OK com página de resultados")
     void search_ShouldReturn200WithPage() throws Exception {
         NaturalPerson person = createMockPerson();
@@ -168,12 +163,46 @@ class NaturalPersonControllerTest {
                 .andExpect(jsonPath("$.totalElements").value(1));
     }
 
-    private NaturalPerson createMockPerson() {
-        User user = User.create("test@test.com", "pass1234", "Test Name", "tester");
+    @Test
+    @WithMockCustomUser
+    @DisplayName("POST /natural-person/request-email-confirmation - Deve retornar 200 OK")
+    void requestEmailConfirmation_ShouldReturn200() throws Exception {
+        RequestEmailConfirmationCommand command = new RequestEmailConfirmationCommand("test@example.com");
+        doNothing().when(requestEmailConfirmationUseCase).handle(anyString());
 
+        mockMvc.perform(post("/natural-person/request-email-confirmation")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(command)))
+                .andExpect(status().isOk());
+
+        verify(requestEmailConfirmationUseCase).handle("test@example.com");
+    }
+
+    @Test
+    @DisplayName("POST /natural-person/confirm-email/{token} - Deve retornar 200 OK em sucesso")
+    void confirmEmail_ShouldReturn200() throws Exception {
+        String token = "valid-token";
+        doNothing().when(confirmEmailUseCase).handle(any(ConfirmEmailCommand.class));
+
+        mockMvc.perform(post("/natural-person/confirm-email/{token}", token))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("POST /natural-person/confirm-email/{token} - Deve retornar 400 Bad Request em falha")
+    void confirmEmail_ShouldReturn400OnFailure() throws Exception {
+        String token = "invalid-token";
+        doThrow(new InternalException("Token inválido")).when(confirmEmailUseCase).handle(any(ConfirmEmailCommand.class));
+
+        mockMvc.perform(post("/natural-person/confirm-email/{token}", token))
+                .andExpect(status().isBadRequest());
+    }
+
+    private NaturalPerson createMockPerson() {
         return NaturalPerson.create(
-                user, "51086174968", "1234567", LocalDate.of(1990, 1, 1),
-                Gender.MALE, "11999999999", "11888888888"
+                "Test Name", "test@test.com", "tester", "51086174968", "1234567",
+                LocalDate.of(1990, 1, 1), Gender.MALE, "11999999999", "11888888888"
         );
     }
 }

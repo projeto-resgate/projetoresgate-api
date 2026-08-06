@@ -4,7 +4,6 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service.FindNaturalPersonByIdService;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.FindNaturalPersonByIdQuery;
-import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,8 +32,7 @@ class FindNaturalPersonByIdServiceTest {
     @DisplayName("Deve encontrar pessoa física por ID com sucesso")
     void handle_ShouldFindByIdSuccessfully() {
         UUID id = UUID.randomUUID();
-        User user = User.create("email@test.com", "password123", "Name", "nick");
-        NaturalPerson person = NaturalPerson.create(user, "51086174968", null, null, null, null, null);
+        NaturalPerson person = NaturalPerson.create("Name", "email@test.com", "nick", "51086174968", null, null, null, null, null);
         FindNaturalPersonByIdQuery query = new FindNaturalPersonByIdQuery(id);
 
         when(repository.findByIdOrThrow(id)).thenReturn(person);

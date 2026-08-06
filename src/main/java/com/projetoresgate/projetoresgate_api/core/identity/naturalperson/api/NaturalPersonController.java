@@ -4,11 +4,12 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.api.dto
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.*;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.ConfirmEmailCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.CreateNaturalPersonCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.RequestEmailConfirmationCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.SoftDeleteNaturalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.UpdateNaturalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.FindNaturalPersonByIdQuery;
-import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.FindNaturalPersonByUserIdQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.SearchNaturalPersonQuery;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -36,21 +37,24 @@ public class NaturalPersonController {
     private final UpdateNaturalPersonUseCase updateUseCase;
     private final SoftDeleteNaturalPersonUseCase softDeleteUseCase;
     private final FindNaturalPersonByIdUseCase findByIdUseCase;
-    private final FindNaturalPersonByUserIdUseCase findByUserIdUseCase;
     private final SearchNaturalPersonUseCase searchUseCase;
+    private final RequestEmailConfirmationUseCase requestEmailConfirmationUseCase;
+    private final ConfirmEmailUseCase confirmEmailUseCase;
 
     public NaturalPersonController(CreateNaturalPersonUseCase createUseCase,
                                    UpdateNaturalPersonUseCase updateUseCase,
                                    SoftDeleteNaturalPersonUseCase softDeleteUseCase,
                                    FindNaturalPersonByIdUseCase findByIdUseCase,
-                                   FindNaturalPersonByUserIdUseCase findByUserIdUseCase,
-                                   SearchNaturalPersonUseCase searchUseCase) {
+                                   SearchNaturalPersonUseCase searchUseCase,
+                                   RequestEmailConfirmationUseCase requestEmailConfirmationUseCase,
+                                   ConfirmEmailUseCase confirmEmailUseCase) {
         this.createUseCase = createUseCase;
         this.updateUseCase = updateUseCase;
         this.softDeleteUseCase = softDeleteUseCase;
         this.findByIdUseCase = findByIdUseCase;
-        this.findByUserIdUseCase = findByUserIdUseCase;
         this.searchUseCase = searchUseCase;
+        this.requestEmailConfirmationUseCase = requestEmailConfirmationUseCase;
+        this.confirmEmailUseCase = confirmEmailUseCase;
     }
 
     @PostMapping
@@ -124,16 +128,24 @@ public class NaturalPersonController {
         return ResponseEntity.ok(NaturalPersonResponse.fromEntity(person));
     }
 
-    @GetMapping("/user/{userId}")
-    @Operation(summary = "Buscar por ID de Usuário", description = "Retorna os dados de uma pessoa física vinculada a um usuário específico.")
+    @PostMapping("/request-email-confirmation")
+    @Operation(summary = "Solicitar confirmação de e-mail", description = "Envia o e-mail de confirmação para a pessoa física.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Pessoa física encontrada",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = NaturalPersonResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Pessoa física não encontrada para este usuário", content = @Content)
+            @ApiResponse(responseCode = "200", description = "E-mail de confirmação enviado")
     })
-    public ResponseEntity<NaturalPersonResponse> findByUserId(@PathVariable UUID userId) {
-        FindNaturalPersonByUserIdQuery query = new FindNaturalPersonByUserIdQuery(userId);
-        NaturalPerson person = findByUserIdUseCase.handle(query);
-        return ResponseEntity.ok(NaturalPersonResponse.fromEntity(person));
+    public ResponseEntity<Void> requestEmailConfirmation(@RequestBody @Valid RequestEmailConfirmationCommand command) {
+        requestEmailConfirmationUseCase.handle(command.email());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/confirm-email/{token}")
+    @Operation(summary = "Confirmar e-mail", description = "Confirma o e-mail da pessoa física usando o token recebido por link.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "E-mail confirmado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Token inválido ou expirado")
+    })
+    public ResponseEntity<Void> confirmEmail(@PathVariable String token) {
+        confirmEmailUseCase.handle(new ConfirmEmailCommand(token));
+        return ResponseEntity.ok().build();
     }
 }

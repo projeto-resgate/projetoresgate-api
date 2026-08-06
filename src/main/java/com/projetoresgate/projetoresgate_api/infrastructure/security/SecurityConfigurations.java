@@ -42,13 +42,14 @@ public class SecurityConfigurations {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.POST, "/user").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/user/request-email-confirmation").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user/forgot-password").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user/reset-password").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/user/confirm-email/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/natural-person").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/natural-person/request-email-confirmation").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/natural-person/confirm-email/**").permitAll()
 
                         .requestMatchers(
                                 "/swagger-ui.html",

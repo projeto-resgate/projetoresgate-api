@@ -1,10 +1,10 @@
-package com.projetoresgate.projetoresgate_api.core.user.service;
+package com.projetoresgate.projetoresgate_api.core.naturalperson.service;
 
-import com.projetoresgate.projetoresgate_api.core.identity.user.domain.EmailConfirmationToken;
-import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
-import com.projetoresgate.projetoresgate_api.core.identity.user.repository.EmailConfirmationTokenRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.user.service.RequestEmailConfirmationService;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.EmailConfirmationToken;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.EmailConfirmationTokenRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service.RequestEmailConfirmationService;
 import com.projetoresgate.projetoresgate_api.infrastructure.email.JavaMailEmailService;
 import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +27,7 @@ import static org.mockito.Mockito.*;
 class RequestEmailConfirmationServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private NaturalPersonRepository naturalPersonRepository;
 
     @Mock
     private EmailConfirmationTokenRepository emailConfirmationTokenRepository;
@@ -38,32 +38,32 @@ class RequestEmailConfirmationServiceTest {
     @InjectMocks
     private RequestEmailConfirmationService requestEmailConfirmationService;
 
-    private User existingUser;
-    private String userEmail;
+    private NaturalPerson existingPerson;
+    private String personEmail;
 
     @BeforeEach
     void setUp() {
-        userEmail = "test@example.com";
-        existingUser = User.create(userEmail, "password", "Test User", "tester");
+        personEmail = "test@example.com";
+        existingPerson = NaturalPerson.create("Test Person", personEmail, "tester", "51086174968", null, null, null, null, null);
     }
 
     @Test
-    @DisplayName("Não deve fazer nada se o e-mail do usuário não existir")
-    void handle_shouldDoNothing_whenUserEmailDoesNotExist() {
-        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.empty());
+    @DisplayName("Não deve fazer nada se o e-mail da pessoa física não existir")
+    void handle_shouldDoNothing_whenEmailDoesNotExist() {
+        when(naturalPersonRepository.findByEmail(personEmail)).thenReturn(Optional.empty());
 
-        requestEmailConfirmationService.handle(userEmail);
+        requestEmailConfirmationService.handle(personEmail);
 
         verifyNoInteractions(emailConfirmationTokenRepository, javaMailEmailService);
     }
 
     @Test
-    @DisplayName("Não deve fazer nada se o e-mail do usuário já estiver verificado")
-    void handle_shouldDoNothing_whenUserEmailIsAlreadyVerified() {
-        existingUser.confirmEmail();
-        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(existingUser));
+    @DisplayName("Não deve fazer nada se o e-mail da pessoa física já estiver verificado")
+    void handle_shouldDoNothing_whenEmailIsAlreadyVerified() {
+        existingPerson.confirmEmail();
+        when(naturalPersonRepository.findByEmail(personEmail)).thenReturn(Optional.of(existingPerson));
 
-        requestEmailConfirmationService.handle(userEmail);
+        requestEmailConfirmationService.handle(personEmail);
 
         verifyNoInteractions(emailConfirmationTokenRepository, javaMailEmailService);
     }
@@ -78,21 +78,22 @@ class RequestEmailConfirmationServiceTest {
             mockedTokenUtils.when(TokenUtils::generateSecureToken).thenReturn(plainTextToken);
             mockedTokenUtils.when(() -> TokenUtils.hashToken(plainTextToken)).thenReturn(expectedTokenHash);
 
-            when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(existingUser));
+            when(naturalPersonRepository.findByEmail(personEmail)).thenReturn(Optional.of(existingPerson));
 
             ArgumentCaptor<EmailConfirmationToken> tokenCaptor = ArgumentCaptor.forClass(EmailConfirmationToken.class);
             ArgumentCaptor<String> htmlCaptor = ArgumentCaptor.forClass(String.class);
 
-            requestEmailConfirmationService.handle(userEmail);
+            requestEmailConfirmationService.handle(personEmail);
 
-            verify(emailConfirmationTokenRepository).deleteByUser(existingUser);
+            verify(emailConfirmationTokenRepository).deleteByNaturalPerson(existingPerson);
             verify(emailConfirmationTokenRepository).save(tokenCaptor.capture());
-            verify(javaMailEmailService).sendHtml(eq(userEmail), anyString(), htmlCaptor.capture());
+            verify(javaMailEmailService).sendHtml(eq(personEmail), anyString(), htmlCaptor.capture());
 
             EmailConfirmationToken savedToken = tokenCaptor.getValue();
             String emailHtml = htmlCaptor.getValue();
 
             assertEquals(expectedTokenHash, savedToken.getTokenHash());
+            assertEquals(existingPerson, savedToken.getNaturalPerson());
             assertTrue(emailHtml.contains("/confirm-email/" + plainTextToken));
         }
     }
