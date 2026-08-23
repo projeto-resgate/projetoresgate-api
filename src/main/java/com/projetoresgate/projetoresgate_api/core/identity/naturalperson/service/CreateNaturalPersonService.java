@@ -41,7 +41,8 @@ public class CreateNaturalPersonService implements CreateNaturalPersonUseCase {
                 command.birthDate(),
                 command.gender(),
                 command.phone(),
-                command.cellphone()
+                command.cellphone(),
+                command.address()
         );
 
         NaturalPerson saved = repository.save(person);
