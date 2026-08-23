@@ -10,9 +10,6 @@ import org.springframework.util.StringUtils;
 
 import java.io.Serializable;
 
-/**
- * Objeto de valor que representa o representante legal de uma pessoa jurídica.
- */
 @Embeddable
 public class Representative implements Serializable {
 
