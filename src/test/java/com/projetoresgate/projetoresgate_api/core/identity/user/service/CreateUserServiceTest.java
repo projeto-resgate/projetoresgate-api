@@ -1,8 +1,8 @@
-package com.projetoresgate.projetoresgate_api.core.user.service;
+package com.projetoresgate.projetoresgate_api.core.identity.user.service;
 
 import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
+import com.projetoresgate.projetoresgate_api.core.identity.user.domain.enums.UserRole;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.user.service.CreateUserService;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.command.CreateUserCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import org.junit.jupiter.api.DisplayName;
@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,8 +47,11 @@ class CreateUserServiceTest {
         assertNotNull(created);
         assertNotNull(created.getId());
         assertEquals("john@test.com", created.getEmail());
+        assertEquals("encoded-password", created.getPassword());
         assertEquals("John Doe", created.getName());
         assertEquals("johny", created.getNickname());
+        assertEquals(Set.of(UserRole.USER), created.getRoles());
+        assertEquals(0L, created.getTokenVersion());
 
         verify(repository).save(any(User.class));
     }

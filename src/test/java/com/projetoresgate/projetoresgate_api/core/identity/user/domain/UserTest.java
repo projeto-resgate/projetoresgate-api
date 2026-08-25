@@ -1,6 +1,5 @@
-package com.projetoresgate.projetoresgate_api.core.user.domain;
+package com.projetoresgate.projetoresgate_api.core.identity.user.domain;
 
-import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.identity.user.domain.enums.UserRole;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import org.junit.jupiter.api.DisplayName;

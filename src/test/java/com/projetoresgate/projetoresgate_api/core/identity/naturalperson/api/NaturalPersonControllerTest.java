@@ -1,8 +1,7 @@
-package com.projetoresgate.projetoresgate_api.core.naturalperson.api;
+package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projetoresgate.projetoresgate_api.config.security.WithMockCustomUser;
-import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.api.NaturalPersonController;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.*;
@@ -32,10 +31,7 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;

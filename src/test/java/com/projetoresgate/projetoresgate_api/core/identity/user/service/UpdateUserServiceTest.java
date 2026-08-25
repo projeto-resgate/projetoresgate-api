@@ -1,8 +1,8 @@
-package com.projetoresgate.projetoresgate_api.core.user.service;
+package com.projetoresgate.projetoresgate_api.core.identity.user.service;
 
 import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
+import com.projetoresgate.projetoresgate_api.core.identity.user.domain.enums.UserRole;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.user.service.UpdateUserService;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.command.UpdateUserCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -54,6 +55,10 @@ class UpdateUserServiceTest {
 
         assertEquals("New Name", user.getName());
         assertEquals("newnick", user.getNickname());
+        assertEquals("email@test.com", user.getEmail());
+        assertEquals("encoded-old-password", user.getPassword());
+        assertEquals(Set.of(UserRole.USER), user.getRoles());
+        assertEquals(0L, user.getTokenVersion());
         verify(repository).save(user);
     }
 

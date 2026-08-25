@@ -1,8 +1,7 @@
-package com.projetoresgate.projetoresgate_api.core.naturalperson.service;
+package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service;
 
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service.SoftDeleteNaturalPersonService;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.SoftDeleteNaturalPersonCommand;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

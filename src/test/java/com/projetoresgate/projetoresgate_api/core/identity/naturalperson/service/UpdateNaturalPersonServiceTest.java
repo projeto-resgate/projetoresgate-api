@@ -1,9 +1,8 @@
-package com.projetoresgate.projetoresgate_api.core.naturalperson.service;
+package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service;
 
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service.UpdateNaturalPersonService;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.UpdateNaturalPersonCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import org.junit.jupiter.api.BeforeEach;

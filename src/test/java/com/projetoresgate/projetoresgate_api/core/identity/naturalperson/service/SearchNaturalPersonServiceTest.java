@@ -1,9 +1,8 @@
-package com.projetoresgate.projetoresgate_api.core.naturalperson.service;
+package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service;
 
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service.SearchNaturalPersonService;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.SearchNaturalPersonQuery;
 import jakarta.persistence.criteria.*;
 import org.junit.jupiter.api.DisplayName;
@@ -20,14 +19,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.contains;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -136,5 +133,42 @@ class SearchNaturalPersonServiceTest {
         verify(cb).like(any(), eq("%" + rgValue + "%"));
         verify(cb).like(any(), eq("%" + cellphone + "%"));
         verify(cb).like(any(), eq("%male%"));
+    }
+
+    @Test
+    @DisplayName("Deve retornar pessoas físicas com todos os campos preenchidos")
+    void handle_ShouldReturnPersonsWithAllFields() {
+        Pageable pageable = PageRequest.of(0, 10);
+        SearchNaturalPersonQuery searchQuery = new SearchNaturalPersonQuery(null, null, null, null, null, pageable);
+
+        LocalDateTime dateCreated = LocalDateTime.of(2025, 3, 10, 8, 45, 0);
+
+        NaturalPerson person = NaturalPerson.create(
+                "Maria Santos", "maria@test.com", "mariinha",
+                "22948025001", "7654321",
+                LocalDate.of(1985, 8, 12), Gender.FEMALE,
+                "1155556666", "11977777777"
+        );
+        person.setDateCreated(dateCreated);
+
+        Page<NaturalPerson> expectedPage = new PageImpl<>(List.of(person));
+        when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(expectedPage);
+
+        Page<NaturalPerson> result = service.handle(searchQuery);
+
+        assertEquals(1, result.getContent().size());
+
+        NaturalPerson found = result.getContent().getFirst();
+        assertEquals("Maria Santos", found.getName());
+        assertEquals("maria@test.com", found.getEmail());
+        assertEquals("mariinha", found.getNickname());
+        assertEquals("22948025001", found.getCpf());
+        assertEquals("7654321", found.getRg());
+        assertEquals(LocalDate.of(1985, 8, 12), found.getBirthDate());
+        assertEquals(Gender.FEMALE, found.getGender());
+        assertEquals("1155556666", found.getPhone());
+        assertEquals("11977777777", found.getCellphone());
+        assertEquals(dateCreated, found.getDateCreated());
+        assertFalse(found.isEmailVerified());
     }
 }

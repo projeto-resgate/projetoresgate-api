@@ -1,8 +1,7 @@
-package com.projetoresgate.projetoresgate_api.core.naturalperson.service;
+package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service;
 
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service.CreateNaturalPersonService;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.RequestEmailConfirmationUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.CreateNaturalPersonCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
