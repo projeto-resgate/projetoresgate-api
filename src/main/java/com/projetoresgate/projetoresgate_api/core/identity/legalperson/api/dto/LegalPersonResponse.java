@@ -4,7 +4,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Le
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Representative;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
-import com.projetoresgate.projetoresgate_api.shared.domain.Address;
+import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 
 import java.util.UUID;
 

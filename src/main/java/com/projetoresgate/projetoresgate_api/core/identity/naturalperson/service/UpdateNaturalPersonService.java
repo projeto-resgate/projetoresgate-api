@@ -40,7 +40,6 @@ public class UpdateNaturalPersonService implements UpdateNaturalPersonUseCase {
                         .gender(command.gender())
                         .phone(command.phone())
                         .cellphone(command.cellphone())
-                        .address(command.address())
                         .apply()
         );
     }

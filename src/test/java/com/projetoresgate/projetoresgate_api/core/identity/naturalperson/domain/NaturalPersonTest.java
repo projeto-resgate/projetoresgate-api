@@ -2,7 +2,6 @@ package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain
 
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
-import com.projetoresgate.projetoresgate_api.shared.domain.Address;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -133,42 +132,5 @@ class NaturalPersonTest {
         person.confirmEmail();
 
         assertTrue(person.isEmailVerified());
-    }
-
-    @Test
-    @DisplayName("Deve criar uma pessoa física com endereço com sucesso")
-    void create_ShouldSucceedWithAddress() {
-        Address address = Address.create("01310-100", "1000", "Apto 101", "Bela Vista", "São Paulo", "SP");
-
-        NaturalPerson person = NaturalPerson.create("Test User", "test@test.com", "tester", "51086174968", null, null, Gender.MALE, null, null, address);
-
-        assertNotNull(person);
-        assertNotNull(person.getAddress());
-        assertEquals("01310-100", person.getAddress().getZipCode());
-        assertEquals("São Paulo", person.getAddress().getCity());
-    }
-
-    @Test
-    @DisplayName("Deve criar uma pessoa física sem endereço com sucesso")
-    void create_ShouldSucceedWithoutAddress() {
-        NaturalPerson person = NaturalPerson.create("Test User", "test@test.com", "tester", "51086174968", null, null, Gender.MALE, null, null, null);
-
-        assertNotNull(person);
-        assertNull(person.getAddress());
-    }
-
-    @Test
-    @DisplayName("Deve atualizar o endereço usando o Inner Updater")
-    void updater_ShouldUpdateAddress() {
-        NaturalPerson person = NaturalPerson.create("Test User", "test@test.com", "tester", "51086174968", null, null, null, null, null);
-
-        Address newAddress = Address.create("20040-020", "200", null, "Centro", "Rio de Janeiro", "RJ");
-
-        person.update()
-                .address(newAddress)
-                .apply();
-
-        assertNotNull(person.getAddress());
-        assertEquals("Rio de Janeiro", person.getAddress().getCity());
     }
 }
