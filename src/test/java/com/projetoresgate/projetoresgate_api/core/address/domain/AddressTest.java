@@ -1,12 +1,13 @@
-package com.projetoresgate.projetoresgate_api.shared.domain;
+package com.projetoresgate.projetoresgate_api.core.address.domain;
 
+import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DisplayName("Address - Value Object Test")
+@DisplayName("Address - Entity Test")
 class AddressTest {
 
     @Test
@@ -15,6 +16,7 @@ class AddressTest {
         Address address = Address.create("01310-100", "1000", "Apto 101", "Bela Vista", "São Paulo", "SP");
 
         assertNotNull(address);
+        assertNotNull(address.getId());
         assertEquals("01310-100", address.getZipCode());
         assertEquals("1000", address.getNumber());
         assertEquals("Apto 101", address.getComplement());

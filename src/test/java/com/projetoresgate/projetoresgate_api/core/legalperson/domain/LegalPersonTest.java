@@ -5,7 +5,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Re
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
-import com.projetoresgate.projetoresgate_api.shared.domain.Address;
+import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +25,7 @@ class LegalPersonTest {
 
         LegalPerson person = LegalPerson.create(
                 cnpj, "Razão Social LTDA", "Nome Fantasia", "Display Name", "6201-5/00",
-                RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, buildAddress());
+                RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, buildAddress(), null);
 
         assertNotNull(person);
         assertEquals(cnpj, person.getCnpj());
@@ -59,7 +59,7 @@ class LegalPersonTest {
     void create_ShouldFailWithoutCnpj() {
         InternalException exception = assertThrows(InternalException.class, () ->
                 LegalPerson.create("", "Razão Social LTDA", null, null, null,
-                        RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, buildAddress())
+                        RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, buildAddress(), null)
         );
         assertEquals("O CNPJ não pode ser vazio.", exception.getMessage());
     }
@@ -69,7 +69,7 @@ class LegalPersonTest {
     void create_ShouldFailWithoutCorporateName() {
         InternalException exception = assertThrows(InternalException.class, () ->
                 LegalPerson.create("12345678000195", "", null, null, null,
-                        RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, buildAddress())
+                        RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, buildAddress(), null)
         );
         assertEquals("A razão social não pode ser vazia.", exception.getMessage());
     }
@@ -79,7 +79,7 @@ class LegalPersonTest {
     void validate_ShouldFailIfCnpjTooLong() {
         InternalException exception = assertThrows(InternalException.class, () ->
                 LegalPerson.create("1234567890123456", "Razão Social LTDA", null, null, null,
-                        RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, buildAddress())
+                        RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, buildAddress(), null)
         );
         assertEquals("O CNPJ não pode exceder 14 caracteres.", exception.getMessage());
     }
@@ -89,7 +89,7 @@ class LegalPersonTest {
     void create_ShouldFailWithoutRegistrationStatus() {
         InternalException exception = assertThrows(InternalException.class, () ->
                 LegalPerson.create("12345678000195", "Razão Social LTDA", null, null, null,
-                        null, CompanyStatus.ACTIVE, buildAddress())
+                        null, CompanyStatus.ACTIVE, buildAddress(), null)
         );
         assertEquals("O status de registro é obrigatório.", exception.getMessage());
     }
@@ -99,7 +99,7 @@ class LegalPersonTest {
     void create_ShouldFailWithoutCompanyStatus() {
         InternalException exception = assertThrows(InternalException.class, () ->
                 LegalPerson.create("12345678000195", "Razão Social LTDA", null, null, null,
-                        RegistrationStatus.ACTIVE, null, buildAddress())
+                        RegistrationStatus.ACTIVE, null, buildAddress(), null)
         );
         assertEquals("O status da empresa é obrigatório.", exception.getMessage());
     }
@@ -109,7 +109,7 @@ class LegalPersonTest {
     void create_ShouldFailWithoutAddress() {
         InternalException exception = assertThrows(InternalException.class, () ->
                 LegalPerson.create("12345678000195", "Razão Social LTDA", null, null, null,
-                        RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, null)
+                        RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, null, null)
         );
         assertEquals("O endereço é obrigatório.", exception.getMessage());
     }
@@ -128,7 +128,7 @@ class LegalPersonTest {
     void updater_ShouldUpdateFields() {
         LegalPerson person = LegalPerson.create(
                 "12345678000195", "Razão Social LTDA", null, null, null,
-                RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, buildAddress());
+                RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, buildAddress(), null);
 
         person.update()
                 .cnpj("98765432000198")

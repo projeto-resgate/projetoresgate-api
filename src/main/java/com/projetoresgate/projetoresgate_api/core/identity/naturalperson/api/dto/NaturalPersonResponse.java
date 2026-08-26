@@ -2,9 +2,9 @@ package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.api.dt
 
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
-import com.projetoresgate.projetoresgate_api.shared.domain.Address;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record NaturalPersonResponse(
@@ -18,7 +18,7 @@ public record NaturalPersonResponse(
         String phone,
         String cellphone,
         Gender gender,
-        Address address
+        LocalDateTime dateCreated
 ) {
     public static NaturalPersonResponse fromEntity(NaturalPerson entity) {
         return new NaturalPersonResponse(
@@ -32,7 +32,7 @@ public record NaturalPersonResponse(
                 entity.getPhone(),
                 entity.getCellphone(),
                 entity.getGender(),
-                entity.getAddress()
+                entity.getDateCreated()
         );
     }
 }

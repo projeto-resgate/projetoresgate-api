@@ -2,7 +2,6 @@ package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain
 
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
-import com.projetoresgate.projetoresgate_api.shared.domain.Address;
 import com.projetoresgate.projetoresgate_api.shared.entity.AuditableEntity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.SQLDelete;
@@ -44,13 +43,10 @@ public class NaturalPerson extends AuditableEntity {
 
     private boolean isEmailVerified = false;
 
-    @Embedded
-    private Address address;
-
     protected NaturalPerson() {
     }
 
-    private NaturalPerson(UUID id, String name, String email, String nickname, String cpf, String rg, LocalDate birthDate, Gender gender, String phone, String cellphone, Address address) {
+    private NaturalPerson(UUID id, String name, String email, String nickname, String cpf, String rg, LocalDate birthDate, Gender gender, String phone, String cellphone) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -61,17 +57,12 @@ public class NaturalPerson extends AuditableEntity {
         this.gender = gender;
         this.phone = phone;
         this.cellphone = cellphone;
-        this.address = address;
         this.isEmailVerified = false;
         validate();
     }
 
     public static NaturalPerson create(String name, String email, String nickname, String cpf, String rg, LocalDate birthDate, Gender gender, String phone, String cellphone) {
-        return new NaturalPerson(UUID.randomUUID(), name, email, nickname, cpf, rg, birthDate, gender, phone, cellphone, null);
-    }
-
-    public static NaturalPerson create(String name, String email, String nickname, String cpf, String rg, LocalDate birthDate, Gender gender, String phone, String cellphone, Address address) {
-        return new NaturalPerson(UUID.randomUUID(), name, email, nickname, cpf, rg, birthDate, gender, phone, cellphone, address);
+        return new NaturalPerson(UUID.randomUUID(), name, email, nickname, cpf, rg, birthDate, gender, phone, cellphone);
     }
 
     public void confirmEmail() {
@@ -99,9 +90,6 @@ public class NaturalPerson extends AuditableEntity {
         }
         if (StringUtils.hasText(this.cellphone) && this.cellphone.length() > 20) {
             throw new InternalException("O celular não pode exceder 20 caracteres.");
-        }
-        if (nonNull(this.address)) {
-            this.address.validate();
         }
     }
 
@@ -156,11 +144,6 @@ public class NaturalPerson extends AuditableEntity {
             return this;
         }
 
-        public Updater address(Address address) {
-            NaturalPerson.this.address = address;
-            return this;
-        }
-
         public NaturalPerson apply() {
             NaturalPerson.this.validate();
             return NaturalPerson.this;
@@ -209,9 +192,5 @@ public class NaturalPerson extends AuditableEntity {
 
     public boolean isEmailVerified() {
         return isEmailVerified;
-    }
-
-    public Address getAddress() {
-        return address;
     }
 }
