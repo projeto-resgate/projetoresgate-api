@@ -1,10 +1,9 @@
-package com.projetoresgate.projetoresgate_api.core.user.service;
+package com.projetoresgate.projetoresgate_api.core.identity.user.service;
 
 import com.projetoresgate.projetoresgate_api.core.identity.user.domain.PasswordResetToken;
 import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.PasswordResetTokenRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.user.service.ResetPasswordService;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
 import org.junit.jupiter.api.BeforeEach;

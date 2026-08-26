@@ -1,9 +1,8 @@
-package com.projetoresgate.projetoresgate_api.core.user.service;
+package com.projetoresgate.projetoresgate_api.core.identity.user.service;
 
 import com.projetoresgate.projetoresgate_api.core.identity.user.api.dto.AuthenticationResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.user.service.AuthenticateUserService;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.query.AuthenticateUserQuery;
 import com.projetoresgate.projetoresgate_api.infrastructure.services.IRefreshTokenService;
 import com.projetoresgate.projetoresgate_api.infrastructure.services.ITokenService;

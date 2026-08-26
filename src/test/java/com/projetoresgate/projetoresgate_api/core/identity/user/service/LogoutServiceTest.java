@@ -1,8 +1,7 @@
-package com.projetoresgate.projetoresgate_api.core.user.service;
+package com.projetoresgate.projetoresgate_api.core.identity.user.service;
 
 import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.user.service.LogoutService;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.command.LogoutCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.services.IRefreshTokenService;
 import org.junit.jupiter.api.DisplayName;
@@ -16,9 +15,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("LogoutService - Test")

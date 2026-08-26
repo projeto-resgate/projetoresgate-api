@@ -1,6 +1,5 @@
-package com.projetoresgate.projetoresgate_api.core.naturalperson.domain;
+package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain;
 
-import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import org.junit.jupiter.api.DisplayName;

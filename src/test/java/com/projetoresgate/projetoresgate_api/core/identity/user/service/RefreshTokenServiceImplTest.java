@@ -1,8 +1,7 @@
-package com.projetoresgate.projetoresgate_api.core.user.service;
+package com.projetoresgate.projetoresgate_api.core.identity.user.service;
 
 import com.projetoresgate.projetoresgate_api.core.identity.user.api.dto.RefreshTokenResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
-import com.projetoresgate.projetoresgate_api.core.identity.user.service.RefreshTokenServiceImpl;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.query.RefreshTokenQuery;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.infrastructure.services.IRefreshTokenService;

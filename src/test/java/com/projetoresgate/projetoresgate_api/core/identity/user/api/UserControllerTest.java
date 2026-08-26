@@ -1,8 +1,7 @@
-package com.projetoresgate.projetoresgate_api.core.user.api;
+package com.projetoresgate.projetoresgate_api.core.identity.user.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projetoresgate.projetoresgate_api.config.security.WithMockCustomUser;
-import com.projetoresgate.projetoresgate_api.core.identity.user.api.UserController;
 import com.projetoresgate.projetoresgate_api.core.identity.user.api.dto.AuthenticationResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.user.api.dto.RefreshTokenResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
@@ -38,10 +37,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = UserController.class)
