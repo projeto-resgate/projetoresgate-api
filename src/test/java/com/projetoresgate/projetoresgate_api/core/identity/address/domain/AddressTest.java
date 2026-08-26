@@ -1,6 +1,5 @@
-package com.projetoresgate.projetoresgate_api.core.address.domain;
+package com.projetoresgate.projetoresgate_api.core.identity.address.domain;
 
-import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

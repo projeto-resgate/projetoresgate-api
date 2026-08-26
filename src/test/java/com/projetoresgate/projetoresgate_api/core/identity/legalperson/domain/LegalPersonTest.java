@@ -1,11 +1,9 @@
-package com.projetoresgate.projetoresgate_api.core.legalperson.domain;
+package com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain;
 
-import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
-import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Representative;
+import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
-import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
