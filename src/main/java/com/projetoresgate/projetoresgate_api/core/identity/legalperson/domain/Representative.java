@@ -1,11 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain;
 
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
-import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import org.springframework.util.StringUtils;
 
 import java.io.Serializable;
@@ -13,22 +9,12 @@ import java.io.Serializable;
 @Embeddable
 public class Representative implements Serializable {
 
-    @NotBlank(message = "O nome do representante é obrigatório")
-    @Size(max = 255, message = "O nome do representante não pode exceder 255 caracteres")
-    @Column(name = "representative_name", length = 255)
     private String name;
 
-    @Size(max = 20, message = "O celular do representante não pode exceder 20 caracteres")
-    @Column(name = "representative_cellphone", length = 20)
     private String cellphone;
 
-    @Size(max = 20, message = "O telefone do representante não pode exceder 20 caracteres")
-    @Column(name = "representative_phone", length = 20)
     private String phone;
 
-    @Email(message = "E-mail do representante inválido")
-    @Size(max = 255, message = "O e-mail do representante não pode exceder 255 caracteres")
-    @Column(name = "representative_email", length = 255)
     private String email;
 
     protected Representative() {

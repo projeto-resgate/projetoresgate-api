@@ -1,9 +1,9 @@
 package com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain;
 
+import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
-import com.projetoresgate.projetoresgate_api.shared.domain.Address;
 import com.projetoresgate.projetoresgate_api.shared.entity.AuditableEntity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.SQLDelete;
@@ -39,10 +39,17 @@ public class LegalPerson extends AuditableEntity {
     @Enumerated(EnumType.STRING)
     private CompanyStatus companyStatus;
 
-    @Embedded
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "address_id")
     private Address address;
 
     @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "name", column = @Column(name = "representative_name")),
+            @AttributeOverride(name = "cellphone", column = @Column(name = "representative_cellphone")),
+            @AttributeOverride(name = "phone", column = @Column(name = "representative_phone")),
+            @AttributeOverride(name = "email", column = @Column(name = "representative_email"))
+    })
     private Representative representative;
 
     protected LegalPerson() {
@@ -62,13 +69,6 @@ public class LegalPerson extends AuditableEntity {
         this.address = address;
         this.representative = representative;
         validate();
-    }
-
-    public static LegalPerson create(String cnpj, String corporateName, String tradeName, String displayName,
-                                     String mainCnaeCode, RegistrationStatus registrationStatus,
-                                     CompanyStatus companyStatus, Address address) {
-        return new LegalPerson(UUID.randomUUID(), cnpj, corporateName, tradeName, displayName,
-                mainCnaeCode, registrationStatus, companyStatus, address, null);
     }
 
     public static LegalPerson create(String cnpj, String corporateName, String tradeName, String displayName,
