@@ -4,6 +4,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Le
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.SearchLegalPersonUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.SearchLegalPersonQuery;
+import com.projetoresgate.projetoresgate_api.infrastructure.utils.CnpjUtils;
 import com.projetoresgate.projetoresgate_api.shared.specification.SpecificationBuilder;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
@@ -27,7 +28,7 @@ public class SearchLegalPersonService implements SearchLegalPersonUseCase {
     public Page<LegalPerson> handle(SearchLegalPersonQuery query) {
 
         Specification<LegalPerson> genericFilters = new SpecificationBuilder<LegalPerson>()
-                .with("cnpj", ":", query.cnpj())
+                .with("cnpj", ":", CnpjUtils.onlyDigits(query.cnpj()))
                 .with("corporateName", ":", query.corporateName())
                 .with("registrationStatus", ":", query.registrationStatus())
                 .with("companyStatus", ":", query.companyStatus())

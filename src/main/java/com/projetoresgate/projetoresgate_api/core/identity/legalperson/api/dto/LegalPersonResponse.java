@@ -1,11 +1,10 @@
 package com.projetoresgate.projetoresgate_api.core.identity.legalperson.api.dto;
 
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
-import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Representative;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
-import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record LegalPersonResponse(
@@ -17,8 +16,9 @@ public record LegalPersonResponse(
         String mainCnaeCode,
         RegistrationStatus registrationStatus,
         CompanyStatus companyStatus,
-        Address address,
-        Representative representative
+        AddressResponse address,
+        RepresentativeResponse representative,
+        LocalDateTime dateCreated
 ) {
     public static LegalPersonResponse fromEntity(LegalPerson entity) {
         return new LegalPersonResponse(
@@ -30,8 +30,9 @@ public record LegalPersonResponse(
                 entity.getMainCnaeCode(),
                 entity.getRegistrationStatus(),
                 entity.getCompanyStatus(),
-                entity.getAddress(),
-                entity.getRepresentative()
+                AddressResponse.fromEntity(entity.getAddress()),
+                RepresentativeResponse.fromEntity(entity.getRepresentative()),
+                entity.getDateCreated()
         );
     }
 }

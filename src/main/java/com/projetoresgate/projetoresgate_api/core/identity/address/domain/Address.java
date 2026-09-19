@@ -53,6 +53,48 @@ public class Address extends AuditableEntity {
         return new Address(UUID.randomUUID(), zipCode, number, complement, neighborhood, city, state);
     }
 
+    public Updater update() {
+        return new Updater();
+    }
+
+    public class Updater {
+
+        public Updater zipCode(String zipCode) {
+            Address.this.zipCode = zipCode;
+            return this;
+        }
+
+        public Updater number(String number) {
+            Address.this.number = number;
+            return this;
+        }
+
+        public Updater complement(String complement) {
+            Address.this.complement = complement;
+            return this;
+        }
+
+        public Updater neighborhood(String neighborhood) {
+            Address.this.neighborhood = neighborhood;
+            return this;
+        }
+
+        public Updater city(String city) {
+            Address.this.city = city;
+            return this;
+        }
+
+        public Updater state(String state) {
+            Address.this.state = state;
+            return this;
+        }
+
+        public Address apply() {
+            Address.this.validate();
+            return Address.this;
+        }
+    }
+
     public void validate() {
         if (!StringUtils.hasText(this.zipCode)) {
             throw new InternalException("O CEP não pode ser vazio.");

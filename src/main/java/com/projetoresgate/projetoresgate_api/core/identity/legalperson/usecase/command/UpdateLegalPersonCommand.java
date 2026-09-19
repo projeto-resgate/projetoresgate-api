@@ -1,7 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Representative;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
@@ -22,11 +21,11 @@ public record UpdateLegalPersonCommand(
         RegistrationStatus registrationStatus,
         CompanyStatus companyStatus,
         @Valid
-        Address address,
+        AddressCommand address,
         @Valid
         Representative representative
 ) {
-    public UpdateLegalPersonCommand(UUID id, String corporateName, String tradeName, String displayName, String cnpj, String mainCnaeCode, RegistrationStatus registrationStatus, CompanyStatus companyStatus, Address address) {
+    public UpdateLegalPersonCommand(UUID id, String corporateName, String tradeName, String displayName, String cnpj, String mainCnaeCode, RegistrationStatus registrationStatus, CompanyStatus companyStatus, AddressCommand address) {
         this(id, corporateName, tradeName, displayName, cnpj, mainCnaeCode, registrationStatus, companyStatus, address, null);
     }
 

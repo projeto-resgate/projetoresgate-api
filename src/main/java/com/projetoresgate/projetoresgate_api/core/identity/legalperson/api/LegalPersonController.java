@@ -6,6 +6,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.en
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.*;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.CreateLegalPersonCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.SoftDeleteLegalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.UpdateLegalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.FindLegalPersonByIdQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.SearchLegalPersonQuery;
@@ -20,6 +21,7 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,15 +35,18 @@ public class LegalPersonController {
 
     private final CreateLegalPersonUseCase createUseCase;
     private final UpdateLegalPersonUseCase updateUseCase;
+    private final SoftDeleteLegalPersonUseCase softDeleteUseCase;
     private final FindLegalPersonByIdUseCase findByIdUseCase;
     private final SearchLegalPersonUseCase searchUseCase;
 
     public LegalPersonController(CreateLegalPersonUseCase createUseCase,
                                  UpdateLegalPersonUseCase updateUseCase,
+                                 SoftDeleteLegalPersonUseCase softDeleteUseCase,
                                  FindLegalPersonByIdUseCase findByIdUseCase,
                                  SearchLegalPersonUseCase searchUseCase) {
         this.createUseCase = createUseCase;
         this.updateUseCase = updateUseCase;
+        this.softDeleteUseCase = softDeleteUseCase;
         this.findByIdUseCase = findByIdUseCase;
         this.searchUseCase = searchUseCase;
     }
@@ -71,8 +76,19 @@ public class LegalPersonController {
         return ResponseEntity.ok(LegalPersonResponse.fromEntity(person));
     }
 
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Deletar Pessoa Jurídica (Soft Delete)", description = "Marca uma pessoa jurídica como deletada sem remover do banco.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Pessoa jurídica deletada com sucesso", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Pessoa jurídica não encontrada", content = @Content)
+    })
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        softDeleteUseCase.handle(new SoftDeleteLegalPersonCommand(id));
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping
-    @Operation(summary = "Listar com Filtros", description = "Lista pessoas jurídicas com paginação e filtros opcionais.")
+    @Operation(summary = "Listar com Filtros", description = "Lista pessoas jurídicas com paginação, ordenação e filtros opcionais.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class)))
@@ -86,7 +102,7 @@ public class LegalPersonController {
             @Parameter(description = "Número da página") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Tamanho da página") @RequestParam(defaultValue = "10") int size
     ) {
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("corporateName").ascending());
         SearchLegalPersonQuery query = new SearchLegalPersonQuery(searchTerm, cnpj, corporateName, registrationStatus, companyStatus, pageable);
         Page<LegalPerson> pageResult = searchUseCase.handle(query);
         return ResponseEntity.ok(pageResult.map(LegalPersonResponse::fromEntity));

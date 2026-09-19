@@ -1,6 +1,5 @@
 package com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command;
 
-import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Representative;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
@@ -22,11 +21,11 @@ public record CreateLegalPersonCommand(
         @NotNull(message = "O status da empresa é obrigatório")
         CompanyStatus companyStatus,
         @Valid
-        Address address,
+        AddressCommand address,
         @Valid
         Representative representative
 ) {
-    public CreateLegalPersonCommand(String corporateName, String tradeName, String displayName, String cnpj, String mainCnaeCode, RegistrationStatus registrationStatus, CompanyStatus companyStatus, Address address) {
+    public CreateLegalPersonCommand(String corporateName, String tradeName, String displayName, String cnpj, String mainCnaeCode, RegistrationStatus registrationStatus, CompanyStatus companyStatus, AddressCommand address) {
         this(corporateName, tradeName, displayName, cnpj, mainCnaeCode, registrationStatus, companyStatus, address, null);
     }
 }

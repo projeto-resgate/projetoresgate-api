@@ -141,6 +141,30 @@ class SearchLegalPersonServiceTest {
     }
 
     @Test
+    @DisplayName("Deve construir a Specification normalizando o CNPJ formatado no filtro")
+    void handle_ShouldNormalizeFormattedCnpjInFilter() {
+        Pageable pageable = PageRequest.of(0, 10);
+        SearchLegalPersonQuery searchQuery = new SearchLegalPersonQuery(
+                null, "11.222.333/0001-81", null, null, null, pageable);
+
+        doReturn(path).when(root).get(anyString());
+
+        lenient().doReturn(String.class).when(path).getJavaType();
+        lenient().doReturn(mockPredicate).when(cb).like(any(), anyString());
+        lenient().doReturn(mockPredicate).when(cb).and(any(Predicate[].class));
+
+        service.handle(searchQuery);
+
+        verify(repository).findAll(specCaptor.capture(), eq(pageable));
+
+        Specification<LegalPerson> capturedSpec = specCaptor.getValue();
+        capturedSpec.toPredicate(root, query, cb);
+
+        verify(cb).like(any(), eq("%11222333000181%"));
+        verify(cb, never()).like(any(), eq("%11.222.333/0001-81%"));
+    }
+
+    @Test
     @DisplayName("Deve retornar pessoas jurídicas com todos os campos preenchidos")
     void handle_ShouldReturnPersonsWithAllFields() {
         Pageable pageable = PageRequest.of(0, 10);

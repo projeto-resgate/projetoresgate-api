@@ -122,6 +122,16 @@ class LegalPersonTest {
     }
 
     @Test
+    @DisplayName("Deve lançar exceção na validação se o código CNAE exceder 20 caracteres")
+    void validate_ShouldFailIfCnaeCodeTooLong() {
+        InternalException exception = assertThrows(InternalException.class, () ->
+                LegalPerson.create("12345678000195", "Razão Social LTDA", null, null, "A".repeat(21),
+                        RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, buildAddress(), null)
+        );
+        assertEquals("O CNAE principal não pode exceder 20 caracteres.", exception.getMessage());
+    }
+
+    @Test
     @DisplayName("Deve atualizar campos usando o Inner Updater com sucesso")
     void updater_ShouldUpdateFields() {
         LegalPerson person = LegalPerson.create(
