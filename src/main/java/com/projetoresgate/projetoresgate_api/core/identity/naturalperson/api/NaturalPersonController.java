@@ -1,6 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.api;
 
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.api.dto.NaturalPersonResponse;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.api.dto.NaturalPersonSummaryResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.*;
@@ -9,10 +10,12 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.RequestEmailConfirmationCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.SoftDeleteNaturalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.UpdateNaturalPersonCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.AutocompleteNaturalPersonQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.FindNaturalPersonByIdQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.SearchNaturalPersonQuery;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -26,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -38,6 +42,7 @@ public class NaturalPersonController {
     private final SoftDeleteNaturalPersonUseCase softDeleteUseCase;
     private final FindNaturalPersonByIdUseCase findByIdUseCase;
     private final SearchNaturalPersonUseCase searchUseCase;
+    private final AutocompleteNaturalPersonUseCase autocompleteUseCase;
     private final RequestEmailConfirmationUseCase requestEmailConfirmationUseCase;
     private final ConfirmEmailUseCase confirmEmailUseCase;
 
@@ -46,6 +51,7 @@ public class NaturalPersonController {
                                    SoftDeleteNaturalPersonUseCase softDeleteUseCase,
                                    FindNaturalPersonByIdUseCase findByIdUseCase,
                                    SearchNaturalPersonUseCase searchUseCase,
+                                   AutocompleteNaturalPersonUseCase autocompleteUseCase,
                                    RequestEmailConfirmationUseCase requestEmailConfirmationUseCase,
                                    ConfirmEmailUseCase confirmEmailUseCase) {
         this.createUseCase = createUseCase;
@@ -53,6 +59,7 @@ public class NaturalPersonController {
         this.softDeleteUseCase = softDeleteUseCase;
         this.findByIdUseCase = findByIdUseCase;
         this.searchUseCase = searchUseCase;
+        this.autocompleteUseCase = autocompleteUseCase;
         this.requestEmailConfirmationUseCase = requestEmailConfirmationUseCase;
         this.confirmEmailUseCase = confirmEmailUseCase;
     }
@@ -126,6 +133,19 @@ public class NaturalPersonController {
         FindNaturalPersonByIdQuery query = new FindNaturalPersonByIdQuery(id);
         NaturalPerson person = findByIdUseCase.handle(query);
         return ResponseEntity.ok(NaturalPersonResponse.fromEntity(person));
+    }
+
+    @GetMapping("/autocomplete")
+    @Operation(summary = "Autocomplete de Pessoas Físicas", description = "Busca leve de pessoas físicas para componentes de seleção do front.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de sugestões retornada com sucesso",
+                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = NaturalPersonSummaryResponse.class))))
+    })
+    public ResponseEntity<List<NaturalPersonSummaryResponse>> autocomplete(
+            @Parameter(description = "Termo de pesquisa (Nome, Nickname, CPF ou RG)") @RequestParam(defaultValue = "") String searchTerm,
+            @Parameter(description = "Quantidade máxima de resultados") @RequestParam(defaultValue = "10") int limit
+    ) {
+        return ResponseEntity.ok(autocompleteUseCase.handle(new AutocompleteNaturalPersonQuery(searchTerm, limit)));
     }
 
     @PostMapping("/request-email-confirmation")

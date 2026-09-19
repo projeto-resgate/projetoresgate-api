@@ -2,6 +2,7 @@ package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projetoresgate.projetoresgate_api.config.security.WithMockCustomUser;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.api.dto.NaturalPersonSummaryResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.*;
@@ -9,6 +10,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.CreateNaturalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.RequestEmailConfirmationCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.UpdateNaturalPersonCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.AutocompleteNaturalPersonQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.infrastructure.security.SecurityConfigurations;
@@ -31,6 +33,7 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -60,8 +63,11 @@ class NaturalPersonControllerTest {
     @MockitoBean
     private FindNaturalPersonByIdUseCase findByIdUseCase;
 
-    @MockitoBean
-    private SearchNaturalPersonUseCase searchUseCase;
+@MockitoBean
+private SearchNaturalPersonUseCase searchUseCase;
+
+@MockitoBean
+private AutocompleteNaturalPersonUseCase autocompleteUseCase;
 
     @MockitoBean
     private RequestEmailConfirmationUseCase requestEmailConfirmationUseCase;
@@ -193,6 +199,33 @@ class NaturalPersonControllerTest {
 
         mockMvc.perform(post("/natural-person/confirm-email/{token}", token))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("GET /natural-person/autocomplete - Deve retornar 200 OK com sugestões")
+    void autocomplete_ShouldReturn200() throws Exception {
+        NaturalPersonSummaryResponse summary = new NaturalPersonSummaryResponse(
+                UUID.randomUUID(), "João Silva", "1234567", "51086174968");
+
+        when(autocompleteUseCase.handle(any())).thenReturn(List.of(summary));
+
+        mockMvc.perform(get("/natural-person/autocomplete")
+                        .param("searchTerm", "joao"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("João Silva"))
+                .andExpect(jsonPath("$[0].rg").value("1234567"))
+                .andExpect(jsonPath("$[0].cpf").value("51086174968"));
+
+        verify(autocompleteUseCase).handle(eq(new AutocompleteNaturalPersonQuery("joao", 10)));
+    }
+
+    @Test
+    @DisplayName("GET /natural-person/autocomplete - Deve retornar 401 Unauthorized sem autenticação")
+    void autocomplete_ShouldReturn401WithoutAuth() throws Exception {
+        mockMvc.perform(get("/natural-person/autocomplete")
+                        .param("searchTerm", "joao"))
+                .andExpect(status().isUnauthorized());
     }
 
     private NaturalPerson createMockPerson() {

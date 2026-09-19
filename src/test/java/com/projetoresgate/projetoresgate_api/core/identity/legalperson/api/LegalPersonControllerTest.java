@@ -3,6 +3,7 @@ package com.projetoresgate.projetoresgate_api.core.identity.legalperson.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projetoresgate.projetoresgate_api.config.security.WithMockCustomUser;
 import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.api.dto.LegalPersonSummaryResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Representative;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
@@ -12,6 +13,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.c
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.CreateLegalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.SoftDeleteLegalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.UpdateLegalPersonCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.AutocompleteLegalPersonQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.SearchLegalPersonQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
@@ -70,6 +72,9 @@ private FindLegalPersonByIdUseCase findByIdUseCase;
 
 @MockitoBean
 private SearchLegalPersonUseCase searchUseCase;
+
+@MockitoBean
+private AutocompleteLegalPersonUseCase autocompleteUseCase;
 
     @MockitoBean
     private UserDetailsService userDetailsService;
@@ -353,6 +358,32 @@ void findById_ShouldReturn401WithoutAuth() throws Exception {
     UUID id = UUID.randomUUID();
 
     mockMvc.perform(get("/legal-person/{id}", id))
+            .andExpect(status().isUnauthorized());
+}
+
+@Test
+@WithMockCustomUser
+@DisplayName("GET /legal-person/autocomplete - Deve retornar 200 OK com sugestões")
+void autocomplete_ShouldReturn200() throws Exception {
+    LegalPersonSummaryResponse summary = new LegalPersonSummaryResponse(
+            UUID.randomUUID(), "Acme LTDA", "11222333000181");
+
+    when(autocompleteUseCase.handle(any())).thenReturn(List.of(summary));
+
+    mockMvc.perform(get("/legal-person/autocomplete")
+                    .param("searchTerm", "acme"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].displayName").value("Acme LTDA"))
+            .andExpect(jsonPath("$[0].cnpj").value("11222333000181"));
+
+    verify(autocompleteUseCase).handle(eq(new AutocompleteLegalPersonQuery("acme", 10)));
+}
+
+@Test
+@DisplayName("GET /legal-person/autocomplete - Deve retornar 401 Unauthorized sem autenticação")
+void autocomplete_ShouldReturn401WithoutAuth() throws Exception {
+    mockMvc.perform(get("/legal-person/autocomplete")
+                    .param("searchTerm", "acme"))
             .andExpect(status().isUnauthorized());
 }
 

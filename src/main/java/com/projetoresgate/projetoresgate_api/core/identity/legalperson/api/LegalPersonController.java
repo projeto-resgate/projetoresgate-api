@@ -1,6 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.identity.legalperson.api;
 
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.api.dto.LegalPersonResponse;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.api.dto.LegalPersonSummaryResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
@@ -8,10 +9,12 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.*
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.CreateLegalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.SoftDeleteLegalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.UpdateLegalPersonCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.AutocompleteLegalPersonQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.FindLegalPersonByIdQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.SearchLegalPersonQuery;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -26,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -38,17 +42,20 @@ public class LegalPersonController {
     private final SoftDeleteLegalPersonUseCase softDeleteUseCase;
     private final FindLegalPersonByIdUseCase findByIdUseCase;
     private final SearchLegalPersonUseCase searchUseCase;
+    private final AutocompleteLegalPersonUseCase autocompleteUseCase;
 
     public LegalPersonController(CreateLegalPersonUseCase createUseCase,
                                  UpdateLegalPersonUseCase updateUseCase,
                                  SoftDeleteLegalPersonUseCase softDeleteUseCase,
                                  FindLegalPersonByIdUseCase findByIdUseCase,
-                                 SearchLegalPersonUseCase searchUseCase) {
+                                 SearchLegalPersonUseCase searchUseCase,
+                                 AutocompleteLegalPersonUseCase autocompleteUseCase) {
         this.createUseCase = createUseCase;
         this.updateUseCase = updateUseCase;
         this.softDeleteUseCase = softDeleteUseCase;
         this.findByIdUseCase = findByIdUseCase;
         this.searchUseCase = searchUseCase;
+        this.autocompleteUseCase = autocompleteUseCase;
     }
 
     @PostMapping
@@ -119,5 +126,18 @@ public class LegalPersonController {
         FindLegalPersonByIdQuery query = new FindLegalPersonByIdQuery(id);
         LegalPerson person = findByIdUseCase.handle(query);
         return ResponseEntity.ok(LegalPersonResponse.fromEntity(person));
+    }
+
+    @GetMapping("/autocomplete")
+    @Operation(summary = "Autocomplete de Pessoas Jurídicas", description = "Busca leve de pessoas jurídicas para componentes de seleção do front.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de sugestões retornada com sucesso",
+                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = LegalPersonSummaryResponse.class))))
+    })
+    public ResponseEntity<List<LegalPersonSummaryResponse>> autocomplete(
+            @Parameter(description = "Termo de pesquisa (Razão Social, Nome Fantasia, Nome de Exibição ou CNPJ)") @RequestParam(defaultValue = "") String searchTerm,
+            @Parameter(description = "Quantidade máxima de resultados") @RequestParam(defaultValue = "10") int limit
+    ) {
+        return ResponseEntity.ok(autocompleteUseCase.handle(new AutocompleteLegalPersonQuery(searchTerm, limit)));
     }
 }
