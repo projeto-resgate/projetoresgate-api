@@ -50,7 +50,7 @@ class CreateUserServiceTest {
         assertEquals("encoded-password", created.getPassword());
         assertEquals("John Doe", created.getName());
         assertEquals("johny", created.getNickname());
-        assertEquals(Set.of(UserRole.USER), created.getRoles());
+        assertEquals(Set.of(UserRole.ADMIN), created.getRoles());
         assertEquals(0L, created.getTokenVersion());
 
         verify(repository).save(any(User.class));

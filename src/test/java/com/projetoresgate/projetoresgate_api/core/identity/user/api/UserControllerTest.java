@@ -105,7 +105,7 @@ class UserControllerTest {
                 UUID.randomUUID().toString(),
                 "Test User",
                 "test@example.com",
-                Set.of(UserRole.USER)
+                Set.of(UserRole.ADMIN)
         );
 
         when(authenticateUserUseCase.handle(any(AuthenticateUserQuery.class))).thenReturn(authResponse);

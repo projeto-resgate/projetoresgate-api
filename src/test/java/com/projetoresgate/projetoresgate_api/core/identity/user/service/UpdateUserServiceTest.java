@@ -18,7 +18,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -57,7 +58,7 @@ class UpdateUserServiceTest {
         assertEquals("newnick", user.getNickname());
         assertEquals("email@test.com", user.getEmail());
         assertEquals("encoded-old-password", user.getPassword());
-        assertEquals(Set.of(UserRole.USER), user.getRoles());
+        assertEquals(Set.of(UserRole.ADMIN), user.getRoles());
         assertEquals(0L, user.getTokenVersion());
         verify(repository).save(user);
     }

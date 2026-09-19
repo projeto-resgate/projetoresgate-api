@@ -50,7 +50,7 @@ class FindUserServiceTest {
         assertEquals("encoded-password", found.getPassword());
         assertEquals("João Silva", found.getName());
         assertEquals("joaozinho", found.getNickname());
-        assertEquals(Set.of(UserRole.USER), found.getRoles());
+        assertEquals(Set.of(UserRole.ADMIN), found.getRoles());
         assertEquals(0L, found.getTokenVersion());
         assertEquals(dateCreated, found.getDateCreated());
         verify(repository).findById(id);

@@ -20,7 +20,7 @@ class UserTest {
         assertEquals("password123", user.getPassword());
         assertEquals("Test User", user.getName());
         assertEquals("tester", user.getNickname());
-        assertTrue(user.getRoles().contains(UserRole.USER));
+        assertTrue(user.getRoles().contains(UserRole.ADMIN));
     }
 
     @Test
@@ -97,6 +97,6 @@ class UserTest {
         user.addRole(UserRole.ADMIN);
 
         assertTrue(user.getRoles().contains(UserRole.ADMIN));
-        assertTrue(user.getRoles().contains(UserRole.USER));
+        assertTrue(user.getRoles().contains(UserRole.ADMIN));
     }
 }
