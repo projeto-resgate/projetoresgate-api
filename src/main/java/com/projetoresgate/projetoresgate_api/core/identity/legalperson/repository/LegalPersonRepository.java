@@ -3,12 +3,17 @@ package com.projetoresgate.projetoresgate_api.core.identity.legalperson.reposito
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
 @Repository
-public interface LegalPersonRepository extends JpaRepository<LegalPerson, UUID> {
+public interface LegalPersonRepository extends JpaRepository<LegalPerson, UUID>, JpaSpecificationExecutor<LegalPerson> {
+
+    boolean existsByCnpj(String cnpj);
+
+    boolean existsByCnpjAndIdNot(String cnpj, UUID id);
 
     default LegalPerson findByIdOrThrow(UUID id) {
         return findById(id)
