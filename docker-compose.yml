@@ -10,6 +10,41 @@ services:
       - POSTGRES_DB=projetoresgatedb
     volumes:
       - "postgres_data:/var/lib/postgresql/data"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin -d projetoresgatedb" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
+  migrations:
+    image: flyway/flyway:10-alpine
+    container_name: projetoresgate_migrations
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      FLYWAY_URL: jdbc:postgresql://db:5432/projetoresgatedb
+      FLYWAY_USER: admin
+      FLYWAY_PASSWORD: admin
+      FLYWAY_BASELINE_ON_MIGRATE: "true"
+    volumes:
+      - ./src/main/resources/db/migration:/flyway/sql:ro
+    command: -locations=filesystem:/flyway/sql migrate
+
+  seeder:
+    image: postgres:15-alpine
+    container_name: projetoresgate_seeder
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=projetoresgatedb
+    volumes:
+      - ./docker/database/init.sql:/seed/init.sql:ro
+    entrypoint: ["/bin/sh", "-ec"]
+    command: >
+      "echo 'Flyway concluído! Rodando o init.sql...'; PGPASSWORD=$$POSTGRES_PASSWORD psql -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -f /seed/init.sql"
 volumes:
   postgres_data:

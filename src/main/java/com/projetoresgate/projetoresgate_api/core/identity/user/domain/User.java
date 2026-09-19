@@ -47,7 +47,7 @@ public class User extends AuditableEntity {
         this.password = encodedPassword;
         this.name = name;
         this.nickname = nickname;
-        this.roles.add(UserRole.USER);
+        this.roles.add(UserRole.ADMIN);
         validate();
     }
 

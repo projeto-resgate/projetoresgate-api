@@ -13,7 +13,7 @@ public @interface WithMockCustomUser {
 
     String name() default "Test User";
 
-    String[] roles() default { "USER" };
+    String[] roles() default {"ADMIN"};
 
     String id() default "11a33607-683c-48e8-a23a-79a60152313c";
 }
