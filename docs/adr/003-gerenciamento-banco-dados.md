@@ -1,51 +1,77 @@
-# 3. Gerenciamento de Banco de Dados e Migrations (Flyway)
+---
+name: banco-de-dados
+status: aceito
+summary: Flyway é o único dono do schema e ddl-auto=validate. Nunca edite migration já commitada: crie a próxima.
+---
 
-Data: 2026-02-10
-
-## Contexto
-
-Em projetos com múltiplos desenvolvedores, a consistência do esquema do banco de dados (tabelas, colunas, índices) é crítica. Alterações manuais (via pgAdmin/DBeaver) ou o uso do Hibernate (`ddl-auto=update`) em produção podem causar:
-1.  Perda de dados.
-2.  Inconsistência entre ambientes (Dev vs Prod).
-3.  Dificuldade em rastrear quem fez qual alteração e quando.
+# 3. Banco de dados e migrations
 
 ## Decisão
 
-Adotamos o **Flyway** para gerenciar todas as alterações no esquema do banco de dados.
+O Flyway é o único dono da estrutura do banco. Toda alteração de schema é um arquivo SQL
+versionado em `src/main/resources/db/migration`.
 
-### 1. Versionamento de Scripts
-Toda alteração no banco deve ser feita através de um script SQL versionado, localizado em `src/main/resources/db/migration`.
+O Hibernate nunca altera o schema. `spring.jpa.hibernate.ddl-auto=validate` em todos os
+perfis: ele só confere que as entidades Java batem com o banco e falha se não baterem.
 
-*   **Prefixo:** `V` (Versionado)
-*   **Versão:** Número sequencial ou timestamp (ex: `V1__`, `V2__`, `V202405221030__`).
-*   **Separador:** `__` (dois underscores).
-*   **Descrição:** Nome descritivo da alteração (ex: `create_table_users`, `add_column_cpf`).
-*   **Extensão:** `.sql`
+## Como escrever uma migration
 
-**Exemplo:** `V1__create_table_users.sql`
+Nome no formato `V<NNN>__<descricao>.sql`, com três dígitos e dois underscores.
 
-### 2. Imutabilidade
-Uma vez que um script de migração foi aplicado (rodou com sucesso), ele **NUNCA** deve ser alterado. Se precisar corrigir algo, crie um novo script de migração (`V2__fix_column_type.sql`).
+```
+V001__Initial_setup.sql
+V011__Create_family_groups_tables.sql
+V012__add_phone_to_natural_person.sql
+```
 
-### 3. Hibernate DDL Auto
-A propriedade `spring.jpa.hibernate.ddl-auto` deve ser configurada como `validate` em produção e `none` ou `validate` em desenvolvimento, para garantir que o Hibernate apenas verifique se as entidades Java batem com o banco, mas não altere nada automaticamente. O Flyway é o único dono da estrutura do banco.
+O Flyway aplica em ordem numérica, uma vez, e guarda o que já rodou em `flyway_schema_history`.
+Existem 11 migrations, `V001` a `V011`.
 
-### 4. Nomenclatura no Banco
-*   **Tabelas e Colunas:** Use `snake_case` (minúsculas com sublinhado). Ex: `user_profiles`, `birth_date`.
-*   **Chaves Estrangeiras:** `fk_{tabela_origem}_{tabela_destino}`.
-*   **Índices:** `idx_{tabela}_{coluna}`.
+## Regra que não tem exceção
+
+**Nunca edite uma migration que já foi commitada.** Se o SQL está errado, crie `V012` corrigindo.
+Editar uma migration já aplicada não muda o banco de quem já rodou, e quebra o histórico sem
+avisar. O histórico de um banco é append-only.
+
+Para consertar algo localmente durante o desenvolvimento, o banco de teste do Testcontainers é
+recriado a cada execução, então basta apagar e deixar o Flyway rodar de novo.
+
+## Nomenclatura
+
+- **Tabelas e colunas:** `snake_case`. Entidade Java `FamilyGroup` mapeia para `family_group`, via
+  `@Table(name = "family_group")` explícito.
+- **Tabela de junção:** `family_group_natural_person`.
+- **Chave estrangeira:** `REFERENCES <tabela>(id)` declarada inline na coluna, sem constraint
+  nomeada. Veja `V011__Create_family_groups_tables.sql`.
+- **Índice:** `idx_<tabela>_<coluna>`.
+
+Índice de busca textual usa a extensão `pg_trgm`:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX IF NOT EXISTS idx_natural_person_cpf_trgm ON natural_person USING GIN (cpf gin_trgm_ops);
+```
+
+É o que faz `~` (ILIKE) não fazer full scan.
 
 ## O que NÃO fazer
 
-*   **NUNCA** altere a estrutura do banco manualmente em qualquer ambiente compartilhado.
-*   **NUNCA** delete um script de migração que já foi comitado.
-*   **NUNCA** use `ddl-auto=create` ou `update` em produção.
+- Não alterar o banco manualmente em ambiente compartilhado. O próximo `git pull` desfaz.
+- Não usar `ddl-auto=create` ou `update`. `validate` em todos os perfis.
+- Não deletar migration commitada.
+- Não escrever migration que depende de dado de teste. Migration de teste não existe: o
+  Testcontainers sobe o Postgres vazio e o Flyway aplica tudo do zero, o que é exatamente o que
+  você quer que aconteça.
 
-## Fluxo de Trabalho
+## Script para o dia a dia
 
-1.  Desenvolvedor precisa adicionar uma coluna `phone` na tabela `users`.
-2.  Cria arquivo `src/main/resources/db/migration/V5__add_phone_to_users.sql`.
-3.  Conteúdo: `ALTER TABLE users ADD COLUMN phone VARCHAR(20);`.
-4.  Roda a aplicação localmente. O Flyway detecta o novo arquivo e aplica a mudança.
-5.  Testa e commita o arquivo `.sql`.
-6.  Outros devs puxam o código, rodam a aplicação e o banco deles é atualizado automaticamente.
+```bash
+# ver o que o Flyway aplicou
+./mvnw -o flyway:info
+
+# validar os SQL sem rodar a aplicação
+./mvnw -o test -Dtest=PostgresIntegrationTestSuite
+```
+
+A referência completa, incluindo como o schema dos testes é montado, está em
+[`banco-de-dados.md`](../banco-de-dados.md).

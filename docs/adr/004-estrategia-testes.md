@@ -1,14 +1,15 @@
+---
+name: estrategia-de-testes
+status: aceito
+summary: Unitário=@ExtendWith(MockitoExtension), controller=@WebMvcTest, banco=@DataJpaTest extends PostgresIntegrationTest. Nunca @SpringBootTest nem H2.
+---
+
 # 4. Estratégia de Testes
-
-Data: 2026-02-10
-
-## Contexto
-
-Testes automatizados são a garantia de que novas funcionalidades não quebram as antigas (regressão). Para desenvolvedores iniciantes, a dúvida comum é "o que testar?" e "como testar?". Testar tudo da mesma forma pode ser ineficiente e lento.
 
 ## Decisão
 
-Adotamos a **Pirâmide de Testes**, focando em uma base sólida de testes unitários e testes de integração estratégicos.
+Três tipos de teste, e o tipo é escolhido pelo que a dúvida precisa responder. A suíte tem 375
+testes em 69 classes.
 
 ### 1. Testes Unitários (Foco: Regra de Negócio)
 *   **Onde:** Camadas de `usecase`, `service` e `domain`.
@@ -20,113 +21,52 @@ Adotamos a **Pirâmide de Testes**, focando em uma base sólida de testes unitá
     *   Testar caminhos tristes (exceções, validações falhando).
     *   Não subir o contexto do Spring (`@SpringBootTest` é proibido aqui, use apenas `@ExtendWith(MockitoExtension.class)`). Isso garante execução rápida.
 
-### 2. Testes de Integração (Foco: Contrato e Fluxo)
-*   **Onde:** Camada de `api` (Controllers).
-*   **Ferramentas:** `@SpringBootTest`, `MockMvc`, Testcontainers (opcional para banco).
-*   **Objetivo:** Garantir que a API recebe e retorna os dados corretamente (HTTP Status, JSON Body) e que os componentes se conversam.
+### 2. Testes de Controller (Foco: Contrato HTTP)
+*   **Onde:** Camada de `api`.
+*   **Ferramentas:** `@WebMvcTest` com `MockMvc`. Os use cases são `@MockBean`.
+*   **Objetivo:** Garantir que a API recebe e devolve os dados certos: status HTTP, JSON de saída,
+  header `Location`, e o mapeamento de exceção.
 *   **Como:**
-    *   Usar `MockMvc` para simular requisições HTTP.
-    *   Verificar se o Controller chama o UseCase corretamente.
-    *   Verificar se o tratamento de exceção (`GlobalExceptionHandler`) está funcionando (ex: retornar 404 quando o Service lança exceção).
+    *   `@WebMvcTest` carrega só a camada web. Não usar `@SpringBootTest`: sobe o contexto
+      inteiro sem necessidade e deixa a suíte lenta.
+    *   Sempre importar a configuração de segurança com `@Import(SecurityConfigurations.class)`.
+      Sem isso a requisição volta 403 e o teste falha sem causa aparente.
+    *   Usar `@WithMockCustomUser` para simular o usuário autenticado.
+    *   Verificar também os campos que **não** devem aparecer no JSON, com
+      `jsonPath(...).doesNotExist()`.
 
-### 3. Cobertura
-Embora não tenhamos um número rígido, buscamos cobrir os fluxos principais de negócio. Classes de configuração, DTOs simples (getters/setters) e código gerado não precisam de testes intensivos.
+### 3. Testes de Integração de Dados (Foco: Banco Real)
+*   **Onde:** Camada de `repository` e services que tocam banco.
+*   **Ferramentas:** `@DataJpaTest` + `extends PostgresIntegrationTest`, que sobe um PostgreSQL real
+  via Testcontainers e aplica as migrations do Flyway.
+*   **Objetivo:** Validar o que só o banco de verdade revela: JPQL e query nativa, paginação com
+  `join`, `@SQLRestriction`, sequence e constraint.
+*   **Como:**
+    *   Todo teste que toca banco **precisa** do Testcontainers. Não há H2 no projeto: ele não
+      reproduz o dialeto do Postgres, então o teste passaria sem validar nada. Ver [ADR 007](007-testcontainers-postgres.md).
+    *   Criar os dados que o teste precisa. Não depender do seed.
+    *   Lembrar que `nextval` não reverte com o rollback do teste, então sequence usada pelo teste
+      precisa ser reiniciada no `@BeforeEach`.
 
-## Exemplos de testes abaixo
+### 4. Cobertura
 
-## AAA Pattern (Arrange-Act-Assert)
-
-```java
-@Test
-@DisplayName("Descrição do que testa")
-void methodName_shouldBehavior_whenCondition() {
-    // ARRANGE - Preparar dados
-    CreateUserCommand cmd = new CreateUserCommand("name", "email@test.com", "pwd123");
-    when(repository.findByEmail("email@test.com")).thenReturn(Optional.empty());
-    
-    // ACT - Executar
-    User result = service.handle(cmd);
-    
-    // ASSERT - Verificar
-    assertNotNull(result);
-    assertEquals("email@test.com", result.getEmail());
-    verify(repository).save(any(User.class));
-}
-```
-
-## Unit Test
-
-```java
-@ExtendWith(MockitoExtension.class)
-class UserTest {
-    @Mock UserRepository repository;
-    @InjectMocks UserService service;
-    
-    @Test void test() { }
-}
-```
-
-## Integration Test
-
-```java
-@SpringBootTest
-class UserControllerTest {
-    @Autowired MockMvc mockMvc;
-    
-    @Test void test() throws Exception {
-        mockMvc.perform(post("/user"))
-            .andExpect(status().isCreated());
-    }
-}
-```
-
-## Mockito
-
-```java
-// Mock
-@Mock UserRepository repository;
-
-// Simular
-when(repository.findById(any())).thenReturn(Optional.of(user));
-
-// Verificar
-verify(repository).findById(userId);
-verify(repository, times(2)).save(any());
-verify(repository, never()).delete(any());
-
-// Capturar argumentos
-ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-verify(repository).save(captor.capture());
-User saved = captor.getValue();
-```
+Sem número rígido. Cobrem-se os fluxos de negócio. Classe de configuração, DTO simples e código
+gerado não precisam de teste.
 
 ## O que NÃO fazer
 
-*   Não escreva testes que dependem de dados pré-existentes no banco (o teste deve criar seus dados e limpar depois, ou usar mocks).
-*   Não use `System.out.println` para validar testes; use `Assertions` (`assertEquals`, `assertThrows`).
-*   Não ignore testes falhando. Se falhou, o build deve quebrar.
+*   **Não use `@SpringBootTest`** sem necessidade. Ele sobe o contexto inteiro e deixa a suíte
+    lenta sem testar nada a mais que `@WebMvcTest` e `@DataJpaTest` já não cubram.
+*   **Não reintroduzir H2.** Não está no `pom.xml` e não valida o dialeto do Postgres.
+*   **Não use `ddl-auto=create-drop` em teste de integração.** O schema tem que vir do Flyway,
+    senão o teste roda contra um schema que ninguém usa.
+*   **Não escreva teste que só verifica mock.** Confirmar que o Mockito devolveu o que você mandou
+    não testa nada. Asserte o comportamento.
+*   **Não dependa de dados pré-existentes.** O teste cria o que precisa.
+*   **Não use `System.out.println`** para validar; use `Assertions`.
+*   **Não deixe teste falhando.** Se falhou, o build quebra e a causa precisa ser resolvida.
 
-## Exemplo
+## Onde ver os exemplos
 
-**Teste Unitário (Service):**
-```java
-@ExtendWith(MockitoExtension.class)
-class CreateUserServiceTest {
-    @Mock UserRepository repository;
-    @InjectMocks CreateUserService service;
-
-    @Test
-    void shouldCreateUser() {
-        // Arrange
-        User user = new User("Diego", "email@teste.com");
-        when(repository.save(any())).thenReturn(user);
-
-        // Act
-        User created = service.execute(new CreateUserCommand(...));
-
-        // Assert
-        assertNotNull(created);
-        verify(repository).save(any());
-    }
-}
-```
+Cada tipo de teste tem exemplo completo, com os detalhes de `MockMvc`, `@WithMockCustomUser`,
+Testcontainers e reset de sequence, em [`docs/testes.md`](../testes.md).

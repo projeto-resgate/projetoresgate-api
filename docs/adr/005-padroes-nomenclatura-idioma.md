@@ -1,72 +1,96 @@
-# 5. Padrões de Nomenclatura e Idioma
+---
+name: nomenclatura-e-idioma
+status: aceito
+summary: Código em inglês, texto em português, commits conventional em inglês. Listagem=FindAll, uma=Find*ById. Sempre Command/Response, nunca Request.
+---
 
-Data: 2026-02-10
-
-## Contexto
-
-Em projetos com múltiplos desenvolvedores, a falta de padronização na nomenclatura e no idioma do código gera confusão e dificulta a leitura. Misturar inglês e português, ou usar nomes pouco descritivos, torna o código difícil de manter.
+# 5. Nomenclatura e idioma
 
 ## Decisão
 
-Adotamos o **Inglês** como idioma padrão para o código e o **Português** para a documentação e comentários.
+**Código em inglês. Texto em português.**
 
-### 1. Idioma do Código
-*   **Classes, Interfaces, Métodos, Variáveis:** Sempre em **Inglês**.
-    *   Ex: `UserController`, `findUserById`, `birthDate`.
-    *   Não use: `UsuarioController`, `buscarUsuarioPorId`, `dataNascimento`.
-*   **Pacotes:** Sempre em minúsculas, sem separadores (`com.projetoresgate.api`).
-*   **Constantes:** `UPPER_SNAKE_CASE` (ex: `MAX_LOGIN_ATTEMPTS`).
+## Código: inglês
 
-### 2. Idioma da Documentação
-*   **JavaDoc:** Em **Português**.
-    *   Ex: `/** Busca um usuário pelo ID. */`
-*   **Comentários de Código:** Em **Português**.
-    *   Ex: `// Valida se o email já existe no banco`
-*   **Mensagens de Commit:** Em **Português** (imperativo).
-    *   Ex: `Adiciona validação de CPF`, `Corrige bug no login`.
-*   **ADRs e README:** Em **Português**.
+Classes, métodos, variáveis, pacotes e constantes.
 
-### 3. Sufixos Obrigatórios
-Para facilitar a identificação das responsabilidades das classes, usamos sufixos:
-
-*   **Controller:** `XController` (ex: `UserController`)
-*   **Service:** `XService` (ex: `UserService`)
-*   **Repository:** `XRepository` (ex: `UserRepository`)
-*   **UseCase:** `XUseCase` (ex: `CreateUserUseCase`)
-*   **Command:** `XCommand` (ex: `CreateUserCommand`)
-*   **Query:** `XQuery` (ex: `FindUserQuery`)
-*   **DTO (Request/Response):** `XRequest`, `XResponse` (ex: `CreateUserRequest`, `UserResponse`)
-*   **Exception:** `XException` (ex: `UserNotFoundException`)
-*   **Mapper:** `XMapper` (ex: `UserMapper`)
-
-### 4. Nomes Descritivos
-Evite abreviações obscuras. O nome deve revelar a intenção.
-*   **Ruim:** `u`, `usr`, `d`, `calc`.
-*   **Bom:** `user`, `currentUser`, `daysSinceLastLogin`, `calculateTotal`.
-
-## O que NÃO fazer
-
-*   Não misture idiomas na mesma linha (`val dataBirth = ...`).
-*   Não use nomes genéricos demais (`Manager`, `Processor`, `Helper`) sem um contexto claro.
-*   Não use prefixos de tipo (`strName`, `iCount`). O tipo já diz o que é.
-
-## Exemplo
-
-**Correto:**
 ```java
-/**
- * Serviço responsável por criar um novo usuário.
- */
-@Service
-public class CreateUserService implements CreateUserUseCase {
-    private final UserRepository userRepository;
-
-    public User execute(CreateUserCommand command) {
-        // Verifica se o email já está em uso
-        if (userRepository.existsByEmail(command.email())) {
-            throw new UserAlreadyExistsException("Email já cadastrado.");
-        }
-        // ...
-    }
+public class FamilyGroupController {
+    public ResponseEntity<FamilyGroupResponse> findById(@PathVariable UUID id) { }
 }
 ```
+
+Não: `GrupoFamiliarController`, `buscarPorId`, `nomeGrupo`.
+
+Constantes em `UPPER_SNAKE_CASE`. Pacotes em minúsculas, sem separador.
+
+## Texto: português
+
+| Onde | Exemplo |
+| --- | --- |
+| JavaDoc | `/** Busca um grupo familiar pelo seu ID. */` |
+| Comentário | `// O friendlyId é gerado pelo banco a partir da sequence` |
+| Mensagem de exceção | `"Pessoa não encontrada com ID: " + id` |
+| `@DisplayName` de teste | `"Deve listar grupos familiares com paginação"` |
+| Nome de migration | `V012__add_phone_to_natural_person.sql` |
+
+Comentário explica **por que**, não **o que**. A linha já diz o que faz; o comentário existe para o
+motivo que não está no código.
+
+## Sufixos
+
+| Tipo | Sufixo | Exemplo |
+| --- | --- | --- |
+| Controller | `Controller` | `FamilyGroupController` |
+| Service | `Service` | `FindAllFamilyGroupsService` |
+| Repository | `Repository` | `FamilyGroupRepository` |
+| Caso de uso | `UseCase` | `CreateFamilyGroupUseCase` |
+| Objeto de caso de uso | `Command` / `Query` | `CreateFamilyGroupCommand` |
+| DTO de entrada (API) | `Command` | `CreateFamilyGroupCommand` |
+| DTO de saída (API) | `Response` | `FamilyGroupResponse` |
+| Exceção | `Exception` | `ResourceNotFoundException` |
+
+## Verbo do caso de uso
+
+O nome começa com o que a operação **faz**, e isso é o mesmo no `UseCase`, no `Query`, no `Service`
+e no método do controller.
+
+| Operação | Verbo | Tipo |
+| --- | --- | --- |
+| Listar, com ou sem filtro | `FindAll` | `FindAllFamilyGroupsUseCase` |
+| Buscar um por id | `Find*ById` | `FindFamilyGroupByIdUseCase` |
+| Busca digitada, top-N | `Autocomplete` | `AutocompleteNaturalPersonUseCase` |
+| Criar | `Create` | `CreateFamilyGroupUseCase` |
+| Alterar | `Update` | `UpdateFamilyGroupUseCase` |
+| Remover (soft delete) | `SoftDelete` | `SoftDeleteFamilyGroupUseCase` |
+| Associar | `Add*` | `AddNaturalPersonToFamilyGroupUseCase` |
+| Desassociar | `Remove*` | `RemoveNaturalPersonFromFamilyGroupUseCase` |
+
+`Search*` não é verbo de caso de uso neste projeto. Listagem é `findAll`, com ou sem filtro: o
+filtro é detalhe do endpoint, não o que ele é.
+
+**Não existe `*Request`.** A entrada da API é `*Command`. Ver
+[ADR 008](008-formato-dtos-api.md).
+
+## Nomes descritivos
+
+O nome revela a intenção, sem prefixo de tipo.
+
+| Ruim | Bom |
+| --- | --- |
+| `u`, `usr`, `d` | `user`, `currentUser`, `daysSinceLastLogin` |
+| `strName`, `iCount` | `name`, `count` |
+| `Manager`, `Processor`, `Helper` | `FamilyGroupService`, `CnpjValidator` |
+
+## Commit
+
+Conventional Commits, **em inglês**, no formato `tipo(escopo): descrição`.
+
+```
+feat(familygroup): adiciona vínculo de pessoa ao grupo
+fix(auth): corrige expiração do refresh token
+docs(adr): registra decisão sobre Testcontainers
+```
+
+Escopos usados no projeto: `familygroup`, `naturalperson`, `legalperson`, `program`, `user`,
+`auth`, `swagger`, `adr`.

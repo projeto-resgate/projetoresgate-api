@@ -7,7 +7,7 @@ e perfis de acesso, servindo como backend para aplicações web e mobile.
 <summary><strong style="font-size:1.5em">🚀 Tecnologias Utilizadas</strong></summary>
 
 * **Java 21**
-* **Spring Boot 3.3.1**
+* **Spring Boot 3.4.4**
 * **Spring Security + JWT (Auth0)**
 * **PostgreSQL** (Banco de Dados)
 * **Flyway** (Migração de Banco de Dados)
@@ -23,21 +23,24 @@ e perfis de acesso, servindo como backend para aplicações web e mobile.
 O projeto adota **Clean Architecture** e princípios de **DDD (Domain-Driven Design)** para isolar regras de negócio de
 detalhes de infraestrutura.
 
-### 📄 Documentação de Decisões Arquiteturais (ADR)
+### 📚 Documentação
 
-Para mais detalhes sobre as decisões arquiteturais e padrões adotados, consulte nossos ADRs:
+Comece pelo índice: **[`docs/README.md`](docs/README.md)**.
 
-* [001 - Padrões Arquiteturais e Estrutura do Projeto](docs/adr/001-padroes-arquiteturais.md)
-* [002 - Estratégia de Tratamento de Erros](docs/adr/002-tratamento-de-erros.md)
-* [003 - Gerenciamento de Banco de Dados e Migrations](docs/adr/003-gerenciamento-banco-dados.md)
-* [004 - Estratégia de Testes](docs/adr/004-estrategia-testes.md)
-* [005 - Padrões de Nomenclatura e Idioma](docs/adr/005-padroes-nomenclatura-idioma.md)
-* [006 - Segurança e Autenticação](docs/adr/006-seguranca-autenticacao.md)
+| Documento | Para quê |
+| --- | --- |
+| [`AGENTS.md`](AGENTS.md) | Regras e comandos. **Leia antes de escrever código.** |
+| [`docs/architecture.md`](docs/architecture.md) | Onde cada tipo de classe mora e por quê |
+| [`docs/convencoes.md`](docs/convencoes.md) | Padrões práticos com código real para copiar |
+| [`docs/testes.md`](docs/testes.md) | Como os testes são organizados e executados |
+| [`docs/banco-de-dados.md`](docs/banco-de-dados.md) | Migrations, nomenclatura SQL e ambiente local |
+| [`docs/adr/`](docs/adr/README.md) | Decisões arquiteturais e o porquê de cada uma |
+| [`docs/rfc/`](docs/rfc/README.md) | Propostas em discussão |
 
-</details>
+### 📄 Decisões Arquiteturais (ADR)
 
-<details>
-<summary><strong style="font-size:1.5em">💡 Dicas antes de commitar</strong></summary>
+As decisões estão em [`docs/adr/README.md`](docs/adr/README.md) — a tabela lá é a fonte única de
+índice. Se um ADR divergir do código, o ADR está errado e deve ser atualizado.
 
 ## Branch Naming
 
@@ -81,8 +84,10 @@ Por que foi feito.
 ## Checklist
 - [ ] Testes adicionados
 - [ ] Documentação atualizada
-- [ ] Cobertura >= 80%
+- [ ] Cobertura dos caminhos principais mantida
 - [ ] Code review solicitado
+- [ ] `./mvnw test` passa (precisa de Docker)
+- [ ] Se mudou entidade ou tabela: migration nova, Swagger e docs atualizados
 ```
 
 ## Code Style
@@ -98,9 +103,9 @@ Por que foi feito.
 
 - [ ] Regras de domínio na entidade
 - [ ] Utilizou padrão service implementando usecase
-- [ ] Está utilizando DTOs (Request/Response) para se comunicar com mundo exterior
-- [ ] Unit tests (80%+ cobertura)
-- [ ] Integration tests
+- [ ] Está utilizando DTOs (`*Command` na entrada, `*Response` na saída) — ver [ADR 008](docs/adr/008-formato-dtos-api.md)
+- [ ] Testes unitários (JUnit 5 + Mockito)
+- [ ] Testes de controller (`@WebMvcTest`) e de integração (`@DataJpaTest` + `PostgresIntegrationTest`)
 - [ ] Swagger documentado
 
 ---
@@ -124,9 +129,36 @@ Utilize o Docker Compose para subir o container do PostgreSQL.
 docker-compose up -d
 ```
 
-Isso iniciará o banco na porta `5432`.
+Isso iniciará o banco na porta `5432`. O Compose sobe três serviços em cadeia: o banco, um
+container do Flyway que aplica as migrations, e um seeder que roda `docker/database/init.sql`
+depois que as migrations terminam.
 
-### 2. Configuração no IntelliJ IDEA (Padrão da Equipe)
+Confira se o serviço de migrations terminou com sucesso:
+
+```bash
+docker compose ps -a
+```
+
+Se as migrations falharem, recrie do zero (isso **apaga os dados locais**):
+
+```bash
+docker compose down -v && docker compose up -d
+```
+
+Mais detalhes em [`docs/banco-de-dados.md`](docs/banco-de-dados.md).
+
+### 2. Rodar os testes
+
+```bash
+./mvnw test          # suíte completa (precisa de Docker)
+./mvnw -o test       # idem, offline: bem mais rápido no dia a dia
+./mvnw test -Dtest=FamilyGroupServiceIntegrationTest   # uma classe
+```
+
+Os testes de integração sobem um PostgreSQL real via Testcontainers — não há H2 no projeto. Por
+isso o Docker precisa estar no ar. Detalhes em [`docs/testes.md`](docs/testes.md).
+
+### 3. Configuração no IntelliJ IDEA (Padrão da Equipe)
 
 Para garantir que todos na equipe rodem o projeto com as mesmas configurações, crie um template de execução:
 
@@ -161,23 +193,10 @@ Acesse a documentação interativa com a aplicação rodando:
 4. No Swagger, clique no botão **Authorize** (cadeado).
 5. Cole o token `Bearer seu_token`.
 
-### 🔧 Como Visualizar os Diagramas (.puml)
+### 📐 Diagramas
 
-Para visualizar e editar os arquivos `.puml` diretamente na sua IDE, é necessário instalar um plugin.
-
-#### No IntelliJ IDEA (Recomendado)
-
-1. Vá em `File` > `Settings` (ou `Ctrl+Alt+S`).
-2. Selecione a aba **Plugins**.
-3. Busque por **"PlantUML integration"** e instale-o.
-4. Após a instalação, reinicie a IDE.
-5. Abra qualquer arquivo `.puml` e utilize a janela de preview para ver o diagrama renderizado.
-
-#### No VS Code
-
-1. Vá para a aba de **Extensions** (ou `Ctrl+Shift+X`).
-2. Busque por **"PlantUML"** (por `jebbs`).
-3. Instale a extensão.
-4. Com um arquivo `.puml` aberto, use o atalho `Alt+D` para abrir o preview do diagrama.
+Os diagramas de arquitetura estão em Mermaid, dentro de
+[`docs/architecture.md`](docs/architecture.md). Editores com suporte a Mermaid (GitHub, VS Code
+com extensão, IntelliJ com plugin) renderizam direto do texto.
 
 </details>

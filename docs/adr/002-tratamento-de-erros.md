@@ -1,64 +1,113 @@
-# 2. Estratégia de Tratamento de Erros (Error Handling)
+---
+name: tratamento-de-erros
+status: aceito
+summary: Sobe exceção, o GlobalExceptionHandler decide o status. ResourceNotFoundException=404, InternalException=400. Nunca null para sinalizar erro.
+---
 
-Data: 2026-02-10
-
-## Contexto
-
-Em uma API REST, é crucial que os erros sejam retornados de forma consistente e informativa para o cliente (frontend/mobile). Desenvolvedores iniciantes frequentemente cometem erros como:
-1.  Engolir exceções (`catch (Exception e) {}`), deixando o sistema em estado inconsistente sem avisar ninguém.
-2.  Retornar código HTTP 200 (OK) mesmo quando ocorre um erro, colocando a mensagem de erro no corpo da resposta.
-3.  Expor stack traces (detalhes técnicos do erro) para o cliente, o que é uma falha de segurança.
+# 2. Tratamento de erros
 
 ## Decisão
 
-Adotamos uma estratégia de **Tratamento Global de Exceções** centralizada.
+O tratamento de erro é centralizado em `infrastructure/handler/GlobalExceptionHandler`, um
+`@RestControllerAdvice` que intercepta toda exceção não tratada que sobe dos controllers.
 
-### 1. GlobalExceptionHandler
-Utilizamos a classe `GlobalExceptionHandler` (anotada com `@ControllerAdvice` ou `@RestControllerAdvice`) localizada na camada de `infrastructure`. Ela intercepta todas as exceções não tratadas que sobem dos Controllers.
+O service **lança** a exceção. Quem decide o status HTTP é o handler. Isso mantém a regra de
+negócio sem nada de HTTP dentro dela.
 
-### 2. Mapeamento de Exceções
-As exceções de negócio (lançadas nos UseCases/Services) devem ser mapeadas para códigos HTTP semanticamente corretos:
+## Exceções de negócio
 
-*   **400 Bad Request:** Erros de validação de dados (ex: campo obrigatório faltando, formato de email inválido).
-*   **401 Unauthorized:** Falha na autenticação (token inválido ou ausente).
-*   **403 Forbidden:** Usuário autenticado, mas sem permissão para acessar o recurso.
-*   **404 Not Found:** Recurso não encontrado (ex: `UserNotFoundException`).
-*   **409 Conflict:** Conflito de estado (ex: tentar cadastrar email já existente).
-*   **422 Unprocessable Entity:** Regra de negócio violada (ex: tentar aprovar um pedido já aprovado).
-*   **500 Internal Server Error:** Erros inesperados (NullPointerException, falha no banco). O cliente deve receber uma mensagem genérica ("Ocorreu um erro interno"), e o erro real deve ser logado.
+Existem em `infrastructure/exception/`. São lançadas no service ou na entidade.
 
-### 3. Estrutura da Resposta de Erro
-A API deve retornar um JSON padronizado em caso de erro. Recomendamos o uso do padrão **Problem Details for HTTP APIs (RFC 7807)** ou um DTO customizado simples contendo:
-*   `timestamp`: Data/hora do erro.
-*   `status`: Código HTTP.
-*   `error`: Descrição curta do erro.
-*   `message`: Mensagem detalhada para o desenvolvedor do frontend.
-*   `path`: Endpoint que gerou o erro.
+| Exceção | HTTP | Quando |
+| --- | --- | --- |
+| `ResourceNotFoundException` | 404 | Registro pedido não existe |
+| `InternalException` | 400 | Regra de negócio violada |
+| `IllegalStateException` | 409 | Estado inconsistente (ex: e-mail já confirmado) |
+| `IllegalArgumentException` | 400 | Argumento inválido vindo de dentro do sistema |
+| `BadCredentialsException` | 401 | Login ou senha errados |
+| `AccessDeniedException` | 403 | Autenticado, mas sem permissão |
+
+`IllegalArgumentException` e `IllegalStateException` já são mapeadas. Para "não encontrado", use
+`ResourceNotFoundException`; `Optional.orElseThrow(() -> new ResourceNotFoundException(...))` é o
+padrão do projeto.
+
+## O que o handler já cobre
+
+São as exceções que **não** precisam ser tratadas de novo. Escolha a mais específica.
+
+| Exceção | HTTP | Quem lança |
+| --- | --- | --- |
+| `ResourceNotFoundException` | 404 | Você, no service |
+| `InternalException` | 400 | Você, quando a regra de negócio nega |
+| `IllegalStateException` | 409 | Você, para estado inconsistente |
+| `IllegalArgumentException` | 400 | Qualquer camada; é o erro de código, não de dado |
+| `BadCredentialsException` | 401 | Spring Security, no login |
+| `AccessDeniedException` | 403 | Spring Security |
+| `EntityNotFoundException` | 404 | JPA/Hibernate. Use `ResourceNotFoundException` no seu código |
+| `DataIntegrityViolationException` | 409 | Banco: chave duplicada, violação de FK |
+| `MethodArgumentNotValidException` | 400 | Spring, para `@Valid` que falhou; preenche `errors` |
+| `Exception` | 500 | Rede de segurança; mensagem genérica, erro real no log |
+
+## Formato da resposta
+
+O DTO é o `ErrorResponse`, com três campos:
+
+```json
+{
+  "code": "Not Found",
+  "message": "Pessoa não encontrada com ID: 123",
+  "errors": [{ "field": "email", "message": "Email inválido" }]
+}
+```
+
+- `code` é o *reason phrase* do HTTP, como `Not Found` ou `Conflict`.
+- `message` é a mensagem da exceção, em português.
+- `errors` só aparece em erro de validação de entrada, e é montado a partir do
+  `MethodArgumentNotValidException`.
+
+O `ErrorResponse` é classe mutável com getters e setters, e não `record` como os outros DTOs. O
+`GlobalExceptionHandler` monta a lista de erros em duas etapas, e o Jackson precisa poder mutar o
+objeto. Ele também é a única resposta que pode ser devolvida em erro, então não segue a convenção
+de DTO de entidade.
+
+Não usamos [RFC 7807](https://www.rfc-editor.org/rfc/rfc7807) (Problem Details). Adotá-lo é escopo
+novo, não uma pendência em aberto.
 
 ## O que NÃO fazer
 
-*   **NUNCA** faça `try-catch` silencioso. Se você capturar uma exceção, ou trate-a (recuperação) ou relance-a (para o GlobalHandler pegar).
-*   **NUNCA** retorne `null` quando algo der errado. Lance uma exceção.
-*   **NUNCA** exponha dados sensíveis na mensagem de erro.
+- **Não devolva `null` para sinalizar erro.** Lance exceção. O `null` passa pelo service, quebra
+  no controller, e o cliente recebe 200 com corpo vazio.
+- **Não engula exceção em `try-catch`.** Se capturar, ou trata a recuperação, ou relança.
+- **Não exponha stack trace.** O `handleGenericException` recebe `Exception` e devolve mensagem
+  genérica; o erro real fica no log.
+- **Não coloque try-catch no controller.** Ele não tem nada a recuperar.
 
 ## Exemplo
 
-**Errado (no Service):**
+Errado:
+
 ```java
-public User findUser(Long id) {
+public NaturalPerson handle(FindNaturalPersonByIdQuery query) {
     try {
-        return repository.findById(id).get();
-    } catch (Exception e) {
-        return null; // O Controller vai receber null e pode dar erro depois
+        return repository.findById(query.id()).get();
+    } catch (NoSuchElementException e) {
+        return null;  // o controller vai seguir com null
     }
 }
 ```
 
-**Correto (no Service):**
+Certo:
+
 ```java
-public User findUser(Long id) {
-    return repository.findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com id: " + id));
+public NaturalPerson handle(FindNaturalPersonByIdQuery query) {
+    return repository.findByIdOrThrow(query.id());
 }
 ```
-O `GlobalExceptionHandler` capturará `ResourceNotFoundException` e retornará 404 automaticamente.
+
+`findByIdOrThrow` é um método `default` do próprio repository, e o handler devolve 404
+automaticamente.
+
+## Nota sobre 422
+
+Não existe 422 neste projeto. Violação de regra de negócio vira 400 (`InternalException`) ou 409
+(`IllegalStateException`). Se surgir a necessidade de 422, é decisão nova e vale um ADR.

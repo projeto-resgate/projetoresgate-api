@@ -1,80 +1,55 @@
-# 1. Padrões Arquiteturais e Estrutura do Projeto
+---
+name: estrutura-do-projeto
+status: aceito
+summary: Pasta por feature, não por camada. Domínio não importa nada de fora; service em service/, nunca usecase/impl/.
+---
 
-Data: 2026-02-10
-
-## Contexto
-
-O projeto `projetoresgate-api` necessita de uma estrutura clara e modular para garantir a manutenibilidade, testabilidade e escalabilidade do código. A arquitetura deve separar as responsabilidades de forma lógica, isolando o domínio da aplicação de detalhes de infraestrutura e interfaces externas.
+# 1. Estrutura do projeto
 
 ## Decisão
 
-Adotamos uma arquitetura baseada em **Clean Architecture**, organizando o código em camadas com responsabilidades bem definidas e princípios de **DDD (Domain-Driven Design)**. A estrutura principal divide-se em `core` (domínio e regras de negócio) e `infrastructure` (detalhes técnicos e frameworks).
+O código se divide em `core` (o domínio) e `infrastructure` (o que conversa com o framework e
+com o mundo externo). Dentro de `core`, o agrupamento é por **feature** (`user`, `naturalperson`,
+`familygroup`, `program`), não por camada técnica.
 
-Dentro do `core`, organizamos o código por **funcionalidades** (ex: `user`), e dentro de cada funcionalidade, aplicamos os seguintes padrões e componentes:
+```
+core/{feature}/
+  api/           *Controller.java
+  api/dto/       *Command.java (entrada) e *Response.java (saída)
+  usecase/       *UseCase.java (interface)
+  usecase/command/  *Command.java  (objeto de caso de uso)
+  usecase/query/    *Query.java    (objeto de caso de uso)
+  service/       *Service.java (implementa o UseCase)
+  domain/        *Entity.java, enums
+  repository/    *Repository.java
 
-### 1. Controller (`api`)
-*   **Responsabilidade:** Ponto de entrada da aplicação (ex: REST API). Recebe as requisições HTTP, valida os dados de entrada (DTOs), invoca o Caso de Uso apropriado e retorna a resposta (DTOs) com o código HTTP adequado.
-*   **Localização:** `core/{feature}/api`
-*   **Sufixo:** `Controller` (ex: `UserController`)
+infrastructure/
+  config/         configuração de framework
+  security/       SecurityConfigurations, filtros
+  handler/        GlobalExceptionHandler, ErrorResponse
+  exception/      exceções de negócio
+  email/          envio de e-mail
+  services/       CookieService, TokenService (tarefas que não são regra de negócio)
+  utils/          utilitários
 
-### 2. Request & Response DTOs (`api/dto`)
-*   **Responsabilidade:** Objetos de Transferência de Dados (Data Transfer Objects) usados para comunicação entre o cliente e a API.
-    *   **Request:** Dados enviados pelo cliente para a API.
-    *   **Response:** Dados retornados pela API para o cliente.
-*   **Localização:** `core/{feature}/api/dto`
-*   **Nomenclatura:** `{Acao}Request`, `{Entidade}Response` (ex: `CreateUserRequest`, `UserResponse`)
+shared/
+  entity/         AuditableEntity (createdAt, updatedAt)
+  specification/  SpecificationBuilder, GenericSpecification, SearchCriteria
+  validation/     anotações e validadores de validação
+```
 
-### 3. Use Case (`usecase`)
-*   **Responsabilidade:** Define as interfaces das operações de negócio (regras de aplicação). Atua como uma porta de entrada para o domínio. Cada Caso de Uso representa uma ação específica que o sistema pode realizar.
-*   **Localização:** `core/{feature}/usecase`
-*   **Sufixo:** `UseCase` (ex: `CreateUserUseCase`, `FindUserUseCase`)
-*   **Padrão:** Interface que define o contrato da operação.
-*   **Método Principal:** O método de execução deve ser nomeado como **`handle`** (ex: `handle(Command cmd)`).
+## Contexto
 
-### 4. Service (`service`)
-*   **Responsabilidade:** Implementação concreta dos Casos de Uso. Contém a lógica de orquestração do negócio, chamando repositórios, outros serviços ou entidades de domínio.
-*   **Localização:** `core/{feature}/service` (ou `core/{feature}/usecase/impl` dependendo da preferência, mas no projeto atual parece estar em `service` implementando a interface do `usecase`)
-*   **Sufixo:** `Service` (ex: `CreateUserService` implementa `CreateUserUseCase`)
+A regra "por feature, não por camada" resolve o problema de um `controller/` com trinta
+controllers e um `service/` com trinta services: você lê uma pasta e vê o assunto inteiro.
+Mudar um cadastro de pessoa toca seis arquivos, e eles ficam juntos.
 
-### 5. Command & Query (`usecase/command`, `usecase/query`)
-*   **Responsabilidade:** Aplicamos o padrão **CQRS** (Command Query Responsibility Segregation) de forma simplificada nos parâmetros dos Casos de Uso.
-    *   **Command:** Objeto que encapsula todos os dados necessários para realizar uma operação de escrita (criar, atualizar, deletar). Representa uma intenção de mudança de estado.
-    *   **Query:** Objeto que encapsula os dados necessários para realizar uma operação de leitura (buscar, listar).
-*   **Localização:**
-    *   Commands: `core/{feature}/usecase/command`
-    *   Queries: `core/{feature}/usecase/query`
-*   **Sufixo:** `Command`, `Query` (ex: `CreateUserCommand`, `FindUserByIdQuery`)
+## Regras
 
-### 6. Repository (`repository`)
-*   **Responsabilidade:** Interface que define o contrato para acesso a dados (persistencia). O domínio define *o que* precisa ser salvo/buscado, e a infraestrutura implementa *como*.
-*   **Localização:** `core/{feature}/repository`
-*   **Sufixo:** `Repository` (ex: `UserRepository`)
-
-### 7. Domain Entity (`domain`)
-*   **Responsabilidade:** Representa os objetos fundamentais do negócio, contendo estado e comportamento (regras de negócio essenciais).
-*   **Localização:** `core/{feature}/domain`
-
-## Consequências
-
-### Positivas
-*   **Separação de Responsabilidades:** Cada componente tem um papel claro, facilitando o entendimento e a manutenção.
-*   **Testabilidade:** A lógica de negócio (Use Cases/Services) pode ser testada unitariamente sem depender de frameworks externos (como Spring MVC ou Banco de Dados), usando mocks para as interfaces (Repositories).
-*   **Independência de Frameworks:** O `core` da aplicação não deve depender fortemente de frameworks, facilitando atualizações ou trocas de tecnologia.
-*   **Padronização:** A estrutura uniforme entre as features facilita a navegação de novos desenvolvedores no projeto.
-
-### Negativas
-*   **Verbosidade:** A criação de muitas classes (DTOs, Commands, Interfaces, Implementações) pode parecer excessiva para operações CRUD simples.
-*   **Curva de Aprendizado:** Desenvolvedores não familiarizados com Clean Architecture podem levar um tempo para entender onde colocar cada lógica.
-
-## Exemplo de Fluxo
-
-1.  **Cliente** envia POST para `/users` com JSON.
-2.  **Controller** (`UserController`) recebe, converte JSON para `CreateUserRequest` (DTO).
-3.  **Controller** converte `CreateUserRequest` para `CreateUserCommand`.
-4.  **Controller** chama `CreateUserUseCase.handle(command)`.
-5.  **Service** (`CreateUserService`) executa a lógica:
-    *   Valida regras de negócio.
-    *   Cria entidade `User` (Domain).
-    *   Chama `UserRepository.save(user)`.
-6.  **Service** retorna o resultado (ex: ID do usuário ou o próprio usuário).
-7.  **Controller** converte o resultado para `UserResponse` (DTO) e retorna HTTP 201.
+- **Dependência aponta para dentro.** `api` e `service` conhecem `domain`. `domain` não conhece
+  ninguém: nem `api`, nem `service`, nem `repository`.
+- **Repository só acessa a própria feature.** Se `naturalperson` precisa de `familygroup`, isso é
+  escopo novo, não um import cruzado silencioso.
+- **O service implementa o UseCase.** Não existe `usecase/impl/`.
+- **Entidade não é anêmica.** Regra de negócio mora em `create(...)` e `update()...apply()`, não no
+  service.
