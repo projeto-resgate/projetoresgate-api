@@ -1,14 +1,14 @@
 package com.projetoresgate.projetoresgate_api.core.identity.familygroup.service;
 
 import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.familygroup.api.dto.FamilyGroupNaturalPersonResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.api.dto.FamilyGroupResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.api.dto.FamilyGroupSummaryResponse;
-import com.projetoresgate.projetoresgate_api.core.identity.familygroup.api.dto.FamilyGroupNaturalPersonResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.domain.FamilyGroup;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.repository.FamilyGroupRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.command.*;
-import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindFamilyGroupNaturalPersonsQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindAllFamilyGroupsQuery;
+import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindFamilyGroupNaturalPersonsQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
@@ -315,8 +315,6 @@ class FamilyGroupServiceIntegrationTest extends PostgresIntegrationTest {
         Page<FamilyGroupNaturalPersonResponse> result = findNaturalPersonsService.handle(
                 new FindFamilyGroupNaturalPersonsQuery(group.getId(), PageRequest.of(0, 10, Sort.by("name").ascending())));
 
-        // Um left join devolveria uma linha com null aqui, o que faria a paginacao reportar
-        // 1 elemento para um grupo sem ninguem vinculado.
         assertTrue(result.getContent().isEmpty());
         assertEquals(0, result.getTotalElements());
         assertEquals(0, result.getTotalPages());

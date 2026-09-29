@@ -56,5 +56,19 @@ BEGIN
         ('00000000-0000-0000-0000-000000000062', '00000000-0000-0000-0000-000000000012'),
         ('00000000-0000-0000-0000-000000000063', '00000000-0000-0000-0000-000000000013');
 
+    INSERT INTO school_grade (id, name, grade_order, date_created, date_updated) VALUES
+        ('00000000-0000-0000-0000-000000000071', 'Primeiro ano do ensino fundamental', 1, now(), now()),
+        ('00000000-0000-0000-0000-000000000072', 'Segundo ano do ensino fundamental', 2, now(), now()),
+        ('00000000-0000-0000-0000-000000000073', 'Terceiro ano do ensino fundamental', 3, now(), now()),
+        ('00000000-0000-0000-0000-000000000074', 'Quarto ano do ensino fundamental', 4, now(), now()),
+        ('00000000-0000-0000-0000-000000000075', 'Quinto ano do ensino fundamental', 5, now(), now()),
+        ('00000000-0000-0000-0000-000000000076', 'Sexto ano do ensino fundamental', 6, now(), now()),
+        ('00000000-0000-0000-0000-000000000077', 'Sétimo ano do ensino fundamental', 7, now(), now()),
+        ('00000000-0000-0000-0000-000000000078', 'Oitavo ano do ensino fundamental', 8, now(), now()),
+        ('00000000-0000-0000-0000-000000000079', 'Nono ano do ensino fundamental', 9, now(), now()),
+        ('00000000-0000-0000-0000-000000000080', 'Primeiro ano do ensino médio', 10, now(), now()),
+        ('00000000-0000-0000-0000-000000000081', 'Segundo ano do ensino médio', 11, now(), now()),
+        ('00000000-0000-0000-0000-000000000082', 'Terceiro ano do ensino médio', 12, now(), now());
+
     RAISE NOTICE 'Seeder aplicado com sucesso.';
 END $$;

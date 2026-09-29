@@ -180,7 +180,6 @@ class SpecificationBuilderIntegrationTest extends PostgresIntegrationTest {
                     .with("gender", "~", Gender.FEMALE)
                     .build();
 
-            // O Spring embrulha a IllegalArgumentException da Criteria em DataAccessException.
             var exception = assertThrows(InvalidDataAccessApiUsageException.class,
                     () -> findBy(specification));
 

@@ -1,11 +1,6 @@
 package com.projetoresgate.projetoresgate_api.shared.specification;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.NonNull;
 
@@ -63,11 +58,6 @@ public class GenericSpecification<T> implements Specification<T> {
         return builder.like(builder.lower(asString(path)), pattern, ESCAPE_CHAR);
     }
 
-    /**
-     * ILIKE não faz sentido em coluna numérica, de data ou de enum: o usuário não busca "parte"
-     * de um número, e o Postgres nem tem o operador para isso. Sem esta checagem, o cast para
-     * Expression<String> falharia só na hora de rodar a query, com mensagem de erro do banco.
-     */
     private boolean isString(Path<?> path) {
         return path.getJavaType() == String.class;
     }
