@@ -37,13 +37,13 @@ class AutocompleteLegalPersonIntegrationTest {
         repository.saveAllAndFlush(List.of(
                 LegalPerson.create("11222333000181", "Razão Social Acme LTDA", "Acme Fantasia", "Acme LTDA", "6201-5/00",
                         RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE,
-                        Address.create("01310-100", "1000", null, "Bela Vista", "São Paulo", "SP"), null),
+                        Address.create(null, null, "01310-100", "1000", null, null, "Bela Vista", "São Paulo", "SP"), null),
                 LegalPerson.create("98765432000198", "Beta Comércio e Serviços", "Beta Store", "Beta Store", "4711-8/02",
                         RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE,
-                        Address.create("20040-020", "200", null, "Centro", "Rio de Janeiro", "RJ"), null),
+                        Address.create(null, null, "20040-020", "200", null, null, "Centro", "Rio de Janeiro", "RJ"), null),
                 LegalPerson.create("12345678000190", "Gama Tecnologia", "Gama Tech", "Gama Tech", "6201-5/00",
                         RegistrationStatus.SUSPENDED, CompanyStatus.INACTIVE,
-                        Address.create("30130-010", "300", null, "Funcionários", "Belo Horizonte", "MG"), null)
+                        Address.create(null, null, "30130-010", "300", null, null, "Funcionários", "Belo Horizonte", "MG"), null)
         ));
     }
 

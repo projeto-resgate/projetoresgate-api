@@ -9,7 +9,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Re
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.*;
-import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.AddressCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.CreateLegalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.SoftDeleteLegalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.UpdateLegalPersonCommand;
@@ -388,11 +388,11 @@ void autocomplete_ShouldReturn401WithoutAuth() throws Exception {
 }
 
     private AddressCommand buildAddress() {
-        return new AddressCommand("01310-100", "1000", null, "Bela Vista", "São Paulo", "SP");
+        return new AddressCommand(null, null, "01310-100", "1000", null, null, "Bela Vista", "São Paulo", "SP");
     }
 
     private LegalPerson createMockPerson() {
-        Address address = Address.create("01310-100", "1000", null, "Bela Vista", "São Paulo", "SP");
+        Address address = Address.create(null, null, "01310-100", "1000", null, null, "Bela Vista", "São Paulo", "SP");
         Representative representative = Representative.create("John Doe", "11988887777", "1133334444", "john@doe.com");
 
         LegalPerson person = LegalPerson.create(

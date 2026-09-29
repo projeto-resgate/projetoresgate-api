@@ -4,7 +4,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Addres
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.UpdateLegalPersonUseCase;
-import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.AddressCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.UpdateLegalPersonCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.infrastructure.utils.CnpjUtils;
@@ -55,11 +55,15 @@ public class UpdateLegalPersonService implements UpdateLegalPersonUseCase {
 
         Address current = nonNull(person.getAddress())
                 ? person.getAddress()
-                : Address.create(command.zipCode(), command.number(), command.complement(),
-                command.neighborhood(), command.city(), command.state());
+                : Address.create(command.streetType(), command.streetName(), command.zipCode(), command.number(),
+                command.referencePoint(), command.complement(), command.neighborhood(), command.city(),
+                command.state());
         current.update()
+                .streetType(command.streetType())
+                .streetName(command.streetName())
                 .zipCode(command.zipCode())
                 .number(command.number())
+                .referencePoint(command.referencePoint())
                 .complement(command.complement())
                 .neighborhood(command.neighborhood())
                 .city(command.city())

@@ -1,4 +1,4 @@
-package com.projetoresgate.projetoresgate_api.core.identity.legalperson.api.dto;
+package com.projetoresgate.projetoresgate_api.core.identity.address.api.dto;
 
 import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import org.junit.jupiter.api.DisplayName;
@@ -10,16 +10,20 @@ import static org.junit.jupiter.api.Assertions.*;
 class AddressResponseTest {
 
     @Test
-    @DisplayName("Deve mapear um endereço para o response com todos os campos")
+    @DisplayName("Deve mapear todos os campos do endereço")
     void fromEntity_ShouldMapAllFields() {
-        Address address = Address.create("01310-100", "1000", "Apto 101", "Bela Vista", "São Paulo", "SP");
+        Address address = Address.create("Rua", "das Palmeiras", "01310-100", "1000", "Próximo à praça",
+                "Apto 101", "Bela Vista", "São Paulo", "SP");
 
         AddressResponse response = AddressResponse.fromEntity(address);
 
         assertNotNull(response);
         assertEquals(address.getId(), response.id());
+        assertEquals("Rua", response.streetType());
+        assertEquals("das Palmeiras", response.streetName());
         assertEquals("01310-100", response.zipCode());
         assertEquals("1000", response.number());
+        assertEquals("Próximo à praça", response.referencePoint());
         assertEquals("Apto 101", response.complement());
         assertEquals("Bela Vista", response.neighborhood());
         assertEquals("São Paulo", response.city());
@@ -27,8 +31,8 @@ class AddressResponseTest {
     }
 
     @Test
-    @DisplayName("Deve retornar null quando o endereço for nulo")
-    void fromEntity_ShouldReturnNullForNullAddress() {
+    @DisplayName("Deve retornar null quando o endereço não existir")
+    void fromEntity_ShouldReturnNullWhenAddressIsNull() {
         assertNull(AddressResponse.fromEntity(null));
     }
 }

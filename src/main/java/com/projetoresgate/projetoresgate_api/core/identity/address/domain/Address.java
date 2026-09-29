@@ -23,9 +23,15 @@ public class Address extends AuditableEntity {
     @Id
     private UUID id;
 
+    private String streetType;
+
+    private String streetName;
+
     private String zipCode;
 
     private String number;
+
+    private String referencePoint;
 
     private String complement;
 
@@ -38,10 +44,14 @@ public class Address extends AuditableEntity {
     protected Address() {
     }
 
-    private Address(UUID id, String zipCode, String number, String complement, String neighborhood, String city, String state) {
+    private Address(UUID id, String streetType, String streetName, String zipCode, String number,
+                    String referencePoint, String complement, String neighborhood, String city, String state) {
         this.id = id;
+        this.streetType = streetType;
+        this.streetName = streetName;
         this.zipCode = zipCode;
         this.number = number;
+        this.referencePoint = referencePoint;
         this.complement = complement;
         this.neighborhood = neighborhood;
         this.city = city;
@@ -49,8 +59,10 @@ public class Address extends AuditableEntity {
         validate();
     }
 
-    public static Address create(String zipCode, String number, String complement, String neighborhood, String city, String state) {
-        return new Address(UUID.randomUUID(), zipCode, number, complement, neighborhood, city, state);
+    public static Address create(String streetType, String streetName, String zipCode, String number,
+                                 String referencePoint, String complement, String neighborhood, String city, String state) {
+        return new Address(UUID.randomUUID(), streetType, streetName, zipCode, number, referencePoint,
+                complement, neighborhood, city, state);
     }
 
     public Updater update() {
@@ -59,6 +71,16 @@ public class Address extends AuditableEntity {
 
     public class Updater {
 
+        public Updater streetType(String streetType) {
+            Address.this.streetType = streetType;
+            return this;
+        }
+
+        public Updater streetName(String streetName) {
+            Address.this.streetName = streetName;
+            return this;
+        }
+
         public Updater zipCode(String zipCode) {
             Address.this.zipCode = zipCode;
             return this;
@@ -66,6 +88,11 @@ public class Address extends AuditableEntity {
 
         public Updater number(String number) {
             Address.this.number = number;
+            return this;
+        }
+
+        public Updater referencePoint(String referencePoint) {
+            Address.this.referencePoint = referencePoint;
             return this;
         }
 
@@ -102,8 +129,17 @@ public class Address extends AuditableEntity {
         if (this.zipCode.length() > 20) {
             throw new InternalException("O CEP não pode exceder 20 caracteres.");
         }
+        if (StringUtils.hasText(this.streetType) && this.streetType.length() > 50) {
+            throw new InternalException("O tipo de logradouro não pode exceder 50 caracteres.");
+        }
+        if (StringUtils.hasText(this.streetName) && this.streetName.length() > 255) {
+            throw new InternalException("O nome do logradouro não pode exceder 255 caracteres.");
+        }
         if (StringUtils.hasText(this.number) && this.number.length() > 20) {
             throw new InternalException("O número não pode exceder 20 caracteres.");
+        }
+        if (StringUtils.hasText(this.referencePoint) && this.referencePoint.length() > 255) {
+            throw new InternalException("O ponto de referência não pode exceder 255 caracteres.");
         }
         if (StringUtils.hasText(this.complement) && this.complement.length() > 100) {
             throw new InternalException("O complemento não pode exceder 100 caracteres.");
@@ -129,8 +165,11 @@ public class Address extends AuditableEntity {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Address other)) return false;
-        return Objects.equals(zipCode, other.zipCode)
+        return Objects.equals(streetType, other.streetType)
+                && Objects.equals(streetName, other.streetName)
+                && Objects.equals(zipCode, other.zipCode)
                 && Objects.equals(number, other.number)
+                && Objects.equals(referencePoint, other.referencePoint)
                 && Objects.equals(complement, other.complement)
                 && Objects.equals(neighborhood, other.neighborhood)
                 && Objects.equals(city, other.city)
@@ -139,11 +178,19 @@ public class Address extends AuditableEntity {
 
     @Override
     public int hashCode() {
-        return Objects.hash(zipCode, number, complement, neighborhood, city, state);
+        return Objects.hash(streetType, streetName, zipCode, number, referencePoint, complement, neighborhood, city, state);
     }
 
     public UUID getId() {
         return id;
+    }
+
+    public String getStreetType() {
+        return streetType;
+    }
+
+    public String getStreetName() {
+        return streetName;
     }
 
     public String getZipCode() {
@@ -152,6 +199,10 @@ public class Address extends AuditableEntity {
 
     public String getNumber() {
         return number;
+    }
+
+    public String getReferencePoint() {
+        return referencePoint;
     }
 
     public String getComplement() {

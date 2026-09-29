@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class LegalPersonTest {
 
     private Address buildAddress() {
-        return Address.create("01310-100", "1000", null, "Bela Vista", "São Paulo", "SP");
+        return Address.create(null, null, "01310-100", "1000", null, null, "Bela Vista", "São Paulo", "SP");
     }
 
     @Test
@@ -116,7 +116,7 @@ class LegalPersonTest {
     @DisplayName("Deve lançar exceção ao criar com endereço sem CEP")
     void create_ShouldFailWithAddressWithoutZipCode() {
         InternalException exception = assertThrows(InternalException.class, () ->
-                Address.create("", null, null, null, "São Paulo", "SP")
+                Address.create(null, null, "", null, null, null, null, "São Paulo", "SP")
         );
         assertEquals("O CEP não pode ser vazio.", exception.getMessage());
     }
@@ -146,7 +146,7 @@ class LegalPersonTest {
                 .mainCnaeCode("8599-6/04")
                 .registrationStatus(RegistrationStatus.SUSPENDED)
                 .companyStatus(CompanyStatus.INACTIVE)
-                .address(Address.create("20040-020", "200", null, "Centro", "Rio de Janeiro", "RJ"))
+                .address(Address.create(null, null, "20040-020", "200", null, null, "Centro", "Rio de Janeiro", "RJ"))
                 .representative(Representative.create("Jane Doe", null, null, "jane@doe.com"))
                 .apply();
 

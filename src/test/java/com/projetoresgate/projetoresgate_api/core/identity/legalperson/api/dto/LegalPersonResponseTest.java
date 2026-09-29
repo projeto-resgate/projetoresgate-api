@@ -19,7 +19,7 @@ class LegalPersonResponseTest {
     @DisplayName("Deve mapear a pessoa jurídica com todos os campos, endereço, representante e data de cadastro")
     void fromEntity_ShouldMapAllFields() {
         LocalDateTime dateCreated = LocalDateTime.of(2025, 11, 23, 11, 5, 20);
-        Address address = Address.create("01310-100", "1000", "Apto 101", "Bela Vista", "São Paulo", "SP");
+        Address address = Address.create(null, null, "01310-100", "1000", null, "Apto 101", "Bela Vista", "São Paulo", "SP");
         Representative representative = Representative.create("John Doe", "11988887777", "1133334444", "john@doe.com");
 
         LegalPerson person = LegalPerson.create(
@@ -57,7 +57,7 @@ class LegalPersonResponseTest {
         LegalPerson person = LegalPerson.create(
                 "11222333000181", "Razão Social LTDA", null, null, null,
                 RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE,
-                Address.create("01310-100", "1000", null, "Bela Vista", "São Paulo", "SP"), null);
+                Address.create(null, null, "01310-100", "1000", null, null, "Bela Vista", "São Paulo", "SP"), null);
         person.setDateCreated(dateCreated);
 
         LegalPersonResponse response = LegalPersonResponse.fromEntity(person);
