@@ -113,7 +113,7 @@ public class ProgramController {
     }
 
     @GetMapping("/names")
-    @Operation(summary = "Listar Nomes de Programas", description = "Retorna apenas os nomes dos programas, com filtro opcional por nome (ilike).")
+    @Operation(summary = "Listar Nomes de Programas", description = "Retorna o id e o nome dos programas, com filtro opcional por nome (ilike).")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de nomes retornada com sucesso",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProgramNameResponse.class)))
@@ -138,7 +138,7 @@ public class ProgramController {
     }
 
     @GetMapping("/{id}/educator-category-items/names")
-    @Operation(summary = "Listar Nomes de Categorias de Educadores", description = "Retorna apenas os nomes das categorias de educadores de um programa, com filtro opcional por nome (ilike).")
+    @Operation(summary = "Listar Nomes de Categorias de Educadores", description = "Retorna o id e o nome das categorias de educadores de um programa, com filtro opcional por nome (ilike).")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de nomes retornada com sucesso",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = EducatorCategoryItemNameResponse.class))),

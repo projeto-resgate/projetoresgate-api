@@ -53,6 +53,7 @@ class FindEducatorCategoryItemNamesServiceTest {
                 service.handle(new FindEducatorCategoryItemNamesQuery(programId, "Fono"));
 
         assertEquals(1, names.size());
+        assertEquals(item.getId(), names.get(0).id());
         assertEquals("Fonoaudiólogo", names.get(0).name());
     }
 

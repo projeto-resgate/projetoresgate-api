@@ -40,7 +40,9 @@ class FindProgramNamesServiceTest {
         List<ProgramNameResponse> names = service.handle(new FindProgramNamesQuery("Programa"));
 
         assertEquals(2, names.size());
+        assertEquals(programA.getId(), names.get(0).id());
         assertEquals("Programa Alpha", names.get(0).name());
+        assertEquals(programB.getId(), names.get(1).id());
         assertEquals("Programa Beta", names.get(1).name());
     }
 }

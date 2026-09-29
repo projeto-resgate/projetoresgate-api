@@ -218,12 +218,14 @@ class ProgramControllerTest {
     @WithMockCustomUser
     @DisplayName("GET /program/names - Deve retornar 200 OK com lista de nomes")
     void findNames_ShouldReturn200() throws Exception {
+        UUID programId = UUID.randomUUID();
         when(findProgramNamesUseCase.handle(any()))
-                .thenReturn(List.of(new ProgramNameResponse("Programa A")));
+                .thenReturn(List.of(new ProgramNameResponse(programId, "Programa A")));
 
         mockMvc.perform(get("/program/names")
                         .param("name", "Programa"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(programId.toString()))
                 .andExpect(jsonPath("$[0].name").value("Programa A"));
     }
 
@@ -232,12 +234,14 @@ class ProgramControllerTest {
     @DisplayName("GET /program/{id}/educator-category-items/names - Deve retornar 200 OK com lista de nomes")
     void findEducatorCategoryItemNames_ShouldReturn200() throws Exception {
         UUID id = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
         when(findEducatorCategoryItemNamesUseCase.handle(any()))
-                .thenReturn(List.of(new EducatorCategoryItemNameResponse("Fonoaudiólogo")));
+                .thenReturn(List.of(new EducatorCategoryItemNameResponse(itemId, "Fonoaudiólogo")));
 
         mockMvc.perform(get("/program/{id}/educator-category-items/names", id)
                         .param("name", "Fono"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(itemId.toString()))
                 .andExpect(jsonPath("$[0].name").value("Fonoaudiólogo"));
     }
 
