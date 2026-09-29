@@ -6,23 +6,17 @@ import com.projetoresgate.projetoresgate_api.core.identity.familygroup.repositor
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.SearchFamilyGroupUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.SearchFamilyGroupQuery;
 import com.projetoresgate.projetoresgate_api.shared.specification.SpecificationBuilder;
-import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import static java.util.Objects.nonNull;
 
 @Service
 public class SearchFamilyGroupService implements SearchFamilyGroupUseCase {
@@ -37,18 +31,11 @@ public class SearchFamilyGroupService implements SearchFamilyGroupUseCase {
     @Transactional(readOnly = true)
     public Page<FamilyGroupSummaryResponse> handle(SearchFamilyGroupQuery query) {
 
-        Specification<FamilyGroup> genericFilters = new SpecificationBuilder<FamilyGroup>()
+        Specification<FamilyGroup> filters = new SpecificationBuilder<FamilyGroup>()
                 .with("name", ":", query.name())
-                .with("numberOfResidents", ":", query.numberOfResidents())
                 .build();
 
-        Specification<FamilyGroup> finalSpec = Specification
-                .where(hasSearchTerm(query.searchTerm()))
-                .and(genericFilters)
-                .and(hasHouseholdIncomeRange(query.minHouseholdIncome(), query.maxHouseholdIncome()))
-                .and(hasPerCapitaIncomeRange(query.minPerCapitaIncome(), query.maxPerCapitaIncome()));
-
-        Page<FamilyGroup> page = repository.findAll(finalSpec, query.pageable());
+        Page<FamilyGroup> page = repository.findAll(filters, query.pageable());
 
         return new PageImpl<>(
                 toSummaries(page.getContent()),
@@ -71,52 +58,5 @@ public class SearchFamilyGroupService implements SearchFamilyGroupUseCase {
                 .map(familyGroup -> FamilyGroupSummaryResponse.fromEntity(familyGroup,
                         countsById.getOrDefault(familyGroup.getId(), 0L)))
                 .toList();
-    }
-
-    private Specification<FamilyGroup> hasSearchTerm(String searchTerm) {
-        if (!StringUtils.hasText(searchTerm)) return null;
-
-        return (root, criteriaQuery, cb) -> {
-            String textSearch = "%" + searchTerm.toLowerCase() + "%";
-
-            List<Predicate> orPredicates = new ArrayList<>();
-            orPredicates.add(cb.like(cb.lower(root.get("name")), textSearch));
-
-            return cb.or(orPredicates.toArray(new Predicate[0]));
-        };
-    }
-
-    private Specification<FamilyGroup> hasHouseholdIncomeRange(BigDecimal min, BigDecimal max) {
-        if (!nonNull(min) && !nonNull(max)) return null;
-
-        return (root, criteriaQuery, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            if (nonNull(min)) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("householdIncome"), min));
-            }
-            if (nonNull(max)) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("householdIncome"), max));
-            }
-
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
-    }
-
-    private Specification<FamilyGroup> hasPerCapitaIncomeRange(BigDecimal min, BigDecimal max) {
-        if (!nonNull(min) && !nonNull(max)) return null;
-
-        return (root, criteriaQuery, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            if (nonNull(min)) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("perCapitaIncome"), min));
-            }
-            if (nonNull(max)) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("perCapitaIncome"), max));
-            }
-
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
     }
 }

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.projetoresgate.projetoresgate_api.shared.testcontainers.PostgresIntegrationTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import java.util.List;
@@ -18,12 +19,9 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DataJpaTest(properties = {
-        "spring.flyway.enabled=false",
-        "spring.jpa.hibernate.ddl-auto=create-drop"
-})
+@DataJpaTest
 @DisplayName("AutocompleteLegalPersonService - Integração")
-class AutocompleteLegalPersonIntegrationTest {
+class AutocompleteLegalPersonIntegrationTest extends PostgresIntegrationTest {
 
     @Autowired
     private LegalPersonRepository repository;

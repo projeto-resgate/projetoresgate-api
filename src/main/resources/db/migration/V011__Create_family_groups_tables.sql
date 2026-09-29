@@ -19,13 +19,7 @@ CREATE TABLE IF NOT EXISTS family_group (
     deleted_at TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS family_group_sequence (
-    id BIGINT PRIMARY KEY,
-    current_value BIGINT NOT NULL DEFAULT 0
-);
-
-INSERT INTO family_group_sequence (id, current_value) VALUES (1, 0)
-ON CONFLICT (id) DO NOTHING;
+CREATE SEQUENCE IF NOT EXISTS family_group_friendly_id_seq START WITH 1;
 
 CREATE TABLE IF NOT EXISTS family_group_natural_person (
     family_group_id UUID NOT NULL REFERENCES family_group(id),

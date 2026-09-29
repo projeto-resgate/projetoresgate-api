@@ -3,9 +3,7 @@ package com.projetoresgate.projetoresgate_api.core.identity.familygroup.service;
 import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.domain.FamilyGroup;
-import com.projetoresgate.projetoresgate_api.core.identity.familygroup.domain.FamilyGroupSequence;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.repository.FamilyGroupRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.familygroup.repository.FamilyGroupSequenceRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.CreateFamilyGroupUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.command.CreateFamilyGroupCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
@@ -18,12 +16,9 @@ import static java.util.Objects.nonNull;
 public class CreateFamilyGroupService implements CreateFamilyGroupUseCase {
 
     private final FamilyGroupRepository repository;
-    private final FamilyGroupSequenceRepository sequenceRepository;
 
-    public CreateFamilyGroupService(FamilyGroupRepository repository,
-                                    FamilyGroupSequenceRepository sequenceRepository) {
+    public CreateFamilyGroupService(FamilyGroupRepository repository) {
         this.repository = repository;
-        this.sequenceRepository = sequenceRepository;
     }
 
     @Override
@@ -49,11 +44,7 @@ public class CreateFamilyGroupService implements CreateFamilyGroupUseCase {
     }
 
     private String nextFriendlyId() {
-        FamilyGroupSequence sequence = sequenceRepository
-                .findByIdForUpdate(FamilyGroupSequence.SINGLETON_ID)
-                .orElseGet(() -> sequenceRepository.save(FamilyGroupSequence.initial()));
-
-        return FamilyGroup.FRIENDLY_ID_PREFIX + sequence.nextValue();
+        return FamilyGroup.FRIENDLY_ID_PREFIX + repository.nextFriendlyIdValue();
     }
 
     private Address toAddress(AddressCommand command) {

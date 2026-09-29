@@ -2,9 +2,7 @@ package com.projetoresgate.projetoresgate_api.core.identity.familygroup.service;
 
 import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.domain.FamilyGroup;
-import com.projetoresgate.projetoresgate_api.core.identity.familygroup.domain.FamilyGroupSequence;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.repository.FamilyGroupRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.familygroup.repository.FamilyGroupSequenceRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.command.CreateFamilyGroupCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import org.junit.jupiter.api.DisplayName;
@@ -15,11 +13,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,23 +25,15 @@ class CreateFamilyGroupServiceTest {
     @Mock
     private FamilyGroupRepository repository;
 
-    @Mock
-    private FamilyGroupSequenceRepository sequenceRepository;
-
     @InjectMocks
     private CreateFamilyGroupService service;
 
     private void givenSequence() {
-        givenSequence(3L);
+        givenSequence(4L);
     }
 
-    private void givenSequence(Long currentValue) {
-        FamilyGroupSequence sequence = FamilyGroupSequence.initial();
-        for (long i = 0; i < currentValue; i++) {
-            sequence.nextValue();
-        }
-        lenient().when(sequenceRepository.findByIdForUpdate(eq(FamilyGroupSequence.SINGLETON_ID)))
-                .thenReturn(Optional.of(sequence));
+    private void givenSequence(Long nextValue) {
+        lenient().when(repository.nextFriendlyIdValue()).thenReturn(nextValue);
     }
 
     @Test
@@ -116,27 +104,11 @@ class CreateFamilyGroupServiceTest {
         CreateFamilyGroupCommand second = new CreateFamilyGroupCommand(
                 "Família Beta", null, null, null, null, null, null, null);
 
-        givenSequence(9L);
+        when(repository.nextFriendlyIdValue()).thenReturn(10L, 11L);
         when(repository.save(any(FamilyGroup.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         assertEquals("FAM-10", service.handle(first).getFriendlyId());
         assertEquals("FAM-11", service.handle(second).getFriendlyId());
-    }
-
-    @Test
-    @DisplayName("Deve inicializar a sequência quando ela ainda não existir")
-    void handle_ShouldCreateSequenceWhenMissing() {
-        CreateFamilyGroupCommand command = new CreateFamilyGroupCommand(
-                "Família Alfa", null, null, null, null, null, null, null);
-
-        when(sequenceRepository.findByIdForUpdate(eq(FamilyGroupSequence.SINGLETON_ID)))
-                .thenReturn(Optional.empty());
-        when(sequenceRepository.save(any(FamilyGroupSequence.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-        when(repository.save(any(FamilyGroup.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        assertEquals("FAM-1", service.handle(command).getFriendlyId());
-        verify(sequenceRepository).save(any(FamilyGroupSequence.class));
     }
 
     @Test

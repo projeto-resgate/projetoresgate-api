@@ -4,17 +4,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projetoresgate.projetoresgate_api.config.security.WithMockCustomUser;
 import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.familygroup.api.dto.FamilyGroupNaturalPersonResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.api.dto.FamilyGroupSummaryResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.domain.FamilyGroup;
+import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.AddNaturalPersonToFamilyGroupUseCase;
+import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.AddNewNaturalPersonToFamilyGroupUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.CreateFamilyGroupUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.FindFamilyGroupByIdUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.FindFamilyGroupNaturalPersonsUseCase;
+import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.RemoveNaturalPersonFromFamilyGroupUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.SearchFamilyGroupUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.SoftDeleteFamilyGroupUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.UpdateFamilyGroupUseCase;
+import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.command.AddNaturalPersonToFamilyGroupCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.command.AddNewNaturalPersonToFamilyGroupCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.command.CreateFamilyGroupCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.command.RemoveNaturalPersonFromFamilyGroupCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.command.UpdateFamilyGroupCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindFamilyGroupNaturalPersonsQuery;
+import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.SearchFamilyGroupQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.CreateNaturalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
@@ -22,6 +32,7 @@ import com.projetoresgate.projetoresgate_api.infrastructure.security.SecurityCon
 import com.projetoresgate.projetoresgate_api.infrastructure.services.ITokenService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -39,11 +50,13 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -51,6 +64,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(SecurityConfigurations.class)
 @DisplayName("FamilyGroupController - Test")
 class FamilyGroupControllerTest {
+
+    private static final Pageable PAGEABLE = PageRequest.of(0, 10, Sort.by("name").ascending());
 
     @Autowired
     private MockMvc mockMvc;
@@ -75,6 +90,15 @@ class FamilyGroupControllerTest {
 
     @MockitoBean
     private SoftDeleteFamilyGroupUseCase softDeleteUseCase;
+
+    @MockitoBean
+    private AddNaturalPersonToFamilyGroupUseCase addNaturalPersonUseCase;
+
+    @MockitoBean
+    private RemoveNaturalPersonFromFamilyGroupUseCase removeNaturalPersonUseCase;
+
+    @MockitoBean
+    private AddNewNaturalPersonToFamilyGroupUseCase addNewNaturalPersonUseCase;
 
     @MockitoBean
     private UserDetailsService userDetailsService;
@@ -228,23 +252,21 @@ class FamilyGroupControllerTest {
 
     @Test
     @WithMockCustomUser
-    @DisplayName("GET /family-group - Deve enviar os filtros de renda e número de moradores para o use case")
+    @DisplayName("GET /family-group - Deve enviar o nome e a paginação para o use case")
     void search_ShouldSendFiltersToUseCase() throws Exception {
         when(searchUseCase.handle(any())).thenReturn(new PageImpl<>(List.of()));
 
         mockMvc.perform(get("/family-group")
-                        .param("searchTerm", "Silva")
                         .param("name", "Família")
-                        .param("minHouseholdIncome", "1000.00")
-                        .param("maxHouseholdIncome", "5000.00")
-                        .param("minPerCapitaIncome", "500.00")
-                        .param("maxPerCapitaIncome", "1500.00")
-                        .param("numberOfResidents", "4")
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk());
 
-        verify(searchUseCase).handle(any());
+        ArgumentCaptor<SearchFamilyGroupQuery> captor = ArgumentCaptor.forClass(SearchFamilyGroupQuery.class);
+        verify(searchUseCase).handle(captor.capture());
+
+        assertEquals("Família", captor.getValue().name());
+        assertEquals(PageRequest.of(0, 10, Sort.by("name").ascending()), captor.getValue().pageable());
     }
 
     @Test
@@ -259,15 +281,69 @@ class FamilyGroupControllerTest {
                 "Breno Ferreira", "breno@email.com", null, "11144477736", "223456789",
                 null, null, null, "11911113333");
 
-        when(findNaturalPersonsUseCase.handle(any())).thenReturn(List.of(daniela, breno));
+        when(findNaturalPersonsUseCase.handle(any())).thenReturn(
+                new PageImpl<>(List.of(
+                        FamilyGroupNaturalPersonResponse.fromEntity(daniela),
+                        FamilyGroupNaturalPersonResponse.fromEntity(breno)), PAGEABLE, 2));
 
         mockMvc.perform(get("/family-group/{id}/natural-person", id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Daniela Ferreira"))
-                .andExpect(jsonPath("$[0].cpf").value("11144477735"))
-                .andExpect(jsonPath("$[0].rg").value("123456789"))
-                .andExpect(jsonPath("$[0].cellphone").value("11911112222"))
-                .andExpect(jsonPath("$[1].name").value("Breno Ferreira"));
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.content[0].id").value(daniela.getId().toString()))
+                .andExpect(jsonPath("$.content[0].name").value("Daniela Ferreira"))
+                .andExpect(jsonPath("$.content[0].cpf").value("11144477735"))
+                .andExpect(jsonPath("$.content[0].rg").value("123456789"))
+                .andExpect(jsonPath("$.content[0].cellphone").value("11911112222"))
+                .andExpect(jsonPath("$.content[1].name").value("Breno Ferreira"))
+                .andExpect(jsonPath("$.content[0].email").doesNotExist())
+                .andExpect(jsonPath("$.content[0].nickname").doesNotExist())
+                .andExpect(jsonPath("$.content[0].birthDate").doesNotExist())
+                .andExpect(jsonPath("$.content[0].phone").doesNotExist())
+                .andExpect(jsonPath("$.content[0].gender").doesNotExist())
+                .andExpect(jsonPath("$.content[0].dateCreated").doesNotExist());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("GET /family-group/{id}/natural-person - Deve repassar page e size e ordenar por nome")
+    void findNaturalPersons_ShouldPassPaginationParams() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        when(findNaturalPersonsUseCase.handle(any())).thenReturn(new PageImpl<>(List.of(), PAGEABLE, 0));
+
+        mockMvc.perform(get("/family-group/{id}/natural-person", id)
+                        .param("page", "2")
+                        .param("size", "5"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<FindFamilyGroupNaturalPersonsQuery> captor =
+                ArgumentCaptor.forClass(FindFamilyGroupNaturalPersonsQuery.class);
+        verify(findNaturalPersonsUseCase).handle(captor.capture());
+
+        assertEquals(id, captor.getValue().familyGroupId());
+        assertEquals(2, captor.getValue().pageable().getPageNumber());
+        assertEquals(5, captor.getValue().pageable().getPageSize());
+        assertEquals(Sort.by("name").ascending(), captor.getValue().pageable().getSort());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("GET /family-group/{id}/natural-person - Deve usar page 0 e size 10 por padrão")
+    void findNaturalPersons_ShouldUseDefaultPagination() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        when(findNaturalPersonsUseCase.handle(any())).thenReturn(new PageImpl<>(List.of(), PAGEABLE, 0));
+
+        mockMvc.perform(get("/family-group/{id}/natural-person", id))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<FindFamilyGroupNaturalPersonsQuery> captor =
+                ArgumentCaptor.forClass(FindFamilyGroupNaturalPersonsQuery.class);
+        verify(findNaturalPersonsUseCase).handle(captor.capture());
+
+        assertEquals(0, captor.getValue().pageable().getPageNumber());
+        assertEquals(10, captor.getValue().pageable().getPageSize());
     }
 
     @Test
@@ -276,11 +352,12 @@ class FamilyGroupControllerTest {
     void findNaturalPersons_ShouldReturnEmptyList() throws Exception {
         UUID id = UUID.randomUUID();
 
-        when(findNaturalPersonsUseCase.handle(any())).thenReturn(List.of());
+        when(findNaturalPersonsUseCase.handle(any())).thenReturn(new PageImpl<>(List.of(), PAGEABLE, 0));
 
         mockMvc.perform(get("/family-group/{id}/natural-person", id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isEmpty());
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andExpect(jsonPath("$.totalElements").value(0));
     }
 
     @Test
@@ -364,6 +441,121 @@ class FamilyGroupControllerTest {
 
         mockMvc.perform(get("/family-group/{id}", id))
                 .andExpect(status().isNotFound());
+    }
+
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("POST /family-group/{id}/natural-person - Deve criar a pessoa e vincular, retornando 201 com Location")
+    void addNewNaturalPerson_ShouldReturn201WithLocation() throws Exception {
+        UUID groupId = UUID.randomUUID();
+        NaturalPerson person = NaturalPerson.create(
+                "Maria Silva", "maria@email.com", null, "11144477735", null, null, null, null, null);
+
+        CreateNaturalPersonCommand createCommand = new CreateNaturalPersonCommand(
+                "Maria Silva", "maria@email.com", null, null, "11144477735", null, null, null, null);
+
+        when(addNewNaturalPersonUseCase.handle(any())).thenReturn(person);
+
+        mockMvc.perform(post("/family-group/{id}/natural-person", groupId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createCommand))
+                        .with(csrf()))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", "http://localhost/natural-person/" + person.getId()))
+                .andExpect(jsonPath("$.name").value("Maria Silva"))
+                .andExpect(jsonPath("$.cpf").value("11144477735"));
+
+        ArgumentCaptor<AddNewNaturalPersonToFamilyGroupCommand> captor =
+                ArgumentCaptor.forClass(AddNewNaturalPersonToFamilyGroupCommand.class);
+        verify(addNewNaturalPersonUseCase).handle(captor.capture());
+
+        assertEquals(groupId, captor.getValue().familyGroupId());
+        assertEquals("Maria Silva", captor.getValue().naturalPerson().name());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("POST /family-group/{id}/natural-person - Deve retornar 400 quando o corpo for invalido")
+    void addNewNaturalPerson_ShouldReturn400WhenBodyInvalid() throws Exception {
+        CreateNaturalPersonCommand invalid = new CreateNaturalPersonCommand(
+                "", "email-invalido", null, null, "cpf-invalido", null, null, null, null);
+
+        mockMvc.perform(post("/family-group/{id}/natural-person", UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalid))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
+
+        verify(addNewNaturalPersonUseCase, never()).handle(any());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("POST /family-group/{id}/natural-person/{naturalPersonId} - Deve vincular existente e retornar 204")
+    void addNaturalPerson_ShouldReturn204() throws Exception {
+        UUID groupId = UUID.randomUUID();
+        UUID personId = UUID.randomUUID();
+
+        doNothing().when(addNaturalPersonUseCase).handle(any());
+
+        mockMvc.perform(post("/family-group/{id}/natural-person/{naturalPersonId}", groupId, personId)
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        ArgumentCaptor<AddNaturalPersonToFamilyGroupCommand> captor =
+                ArgumentCaptor.forClass(AddNaturalPersonToFamilyGroupCommand.class);
+        verify(addNaturalPersonUseCase).handle(captor.capture());
+
+        assertEquals(groupId, captor.getValue().familyGroupId());
+        assertEquals(personId, captor.getValue().naturalPersonId());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("POST /family-group/{id}/natural-person/{naturalPersonId} - Deve retornar 409 quando ja estiver vinculado")
+    void addNaturalPerson_ShouldReturn409WhenAlreadyLinked() throws Exception {
+        doThrow(new IllegalStateException("Esta pessoa ja esta vinculada a este grupo familiar."))
+                .when(addNaturalPersonUseCase).handle(any());
+
+        mockMvc.perform(post("/family-group/{id}/natural-person/{naturalPersonId}",
+                        UUID.randomUUID(), UUID.randomUUID())
+                        .with(csrf()))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("DELETE /family-group/{id}/natural-person/{naturalPersonId} - Deve desvincular e retornar 204")
+    void removeNaturalPerson_ShouldReturn204() throws Exception {
+        UUID groupId = UUID.randomUUID();
+        UUID personId = UUID.randomUUID();
+
+        doNothing().when(removeNaturalPersonUseCase).handle(any());
+
+        mockMvc.perform(delete("/family-group/{id}/natural-person/{naturalPersonId}", groupId, personId)
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        ArgumentCaptor<RemoveNaturalPersonFromFamilyGroupCommand> captor =
+                ArgumentCaptor.forClass(RemoveNaturalPersonFromFamilyGroupCommand.class);
+        verify(removeNaturalPersonUseCase).handle(captor.capture());
+
+        assertEquals(groupId, captor.getValue().familyGroupId());
+        assertEquals(personId, captor.getValue().naturalPersonId());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("DELETE /family-group/{id}/natural-person/{naturalPersonId} - Deve retornar 409 quando nao estiver vinculado")
+    void removeNaturalPerson_ShouldReturn409WhenNotLinked() throws Exception {
+        doThrow(new IllegalStateException("Esta pessoa nao esta vinculada a este grupo familiar."))
+                .when(removeNaturalPersonUseCase).handle(any());
+
+        mockMvc.perform(delete("/family-group/{id}/natural-person/{naturalPersonId}",
+                        UUID.randomUUID(), UUID.randomUUID())
+                        .with(csrf()))
+                .andExpect(status().isConflict());
     }
 
     @Test

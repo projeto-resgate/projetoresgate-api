@@ -5,6 +5,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.AutocompleteNaturalPersonQuery;
+import com.projetoresgate.projetoresgate_api.shared.testcontainers.PostgresIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,14 +16,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DataJpaTest(properties = {
-        "spring.flyway.enabled=false",
-        "spring.jpa.hibernate.ddl-auto=create-drop"
-})
-@DisplayName("AutocompleteNaturalPersonService - Integração (JPA + H2)")
-class AutocompleteNaturalPersonIntegrationTest {
+@DataJpaTest
+@DisplayName("AutocompleteNaturalPersonService - Integração (JPA + Postgres)")
+class AutocompleteNaturalPersonIntegrationTest extends PostgresIntegrationTest {
 
     @Autowired
     private NaturalPersonRepository repository;
