@@ -13,7 +13,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.C
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.FindFamilyGroupByIdUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.FindFamilyGroupNaturalPersonsUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.RemoveNaturalPersonFromFamilyGroupUseCase;
-import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.SearchFamilyGroupUseCase;
+import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.FindAllFamilyGroupsUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.SoftDeleteFamilyGroupUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.UpdateFamilyGroupUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.command.AddNaturalPersonToFamilyGroupCommand;
@@ -22,7 +22,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.c
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.command.RemoveNaturalPersonFromFamilyGroupCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.command.UpdateFamilyGroupCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindFamilyGroupNaturalPersonsQuery;
-import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.SearchFamilyGroupQuery;
+import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindAllFamilyGroupsQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.CreateNaturalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
@@ -86,7 +86,7 @@ class FamilyGroupControllerTest {
     private FindFamilyGroupNaturalPersonsUseCase findNaturalPersonsUseCase;
 
     @MockitoBean
-    private SearchFamilyGroupUseCase searchUseCase;
+    private FindAllFamilyGroupsUseCase findAllUseCase;
 
     @MockitoBean
     private SoftDeleteFamilyGroupUseCase softDeleteUseCase;
@@ -240,7 +240,7 @@ class FamilyGroupControllerTest {
                 new PageImpl<>(List.of(new FamilyGroupSummaryResponse(UUID.randomUUID(), "FAM-1", "Família Silva", 3L)),
                         pageable, 1);
 
-        when(searchUseCase.handle(any())).thenReturn(page);
+        when(findAllUseCase.handle(any())).thenReturn(page);
 
         mockMvc.perform(get("/family-group"))
                 .andExpect(status().isOk())
@@ -254,7 +254,7 @@ class FamilyGroupControllerTest {
     @WithMockCustomUser
     @DisplayName("GET /family-group - Deve enviar o nome e a paginação para o use case")
     void search_ShouldSendFiltersToUseCase() throws Exception {
-        when(searchUseCase.handle(any())).thenReturn(new PageImpl<>(List.of()));
+        when(findAllUseCase.handle(any())).thenReturn(new PageImpl<>(List.of()));
 
         mockMvc.perform(get("/family-group")
                         .param("name", "Família")
@@ -262,8 +262,8 @@ class FamilyGroupControllerTest {
                         .param("size", "10"))
                 .andExpect(status().isOk());
 
-        ArgumentCaptor<SearchFamilyGroupQuery> captor = ArgumentCaptor.forClass(SearchFamilyGroupQuery.class);
-        verify(searchUseCase).handle(captor.capture());
+        ArgumentCaptor<FindAllFamilyGroupsQuery> captor = ArgumentCaptor.forClass(FindAllFamilyGroupsQuery.class);
+        verify(findAllUseCase).handle(captor.capture());
 
         assertEquals("Família", captor.getValue().name());
         assertEquals(PageRequest.of(0, 10, Sort.by("name").ascending()), captor.getValue().pageable());

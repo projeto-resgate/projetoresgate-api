@@ -5,7 +5,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
-public record SearchProgramQuery(
+public record FindAllProgramsQuery(
         ProgramStatus status,
         UUID institutionId,
         Pageable pageable

@@ -33,7 +33,7 @@ public class FindEducatorCategoryItemNamesService implements FindEducatorCategor
 
         Specification<EducatorCategoryItem> filter = new SpecificationBuilder<EducatorCategoryItem>()
                 .with("program.id", ":", query.programId())
-                .with("name", ":", query.name())
+                .with("name", "~", query.name())
                 .build();
 
         Pageable pageable = PageRequest.of(0, query.limit(), Sort.by("name").ascending());

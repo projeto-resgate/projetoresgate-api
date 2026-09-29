@@ -3,7 +3,7 @@ package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.servic
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.SearchNaturalPersonQuery;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.FindAllNaturalPersonsQuery;
 import jakarta.persistence.criteria.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,8 +28,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("SearchNaturalPersonService - Test")
-class SearchNaturalPersonServiceTest {
+@DisplayName("FindAllNaturalPersonsService - Test")
+class FindAllNaturalPersonsServiceTest {
 
     @Mock
     private NaturalPersonRepository repository;
@@ -56,14 +56,14 @@ class SearchNaturalPersonServiceTest {
     private ArgumentCaptor<Specification<NaturalPerson>> specCaptor;
 
     @InjectMocks
-    private SearchNaturalPersonService service;
+    private FindAllNaturalPersonsService service;
 
     @Test
-    @DisplayName("Deve buscar pessoas físicas com paginação")
+    @DisplayName("Deve listar pessoas físicas com paginação")
     @SuppressWarnings("unchecked")
-    void handle_ShouldSearchWithPagination() {
+    void handle_ShouldListWithPagination() {
         Pageable pageable = PageRequest.of(0, 10);
-        SearchNaturalPersonQuery searchQuery = new SearchNaturalPersonQuery(null, null, null, null, null, pageable);
+        FindAllNaturalPersonsQuery searchQuery = new FindAllNaturalPersonsQuery(null, null, null, null, null, pageable);
         Page<NaturalPerson> expectedPage = new PageImpl<>(List.of());
 
         when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(expectedPage);
@@ -78,7 +78,7 @@ class SearchNaturalPersonServiceTest {
     @DisplayName("Deve construir a Specification corretamente quando houver termo de busca")
     void handle_ShouldBuildSpecificationWithSearchTerm() {
         Pageable pageable = PageRequest.of(0, 10);
-        SearchNaturalPersonQuery searchQuery = new SearchNaturalPersonQuery("Ana 123", null, null, null, null, pageable);
+        FindAllNaturalPersonsQuery searchQuery = new FindAllNaturalPersonsQuery("Ana 123", null, null, null, null, pageable);
 
         doReturn(path).when(root).get(anyString());
 
@@ -87,7 +87,7 @@ class SearchNaturalPersonServiceTest {
 
         lenient().doReturn(mockExpression).when(cb).lower(any());
         lenient().doReturn(mockExpression).when(cb).upper(any());
-        lenient().doReturn(mockPredicate).when(cb).like(any(), anyString());
+        lenient().doReturn(mockPredicate).when(cb).like(any(), anyString(), anyChar());
         lenient().doReturn(mockPredicate).when(cb).or(any(Predicate[].class));
         lenient().doReturn(mockPredicate).when(cb).and(any(Predicate[].class));
 
@@ -111,7 +111,7 @@ class SearchNaturalPersonServiceTest {
         String cpfValue = "22948025001";
         String rgValue = "7654321";
         String cellphone = "999999999";
-        SearchNaturalPersonQuery searchQuery = new SearchNaturalPersonQuery(
+        FindAllNaturalPersonsQuery searchQuery = new FindAllNaturalPersonsQuery(
                 null, rgValue, cpfValue, cellphone, Gender.MALE, pageable);
 
         doReturn(path).when(root).get(anyString());
@@ -119,7 +119,7 @@ class SearchNaturalPersonServiceTest {
         lenient().doReturn(path).when(path).get(anyString());
         lenient().doReturn(String.class).when(path).getJavaType();
         lenient().doReturn(mockExpression).when(cb).lower(any());
-        lenient().doReturn(mockPredicate).when(cb).like(any(), anyString());
+        lenient().doReturn(mockPredicate).when(cb).like(any(), anyString(), anyChar());
         lenient().doReturn(mockPredicate).when(cb).and(any(Predicate[].class));
 
         service.handle(searchQuery);
@@ -129,17 +129,18 @@ class SearchNaturalPersonServiceTest {
         Specification<NaturalPerson> capturedSpec = specCaptor.getValue();
         capturedSpec.toPredicate(root, query, cb);
 
-        verify(cb).like(any(), eq("%" + cpfValue + "%"));
-        verify(cb).like(any(), eq("%" + rgValue + "%"));
-        verify(cb).like(any(), eq("%" + cellphone + "%"));
-        verify(cb).like(any(), eq("%male%"));
+        verify(cb).like(any(), eq("%" + cpfValue + "%"), eq('\\'));
+        verify(cb).like(any(), eq("%" + rgValue + "%"), eq('\\'));
+        verify(cb).like(any(), eq("%" + cellphone + "%"), eq('\\'));
+        verify(cb).equal(any(), eq(Gender.MALE));
+        verify(cb, never()).like(any(), contains("male"), anyChar());
     }
 
     @Test
     @DisplayName("Deve retornar pessoas físicas com todos os campos preenchidos")
     void handle_ShouldReturnPersonsWithAllFields() {
         Pageable pageable = PageRequest.of(0, 10);
-        SearchNaturalPersonQuery searchQuery = new SearchNaturalPersonQuery(null, null, null, null, null, pageable);
+        FindAllNaturalPersonsQuery searchQuery = new FindAllNaturalPersonsQuery(null, null, null, null, null, pageable);
 
         LocalDateTime dateCreated = LocalDateTime.of(2025, 3, 10, 8, 45, 0);
 

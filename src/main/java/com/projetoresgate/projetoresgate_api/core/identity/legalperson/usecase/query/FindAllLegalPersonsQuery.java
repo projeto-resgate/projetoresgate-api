@@ -4,7 +4,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.en
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
 import org.springframework.data.domain.Pageable;
 
-public record SearchLegalPersonQuery(
+public record FindAllLegalPersonsQuery(
         String searchTerm,
         String cnpj,
         String corporateName,

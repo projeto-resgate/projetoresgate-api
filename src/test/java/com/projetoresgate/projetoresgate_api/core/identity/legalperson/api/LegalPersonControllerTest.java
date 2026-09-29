@@ -14,7 +14,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.c
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.SoftDeleteLegalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.UpdateLegalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.AutocompleteLegalPersonQuery;
-import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.SearchLegalPersonQuery;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.FindAllLegalPersonsQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
@@ -71,7 +71,7 @@ private SoftDeleteLegalPersonUseCase softDeleteUseCase;
 private FindLegalPersonByIdUseCase findByIdUseCase;
 
 @MockitoBean
-private SearchLegalPersonUseCase searchUseCase;
+private FindAllLegalPersonsUseCase findAllUseCase;
 
 @MockitoBean
 private AutocompleteLegalPersonUseCase autocompleteUseCase;
@@ -233,7 +233,7 @@ private AutocompleteLegalPersonUseCase autocompleteUseCase;
         LegalPerson person = createMockPerson();
         Page<LegalPerson> pageResult = new PageImpl<>(List.of(person));
 
-        when(searchUseCase.handle(any())).thenReturn(pageResult);
+        when(findAllUseCase.handle(any())).thenReturn(pageResult);
 
         mockMvc.perform(get("/legal-person")
                         .param("page", "0")
@@ -251,7 +251,7 @@ private AutocompleteLegalPersonUseCase autocompleteUseCase;
         LegalPerson person = createMockPerson();
         Page<LegalPerson> pageResult = new PageImpl<>(List.of(person));
 
-        when(searchUseCase.handle(any())).thenReturn(pageResult);
+        when(findAllUseCase.handle(any())).thenReturn(pageResult);
 
         mockMvc.perform(get("/legal-person")
                         .param("page", "0")
@@ -269,10 +269,10 @@ private AutocompleteLegalPersonUseCase autocompleteUseCase;
     @DisplayName("GET /legal-person - Deve montar a query correta com filtros e ordenação por razão social")
     void search_ShouldPassCorrectQueryToUseCase() throws Exception {
         Pageable pageable = PageRequest.of(2, 25, Sort.by("corporateName").ascending());
-        SearchLegalPersonQuery expectedQuery = new SearchLegalPersonQuery(
+        FindAllLegalPersonsQuery expectedQuery = new FindAllLegalPersonsQuery(
                 "Razão", "11222333000181", "ACME LTDA", RegistrationStatus.SUSPENDED, CompanyStatus.INACTIVE, pageable);
 
-        when(searchUseCase.handle(any())).thenReturn(new PageImpl<>(List.of()));
+        when(findAllUseCase.handle(any())).thenReturn(new PageImpl<>(List.of()));
 
         mockMvc.perform(get("/legal-person")
                         .param("searchTerm", "Razão")
@@ -284,7 +284,7 @@ private AutocompleteLegalPersonUseCase autocompleteUseCase;
                         .param("size", "25"))
                 .andExpect(status().isOk());
 
-        verify(searchUseCase).handle(eq(expectedQuery));
+        verify(findAllUseCase).handle(eq(expectedQuery));
     }
 
     @Test
@@ -292,15 +292,15 @@ private AutocompleteLegalPersonUseCase autocompleteUseCase;
     @DisplayName("GET /legal-person - Deve usar os valores padrão de paginação e ordenação")
     void search_ShouldUseDefaultPaginationAndSorting() throws Exception {
         Pageable pageable = PageRequest.of(0, 10, Sort.by("corporateName").ascending());
-        SearchLegalPersonQuery expectedQuery = new SearchLegalPersonQuery(
+        FindAllLegalPersonsQuery expectedQuery = new FindAllLegalPersonsQuery(
                 null, null, null, null, null, pageable);
 
-        when(searchUseCase.handle(any())).thenReturn(new PageImpl<>(List.of()));
+        when(findAllUseCase.handle(any())).thenReturn(new PageImpl<>(List.of()));
 
         mockMvc.perform(get("/legal-person"))
                 .andExpect(status().isOk());
 
-        verify(searchUseCase).handle(eq(expectedQuery));
+        verify(findAllUseCase).handle(eq(expectedQuery));
     }
 
     @Test

@@ -88,7 +88,7 @@ class UserControllerTest {
     private SoftDeleteUserUseCase softDeleteUserUseCase;
 
     @MockitoBean
-    private FindUserUseCase findUserUseCase;
+    private FindUserByIdUseCase findUserByIdUseCase;
 
     @MockitoBean
     private ICookieService cookieService;
@@ -177,7 +177,7 @@ class UserControllerTest {
     void findUser_shouldReturn200OkWithUser() throws Exception {
         User user = User.create("john@test.com", "encoded-password", "John Doe", "johny");
 
-        when(findUserUseCase.handle(any(FindUserByIdQuery.class))).thenReturn(user);
+        when(findUserByIdUseCase.handle(any(FindUserByIdQuery.class))).thenReturn(user);
 
         mockMvc.perform(get("/user/{id}", user.getId()))
                 .andExpect(status().isOk())

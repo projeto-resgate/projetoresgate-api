@@ -2,8 +2,8 @@ package com.projetoresgate.projetoresgate_api.core.identity.legalperson.service;
 
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.SearchLegalPersonUseCase;
-import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.SearchLegalPersonQuery;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.FindAllLegalPersonsUseCase;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.FindAllLegalPersonsQuery;
 import com.projetoresgate.projetoresgate_api.infrastructure.utils.CnpjUtils;
 import com.projetoresgate.projetoresgate_api.shared.specification.SpecificationBuilder;
 import jakarta.persistence.criteria.Predicate;
@@ -16,20 +16,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class SearchLegalPersonService implements SearchLegalPersonUseCase {
+public class FindAllLegalPersonsService implements FindAllLegalPersonsUseCase {
 
     private final LegalPersonRepository repository;
 
-    public SearchLegalPersonService(LegalPersonRepository repository) {
+    public FindAllLegalPersonsService(LegalPersonRepository repository) {
         this.repository = repository;
     }
 
     @Override
-    public Page<LegalPerson> handle(SearchLegalPersonQuery query) {
+    public Page<LegalPerson> handle(FindAllLegalPersonsQuery query) {
 
         Specification<LegalPerson> genericFilters = new SpecificationBuilder<LegalPerson>()
                 .with("cnpj", ":", CnpjUtils.onlyDigits(query.cnpj()))
-                .with("corporateName", ":", query.corporateName())
+                .with("corporateName", "~", query.corporateName())
                 .with("registrationStatus", ":", query.registrationStatus())
                 .with("companyStatus", ":", query.companyStatus())
                 .build();

@@ -6,15 +6,14 @@ import com.projetoresgate.projetoresgate_api.core.identity.familygroup.api.dto.F
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.domain.FamilyGroup;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.*;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.command.*;
+import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindAllFamilyGroupsQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindFamilyGroupByIdQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindFamilyGroupNaturalPersonsQuery;
-import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.SearchFamilyGroupQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.api.dto.NaturalPersonResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.CreateNaturalPersonCommand;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -31,7 +30,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -44,7 +42,7 @@ public class FamilyGroupController {
     private final SoftDeleteFamilyGroupUseCase softDeleteUseCase;
     private final FindFamilyGroupByIdUseCase findByIdUseCase;
     private final FindFamilyGroupNaturalPersonsUseCase findNaturalPersonsUseCase;
-    private final SearchFamilyGroupUseCase searchUseCase;
+    private final FindAllFamilyGroupsUseCase findAllUseCase;
     private final AddNaturalPersonToFamilyGroupUseCase addNaturalPersonUseCase;
     private final RemoveNaturalPersonFromFamilyGroupUseCase removeNaturalPersonUseCase;
     private final AddNewNaturalPersonToFamilyGroupUseCase addNewNaturalPersonUseCase;
@@ -54,7 +52,7 @@ public class FamilyGroupController {
                                  SoftDeleteFamilyGroupUseCase softDeleteUseCase,
                                  FindFamilyGroupByIdUseCase findByIdUseCase,
                                  FindFamilyGroupNaturalPersonsUseCase findNaturalPersonsUseCase,
-                                 SearchFamilyGroupUseCase searchUseCase,
+                                 FindAllFamilyGroupsUseCase findAllUseCase,
                                  AddNaturalPersonToFamilyGroupUseCase addNaturalPersonUseCase,
                                  RemoveNaturalPersonFromFamilyGroupUseCase removeNaturalPersonUseCase,
                                  AddNewNaturalPersonToFamilyGroupUseCase addNewNaturalPersonUseCase) {
@@ -63,7 +61,7 @@ public class FamilyGroupController {
         this.softDeleteUseCase = softDeleteUseCase;
         this.findByIdUseCase = findByIdUseCase;
         this.findNaturalPersonsUseCase = findNaturalPersonsUseCase;
-        this.searchUseCase = searchUseCase;
+        this.findAllUseCase = findAllUseCase;
         this.addNaturalPersonUseCase = addNaturalPersonUseCase;
         this.removeNaturalPersonUseCase = removeNaturalPersonUseCase;
         this.addNewNaturalPersonUseCase = addNewNaturalPersonUseCase;
@@ -104,14 +102,14 @@ public class FamilyGroupController {
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class)))
     })
-    public ResponseEntity<Page<FamilyGroupSummaryResponse>> search(
+    public ResponseEntity<Page<FamilyGroupSummaryResponse>> findAll(
             @Parameter(description = "Nome") @RequestParam(required = false) String name,
             @Parameter(description = "Número da página") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Tamanho da página") @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
-        SearchFamilyGroupQuery query = new SearchFamilyGroupQuery(name, pageable);
-        return ResponseEntity.ok(searchUseCase.handle(query));
+        FindAllFamilyGroupsQuery query = new FindAllFamilyGroupsQuery(name, pageable);
+        return ResponseEntity.ok(findAllUseCase.handle(query));
     }
 
     @GetMapping("/{id}/natural-person")

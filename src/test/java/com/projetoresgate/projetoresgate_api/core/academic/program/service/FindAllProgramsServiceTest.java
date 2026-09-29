@@ -5,7 +5,7 @@ import com.projetoresgate.projetoresgate_api.core.academic.program.domain.Educat
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.Program;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.enums.ProgramStatus;
 import com.projetoresgate.projetoresgate_api.core.academic.program.repository.ProgramRepository;
-import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.query.SearchProgramQuery;
+import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.query.FindAllProgramsQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.api.dto.LegalPersonSummaryResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.FindLegalPersonSummariesUseCase;
 import org.junit.jupiter.api.DisplayName;
@@ -32,8 +32,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("SearchProgramService - Test")
-class SearchProgramServiceTest {
+@DisplayName("FindAllProgramsService - Test")
+class FindAllProgramsServiceTest {
 
     @Mock
     private ProgramRepository repository;
@@ -42,7 +42,7 @@ class SearchProgramServiceTest {
     private FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase;
 
     @InjectMocks
-    private SearchProgramService service;
+    private FindAllProgramsService service;
 
     @Test
     @DisplayName("Deve retornar página de programas resolvendo instituições")
@@ -58,7 +58,7 @@ class SearchProgramServiceTest {
         when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
         when(findLegalPersonSummariesUseCase.handle(Set.of(institutionId))).thenReturn(List.of(institution));
 
-        Page<ProgramResponse> result = service.handle(new SearchProgramQuery(ProgramStatus.ACTIVE, institutionId, pageable));
+        Page<ProgramResponse> result = service.handle(new FindAllProgramsQuery(ProgramStatus.ACTIVE, institutionId, pageable));
 
         assertEquals(1, result.getTotalElements());
         ProgramResponse response = result.getContent().get(0);
@@ -75,7 +75,7 @@ class SearchProgramServiceTest {
 
         when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
 
-        Page<ProgramResponse> result = service.handle(new SearchProgramQuery(ProgramStatus.ACTIVE, null, pageable));
+        Page<ProgramResponse> result = service.handle(new FindAllProgramsQuery(ProgramStatus.ACTIVE, null, pageable));
 
         assertTrue(result.getContent().isEmpty());
         verify(findLegalPersonSummariesUseCase, never()).handle(any());

@@ -6,7 +6,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Re
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.SearchLegalPersonQuery;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.FindAllLegalPersonsQuery;
 import jakarta.persistence.criteria.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,8 +30,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("SearchLegalPersonService - Test")
-class SearchLegalPersonServiceTest {
+@DisplayName("FindAllLegalPersonsService - Test")
+class FindAllLegalPersonsServiceTest {
 
     @Mock
     private LegalPersonRepository repository;
@@ -58,7 +58,7 @@ class SearchLegalPersonServiceTest {
     private ArgumentCaptor<Specification<LegalPerson>> specCaptor;
 
     @InjectMocks
-    private SearchLegalPersonService service;
+    private FindAllLegalPersonsService service;
 
     private Address buildAddress() {
         return Address.create(null, null, "01310-100", "1000", null, null, "Bela Vista", "São Paulo", "SP");
@@ -71,10 +71,10 @@ class SearchLegalPersonServiceTest {
     }
 
     @Test
-    @DisplayName("Deve buscar pessoas jurídicas com paginação")
-    void handle_ShouldSearchWithPagination() {
+    @DisplayName("Deve listar pessoas jurídicas com paginação")
+    void handle_ShouldListWithPagination() {
         Pageable pageable = PageRequest.of(0, 10);
-        SearchLegalPersonQuery searchQuery = new SearchLegalPersonQuery(null, null, null, null, null, pageable);
+        FindAllLegalPersonsQuery searchQuery = new FindAllLegalPersonsQuery(null, null, null, null, null, pageable);
         Page<LegalPerson> expectedPage = new PageImpl<>(List.of());
 
         when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(expectedPage);
@@ -89,7 +89,7 @@ class SearchLegalPersonServiceTest {
     @DisplayName("Deve construir a Specification corretamente quando houver termo de busca")
     void handle_ShouldBuildSpecificationWithSearchTerm() {
         Pageable pageable = PageRequest.of(0, 10);
-        SearchLegalPersonQuery searchQuery = new SearchLegalPersonQuery("Razão", null, null, null, null, pageable);
+        FindAllLegalPersonsQuery searchQuery = new FindAllLegalPersonsQuery("Razão", null, null, null, null, pageable);
 
         doReturn(path).when(root).get(anyString());
 
@@ -98,7 +98,7 @@ class SearchLegalPersonServiceTest {
 
         lenient().doReturn(mockExpression).when(cb).lower(any());
         lenient().doReturn(mockExpression).when(cb).upper(any());
-        lenient().doReturn(mockPredicate).when(cb).like(any(), anyString());
+        lenient().doReturn(mockPredicate).when(cb).like(any(), anyString(), anyChar());
         lenient().doReturn(mockPredicate).when(cb).or(any(Predicate[].class));
         lenient().doReturn(mockPredicate).when(cb).and(any(Predicate[].class));
 
@@ -118,7 +118,7 @@ class SearchLegalPersonServiceTest {
     @DisplayName("Deve construir a Specification com filtros de CNPJ, Razão Social, Status de Registro e Status da Empresa")
     void handle_ShouldBuildSpecificationWithSpecificFilters() {
         Pageable pageable = PageRequest.of(0, 10);
-        SearchLegalPersonQuery searchQuery = new SearchLegalPersonQuery(
+        FindAllLegalPersonsQuery searchQuery = new FindAllLegalPersonsQuery(
                 null, "12345678000195", "Razão Social", RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, pageable);
 
         doReturn(path).when(root).get(anyString());
@@ -126,7 +126,7 @@ class SearchLegalPersonServiceTest {
         lenient().doReturn(path).when(path).get(anyString());
         lenient().doReturn(String.class).when(path).getJavaType();
         lenient().doReturn(mockExpression).when(cb).lower(any());
-        lenient().doReturn(mockPredicate).when(cb).like(any(), anyString());
+        lenient().doReturn(mockPredicate).when(cb).like(any(), anyString(), anyChar());
         lenient().doReturn(mockPredicate).when(cb).and(any(Predicate[].class));
 
         service.handle(searchQuery);
@@ -136,21 +136,23 @@ class SearchLegalPersonServiceTest {
         Specification<LegalPerson> capturedSpec = specCaptor.getValue();
         capturedSpec.toPredicate(root, query, cb);
 
-        verify(cb).like(any(), eq("%12345678000195%"));
-        verify(cb).like(any(), eq("%razão social%"));
+        verify(cb).equal(any(), eq("12345678000195"));
+        verify(cb).like(any(), eq("%razão social%"), eq('\\'));
+        verify(cb).equal(any(), eq(RegistrationStatus.ACTIVE));
+        verify(cb).equal(any(), eq(CompanyStatus.ACTIVE));
     }
 
     @Test
     @DisplayName("Deve construir a Specification normalizando o CNPJ formatado no filtro")
     void handle_ShouldNormalizeFormattedCnpjInFilter() {
         Pageable pageable = PageRequest.of(0, 10);
-        SearchLegalPersonQuery searchQuery = new SearchLegalPersonQuery(
+        FindAllLegalPersonsQuery searchQuery = new FindAllLegalPersonsQuery(
                 null, "11.222.333/0001-81", null, null, null, pageable);
 
         doReturn(path).when(root).get(anyString());
 
         lenient().doReturn(String.class).when(path).getJavaType();
-        lenient().doReturn(mockPredicate).when(cb).like(any(), anyString());
+        lenient().doReturn(mockPredicate).when(cb).like(any(), anyString(), anyChar());
         lenient().doReturn(mockPredicate).when(cb).and(any(Predicate[].class));
 
         service.handle(searchQuery);
@@ -160,15 +162,15 @@ class SearchLegalPersonServiceTest {
         Specification<LegalPerson> capturedSpec = specCaptor.getValue();
         capturedSpec.toPredicate(root, query, cb);
 
-        verify(cb).like(any(), eq("%11222333000181%"));
-        verify(cb, never()).like(any(), eq("%11.222.333/0001-81%"));
+        verify(cb).equal(any(), eq("11222333000181"));
+        verify(cb, never()).equal(any(), eq("11.222.333/0001-81"));
     }
 
     @Test
     @DisplayName("Deve retornar pessoas jurídicas com todos os campos preenchidos")
     void handle_ShouldReturnPersonsWithAllFields() {
         Pageable pageable = PageRequest.of(0, 10);
-        SearchLegalPersonQuery searchQuery = new SearchLegalPersonQuery(null, null, null, null, null, pageable);
+        FindAllLegalPersonsQuery searchQuery = new FindAllLegalPersonsQuery(null, null, null, null, null, pageable);
 
         LocalDateTime dateCreated = LocalDateTime.of(2025, 3, 10, 8, 45, 0);
 

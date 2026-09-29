@@ -12,7 +12,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.UpdateNaturalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.AutocompleteNaturalPersonQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.FindNaturalPersonByIdQuery;
-import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.SearchNaturalPersonQuery;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.FindAllNaturalPersonsQuery;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -41,7 +41,7 @@ public class NaturalPersonController {
     private final UpdateNaturalPersonUseCase updateUseCase;
     private final SoftDeleteNaturalPersonUseCase softDeleteUseCase;
     private final FindNaturalPersonByIdUseCase findByIdUseCase;
-    private final SearchNaturalPersonUseCase searchUseCase;
+    private final FindAllNaturalPersonsUseCase findAllUseCase;
     private final AutocompleteNaturalPersonUseCase autocompleteUseCase;
     private final RequestEmailConfirmationUseCase requestEmailConfirmationUseCase;
     private final ConfirmEmailUseCase confirmEmailUseCase;
@@ -50,7 +50,7 @@ public class NaturalPersonController {
                                    UpdateNaturalPersonUseCase updateUseCase,
                                    SoftDeleteNaturalPersonUseCase softDeleteUseCase,
                                    FindNaturalPersonByIdUseCase findByIdUseCase,
-                                   SearchNaturalPersonUseCase searchUseCase,
+                                   FindAllNaturalPersonsUseCase findAllUseCase,
                                    AutocompleteNaturalPersonUseCase autocompleteUseCase,
                                    RequestEmailConfirmationUseCase requestEmailConfirmationUseCase,
                                    ConfirmEmailUseCase confirmEmailUseCase) {
@@ -58,7 +58,7 @@ public class NaturalPersonController {
         this.updateUseCase = updateUseCase;
         this.softDeleteUseCase = softDeleteUseCase;
         this.findByIdUseCase = findByIdUseCase;
-        this.searchUseCase = searchUseCase;
+        this.findAllUseCase = findAllUseCase;
         this.autocompleteUseCase = autocompleteUseCase;
         this.requestEmailConfirmationUseCase = requestEmailConfirmationUseCase;
         this.confirmEmailUseCase = confirmEmailUseCase;
@@ -102,12 +102,12 @@ public class NaturalPersonController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar com Filtros", description = "Lista pessoas físicas com paginação e filtros opcionais.")
+    @Operation(summary = "Listar Pessoas Físicas", description = "Lista pessoas físicas com paginação e filtros opcionais.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class)))
     })
-    public ResponseEntity<Page<NaturalPersonResponse>> search(
+    public ResponseEntity<Page<NaturalPersonResponse>> findAll(
             @Parameter(description = "Termo de pesquisa (Nome, Nickname, CPF ou RG)") @RequestParam(required = false) String searchTerm,
             @Parameter(description = "CPF") @RequestParam(required = false) String cpf,
             @Parameter(description = "RG") @RequestParam(required = false) String rg,
@@ -117,8 +117,8 @@ public class NaturalPersonController {
             @Parameter(description = "Tamanho da página") @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        SearchNaturalPersonQuery query = new SearchNaturalPersonQuery(searchTerm, rg, cpf, cellphone, gender, pageable);
-        Page<NaturalPerson> pageResult = searchUseCase.handle(query);
+        FindAllNaturalPersonsQuery query = new FindAllNaturalPersonsQuery(searchTerm, rg, cpf, cellphone, gender, pageable);
+        Page<NaturalPerson> pageResult = findAllUseCase.handle(query);
         return ResponseEntity.ok(pageResult.map(NaturalPersonResponse::fromEntity));
     }
 

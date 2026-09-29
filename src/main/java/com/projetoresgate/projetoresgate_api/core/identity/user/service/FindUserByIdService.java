@@ -2,17 +2,17 @@ package com.projetoresgate.projetoresgate_api.core.identity.user.service;
 
 import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.FindUserUseCase;
+import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.FindUserByIdUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.query.FindUserByIdQuery;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
-public class FindUserService implements FindUserUseCase {
+public class FindUserByIdService implements FindUserByIdUseCase {
 
     private final UserRepository repository;
 
-    public FindUserService(UserRepository repository) {
+    public FindUserByIdService(UserRepository repository) {
         this.repository = repository;
     }
 

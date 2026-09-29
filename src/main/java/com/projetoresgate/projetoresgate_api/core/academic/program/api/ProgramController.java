@@ -11,7 +11,7 @@ import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.comma
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.query.FindEducatorCategoryItemNamesQuery;
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.query.FindProgramByIdQuery;
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.query.FindProgramNamesQuery;
-import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.query.SearchProgramQuery;
+import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.query.FindAllProgramsQuery;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -40,7 +40,7 @@ public class ProgramController {
     private final UpdateProgramUseCase updateUseCase;
     private final SoftDeleteProgramUseCase softDeleteUseCase;
     private final FindProgramByIdUseCase findByIdUseCase;
-    private final SearchProgramUseCase searchUseCase;
+    private final FindAllProgramsUseCase findAllUseCase;
     private final FindProgramNamesUseCase findProgramNamesUseCase;
     private final FindEducatorCategoryItemNamesUseCase findEducatorCategoryItemNamesUseCase;
 
@@ -48,14 +48,14 @@ public class ProgramController {
                              UpdateProgramUseCase updateUseCase,
                              SoftDeleteProgramUseCase softDeleteUseCase,
                              FindProgramByIdUseCase findByIdUseCase,
-                             SearchProgramUseCase searchUseCase,
+                             FindAllProgramsUseCase findAllUseCase,
                              FindProgramNamesUseCase findProgramNamesUseCase,
                              FindEducatorCategoryItemNamesUseCase findEducatorCategoryItemNamesUseCase) {
         this.createUseCase = createUseCase;
         this.updateUseCase = updateUseCase;
         this.softDeleteUseCase = softDeleteUseCase;
         this.findByIdUseCase = findByIdUseCase;
-        this.searchUseCase = searchUseCase;
+        this.findAllUseCase = findAllUseCase;
         this.findProgramNamesUseCase = findProgramNamesUseCase;
         this.findEducatorCategoryItemNamesUseCase = findEducatorCategoryItemNamesUseCase;
     }
@@ -99,20 +99,20 @@ public class ProgramController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar com Filtros", description = "Lista programas com paginação e filtros opcionais.")
+    @Operation(summary = "Listar Programas", description = "Lista programas com paginação e filtros opcionais.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class)))
     })
-    public ResponseEntity<Page<ProgramResponse>> search(
+    public ResponseEntity<Page<ProgramResponse>> findAll(
             @Parameter(description = "Status") @RequestParam(required = false) ProgramStatus status,
             @Parameter(description = "Id da instituição") @RequestParam(required = false) UUID institutionId,
             @Parameter(description = "Número da página") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Tamanho da página") @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        SearchProgramQuery query = new SearchProgramQuery(status, institutionId, pageable);
-        return ResponseEntity.ok(searchUseCase.handle(query));
+        FindAllProgramsQuery query = new FindAllProgramsQuery(status, institutionId, pageable);
+        return ResponseEntity.ok(findAllUseCase.handle(query));
     }
 
     @GetMapping("/names")

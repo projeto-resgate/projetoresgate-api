@@ -43,7 +43,7 @@ public class UserController {
     private final CreateUserUseCase createUserUseCase;
     private final UpdateUserUseCase updateUserUseCase;
     private final SoftDeleteUserUseCase softDeleteUserUseCase;
-    private final FindUserUseCase findUserUseCase;
+    private final FindUserByIdUseCase findUserByIdUseCase;
     private final ICookieService cookieService;
 
     @Autowired
@@ -56,7 +56,7 @@ public class UserController {
                           CreateUserUseCase createUserUseCase,
                           UpdateUserUseCase updateUserUseCase,
                           SoftDeleteUserUseCase softDeleteUserUseCase,
-                          FindUserUseCase findUserUseCase,
+                          FindUserByIdUseCase findUserByIdUseCase,
                           ICookieService cookieService) {
         this.authenticateUserUseCase = authenticateUserUseCase;
         this.requestPasswordResetUseCase = requestPasswordResetUseCase;
@@ -67,7 +67,7 @@ public class UserController {
         this.createUserUseCase = createUserUseCase;
         this.updateUserUseCase = updateUserUseCase;
         this.softDeleteUserUseCase = softDeleteUserUseCase;
-        this.findUserUseCase = findUserUseCase;
+        this.findUserByIdUseCase = findUserByIdUseCase;
         this.cookieService = cookieService;
     }
 
@@ -173,8 +173,8 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     })
-    public ResponseEntity<UserResponse> findUser(@PathVariable UUID id) {
-        User user = findUserUseCase.handle(new FindUserByIdQuery(id));
+    public ResponseEntity<UserResponse> findById(@PathVariable UUID id) {
+        User user = findUserByIdUseCase.handle(new FindUserByIdQuery(id));
         return ResponseEntity.ok(UserResponse.fromEntity(user));
     }
 

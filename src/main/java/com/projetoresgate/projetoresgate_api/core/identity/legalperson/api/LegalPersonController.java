@@ -11,7 +11,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.c
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.UpdateLegalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.AutocompleteLegalPersonQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.FindLegalPersonByIdQuery;
-import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.SearchLegalPersonQuery;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.FindAllLegalPersonsQuery;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -41,20 +41,20 @@ public class LegalPersonController {
     private final UpdateLegalPersonUseCase updateUseCase;
     private final SoftDeleteLegalPersonUseCase softDeleteUseCase;
     private final FindLegalPersonByIdUseCase findByIdUseCase;
-    private final SearchLegalPersonUseCase searchUseCase;
+    private final FindAllLegalPersonsUseCase findAllUseCase;
     private final AutocompleteLegalPersonUseCase autocompleteUseCase;
 
     public LegalPersonController(CreateLegalPersonUseCase createUseCase,
                                  UpdateLegalPersonUseCase updateUseCase,
                                  SoftDeleteLegalPersonUseCase softDeleteUseCase,
                                  FindLegalPersonByIdUseCase findByIdUseCase,
-                                 SearchLegalPersonUseCase searchUseCase,
+                                 FindAllLegalPersonsUseCase findAllUseCase,
                                  AutocompleteLegalPersonUseCase autocompleteUseCase) {
         this.createUseCase = createUseCase;
         this.updateUseCase = updateUseCase;
         this.softDeleteUseCase = softDeleteUseCase;
         this.findByIdUseCase = findByIdUseCase;
-        this.searchUseCase = searchUseCase;
+        this.findAllUseCase = findAllUseCase;
         this.autocompleteUseCase = autocompleteUseCase;
     }
 
@@ -95,12 +95,12 @@ public class LegalPersonController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar com Filtros", description = "Lista pessoas jurídicas com paginação, ordenação e filtros opcionais.")
+    @Operation(summary = "Listar Pessoas Jurídicas", description = "Lista pessoas jurídicas com paginação, ordenação e filtros opcionais.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class)))
     })
-    public ResponseEntity<Page<LegalPersonResponse>> search(
+    public ResponseEntity<Page<LegalPersonResponse>> findAll(
             @Parameter(description = "Termo de pesquisa (Razão Social, Nome Fantasia, Nome de Exibição ou CNPJ)") @RequestParam(required = false) String searchTerm,
             @Parameter(description = "CNPJ") @RequestParam(required = false) String cnpj,
             @Parameter(description = "Razão Social") @RequestParam(required = false) String corporateName,
@@ -110,8 +110,8 @@ public class LegalPersonController {
             @Parameter(description = "Tamanho da página") @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("corporateName").ascending());
-        SearchLegalPersonQuery query = new SearchLegalPersonQuery(searchTerm, cnpj, corporateName, registrationStatus, companyStatus, pageable);
-        Page<LegalPerson> pageResult = searchUseCase.handle(query);
+        FindAllLegalPersonsQuery query = new FindAllLegalPersonsQuery(searchTerm, cnpj, corporateName, registrationStatus, companyStatus, pageable);
+        Page<LegalPerson> pageResult = findAllUseCase.handle(query);
         return ResponseEntity.ok(pageResult.map(LegalPersonResponse::fromEntity));
     }
 

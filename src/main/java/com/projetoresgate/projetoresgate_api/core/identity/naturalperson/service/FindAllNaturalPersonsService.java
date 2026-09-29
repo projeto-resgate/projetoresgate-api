@@ -2,8 +2,8 @@ package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.servic
 
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.SearchNaturalPersonUseCase;
-import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.SearchNaturalPersonQuery;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.FindAllNaturalPersonsUseCase;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.FindAllNaturalPersonsQuery;
 import com.projetoresgate.projetoresgate_api.shared.specification.SpecificationBuilder;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
@@ -15,21 +15,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class SearchNaturalPersonService implements SearchNaturalPersonUseCase {
+public class FindAllNaturalPersonsService implements FindAllNaturalPersonsUseCase {
 
     private final NaturalPersonRepository repository;
 
-    public SearchNaturalPersonService(NaturalPersonRepository repository) {
+    public FindAllNaturalPersonsService(NaturalPersonRepository repository) {
         this.repository = repository;
     }
 
     @Override
-    public Page<NaturalPerson> handle(SearchNaturalPersonQuery query) {
+    public Page<NaturalPerson> handle(FindAllNaturalPersonsQuery query) {
 
         Specification<NaturalPerson> genericFilters = new SpecificationBuilder<NaturalPerson>()
-                .with("cpf", ":", query.cpf())
-                .with("rg", ":", query.rg())
-                .with("cellphone", ":", query.cellphone())
+                .with("cpf", "~", query.cpf())
+                .with("rg", "~", query.rg())
+                .with("cellphone", "~", query.cellphone())
                 .with("gender", ":", query.gender())
                 .build();
 

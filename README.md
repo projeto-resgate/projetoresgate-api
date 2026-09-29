@@ -133,13 +133,14 @@ Isso iniciará o banco na porta `5432`. O Compose sobe três serviços em cadeia
 container do Flyway que aplica as migrations, e um seeder que roda `docker/database/init.sql`
 depois que as migrations terminam.
 
-Confira se o serviço de migrations terminou com sucesso:
+Confira se migrations e seeder terminaram com sucesso:
 
 ```bash
 docker compose ps -a
+docker compose logs seeder
 ```
 
-Se as migrations falharem, recrie do zero (isso **apaga os dados locais**):
+Se as migrations ou o seed falharem, recrie do zero (isso **apaga os dados locais**):
 
 ```bash
 docker compose down -v && docker compose up -d

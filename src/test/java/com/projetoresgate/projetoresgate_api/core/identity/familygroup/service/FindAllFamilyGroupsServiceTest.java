@@ -3,7 +3,7 @@ package com.projetoresgate.projetoresgate_api.core.identity.familygroup.service;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.api.dto.FamilyGroupSummaryResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.domain.FamilyGroup;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.repository.FamilyGroupRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.SearchFamilyGroupQuery;
+import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindAllFamilyGroupsQuery;
 import jakarta.persistence.criteria.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,8 +28,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("SearchFamilyGroupService - Test")
-class SearchFamilyGroupServiceTest {
+@DisplayName("FindAllFamilyGroupsService - Test")
+class FindAllFamilyGroupsServiceTest {
 
     @Mock
     private FamilyGroupRepository repository;
@@ -59,13 +59,13 @@ class SearchFamilyGroupServiceTest {
     private ArgumentCaptor<Specification<FamilyGroup>> specCaptor;
 
     @InjectMocks
-    private SearchFamilyGroupService service;
+    private FindAllFamilyGroupsService service;
 
     @Test
-    @DisplayName("Deve buscar grupos familiares com paginação")
-    void handle_ShouldSearchWithPagination() {
+    @DisplayName("Deve listar grupos familiares com paginação")
+    void handle_ShouldListWithPagination() {
         Pageable pageable = PageRequest.of(0, 10);
-        SearchFamilyGroupQuery searchQuery = new SearchFamilyGroupQuery(null, pageable);
+        FindAllFamilyGroupsQuery searchQuery = new FindAllFamilyGroupsQuery(null, pageable);
         Page<FamilyGroup> foundPage = new PageImpl<>(List.of());
 
         when(repository.findAll(nullable(Specification.class), eq(pageable))).thenReturn(foundPage);
@@ -82,7 +82,7 @@ class SearchFamilyGroupServiceTest {
     @DisplayName("Deve construir a Specification com o filtro de nome")
     void handle_ShouldBuildSpecificationWithNameFilter() {
         Pageable pageable = PageRequest.of(0, 10);
-        SearchFamilyGroupQuery searchQuery = new SearchFamilyGroupQuery("Família Silva", pageable);
+        FindAllFamilyGroupsQuery searchQuery = new FindAllFamilyGroupsQuery("Família Silva", pageable);
 
         doReturn(path).when(root).get("name");
         lenient().when(repository.findAll(nullable(Specification.class), eq(pageable)))
@@ -91,7 +91,7 @@ class SearchFamilyGroupServiceTest {
         lenient().doReturn(path).when(path).get(anyString());
         lenient().doReturn(String.class).when(path).getJavaType();
         lenient().doReturn(mockExpression).when(cb).lower(any());
-        lenient().doReturn(mockPredicate).when(cb).like(any(), anyString());
+        lenient().doReturn(mockPredicate).when(cb).like(any(), anyString(), anyChar());
         lenient().doReturn(mockPredicate).when(cb).and(any(Predicate[].class));
 
         service.handle(searchQuery);
@@ -101,14 +101,14 @@ class SearchFamilyGroupServiceTest {
         Specification<FamilyGroup> capturedSpec = specCaptor.getValue();
         capturedSpec.toPredicate(root, query, cb);
 
-        verify(cb).like(any(), eq("%família silva%"));
+        verify(cb).like(any(), eq("%família silva%"), eq('\\'));
     }
 
     @Test
     @DisplayName("Deve retornar o resumo dos grupos familiares com o total de pessoas cadastradas")
     void handle_ShouldReturnSummariesWithRegisteredPeopleCount() {
         Pageable pageable = PageRequest.of(0, 10);
-        SearchFamilyGroupQuery searchQuery = new SearchFamilyGroupQuery(null, pageable);
+        FindAllFamilyGroupsQuery searchQuery = new FindAllFamilyGroupsQuery(null, pageable);
 
         FamilyGroup silva = FamilyGroup.create(
                 "FAM-1", "Família Silva", new BigDecimal("5000.00"), new BigDecimal("1250.00"),
@@ -143,7 +143,7 @@ class SearchFamilyGroupServiceTest {
     @DisplayName("Deve retornar zero pessoas cadastradas quando o grupo não tiver ninguém vinculado")
     void handle_ShouldReturnZeroWhenGroupHasNoLinkedPersons() {
         Pageable pageable = PageRequest.of(0, 10);
-        SearchFamilyGroupQuery searchQuery = new SearchFamilyGroupQuery(null, pageable);
+        FindAllFamilyGroupsQuery searchQuery = new FindAllFamilyGroupsQuery(null, pageable);
 
         FamilyGroup familyGroup = FamilyGroup.create(
                 "FAM-1", "Família Silva", new BigDecimal("5000.00"), new BigDecimal("1250.00"),

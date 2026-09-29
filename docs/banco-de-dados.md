@@ -133,17 +133,26 @@ O `docker-compose.yml` sobe três serviços em cadeia:
 3. `seeder` — roda `docker/database/init.sql` só depois que as migrations concluem.
 
 O `depends_on` com `condition: service_completed_successfully` garante a ordem. Depois de
-`up -d`, confira que o serviço `migrations` terminou com exit 0:
+`up -d`, confira que os serviços `migrations` e `seeder` terminaram com exit 0:
 
 ```bash
 docker compose ps -a
+docker compose logs seeder
 ```
 
-Se `migrations` falhar, `up -d` vai continuar pois `db` já está de pé, mas o schema fica errado.
-Nesses casos, `docker compose down -v && docker compose up -d` recria do zero.
+Se qualquer um falhar, `up -d` vai continuar pois `db` já está de pé, mas o schema ou os dados de
+exemplo ficam errados. Nesses casos, `docker compose down -v && docker compose up -d` recria do
+zero.
+
+O `psql` do seeder roda com `ON_ERROR_STOP=1`: um erro no `init.sql` derruba o container em vez de
+ser engolido. Sem essa flag o `psql` imprime o erro no log e **sai com exit 0**, e o
+`service_completed_successfully` enxerga sucesso — é assim que um seed pela metade passa despercebido.
+O `init.sql` é idempotente: num bloco `DO` ele checa se o `admin@projetoresgate.com` já existe e,
+se sim, não faz nada.
 
 O `init.sql` popula os dados de exemplo e faz `setval` na sequence do `friendlyId` para que o
-primeiro grupo do ambiente local continue a numeração do seed.
+primeiro grupo do ambiente local continue a numeração do seed. Como o script inteiro é um único
+bloco `DO`, qualquer erro faz rollback de tudo — ou o seed inteiro entra, ou nada entra.
 
 ## Variáveis de ambiente
 

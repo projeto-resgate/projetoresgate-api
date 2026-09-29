@@ -64,7 +64,7 @@ class NaturalPersonControllerTest {
     private FindNaturalPersonByIdUseCase findByIdUseCase;
 
 @MockitoBean
-private SearchNaturalPersonUseCase searchUseCase;
+private FindAllNaturalPersonsUseCase findAllUseCase;
 
 @MockitoBean
 private AutocompleteNaturalPersonUseCase autocompleteUseCase;
@@ -154,7 +154,7 @@ private AutocompleteNaturalPersonUseCase autocompleteUseCase;
         NaturalPerson person = createMockPerson();
         Page<NaturalPerson> pageResult = new PageImpl<>(List.of(person));
 
-        when(searchUseCase.handle(any())).thenReturn(pageResult);
+        when(findAllUseCase.handle(any())).thenReturn(pageResult);
 
         mockMvc.perform(get("/natural-person")
                         .param("page", "0")

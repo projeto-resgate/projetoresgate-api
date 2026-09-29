@@ -3,8 +3,8 @@ package com.projetoresgate.projetoresgate_api.core.academic.program.service;
 import com.projetoresgate.projetoresgate_api.core.academic.program.api.dto.ProgramResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.Program;
 import com.projetoresgate.projetoresgate_api.core.academic.program.repository.ProgramRepository;
-import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.SearchProgramUseCase;
-import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.query.SearchProgramQuery;
+import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.FindAllProgramsUseCase;
+import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.query.FindAllProgramsQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.api.dto.LegalPersonSummaryResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.FindLegalPersonSummariesUseCase;
 import com.projetoresgate.projetoresgate_api.shared.specification.SpecificationBuilder;
@@ -21,18 +21,18 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-public class SearchProgramService implements SearchProgramUseCase {
+public class FindAllProgramsService implements FindAllProgramsUseCase {
 
     private final ProgramRepository repository;
     private final FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase;
 
-    public SearchProgramService(ProgramRepository repository, FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase) {
+    public FindAllProgramsService(ProgramRepository repository, FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase) {
         this.repository = repository;
         this.findLegalPersonSummariesUseCase = findLegalPersonSummariesUseCase;
     }
 
     @Override
-    public Page<ProgramResponse> handle(SearchProgramQuery query) {
+    public Page<ProgramResponse> handle(FindAllProgramsQuery query) {
 
         Specification<Program> genericFilters = new SpecificationBuilder<Program>()
                 .with("status", ":", query.status())

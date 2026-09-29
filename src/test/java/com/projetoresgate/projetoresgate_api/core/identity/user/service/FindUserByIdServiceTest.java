@@ -22,14 +22,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("FindUserService - Test")
-class FindUserServiceTest {
+@DisplayName("FindUserByIdService - Test")
+class FindUserByIdServiceTest {
 
     @Mock
     private UserRepository repository;
 
     @InjectMocks
-    private FindUserService service;
+    private FindUserByIdService service;
 
     @Test
     @DisplayName("Deve encontrar usuário por ID com sucesso e retornar todos os campos")

@@ -2,7 +2,7 @@ package com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.
 
 import org.springframework.data.domain.Pageable;
 
-public record SearchFamilyGroupQuery(
+public record FindAllFamilyGroupsQuery(
         String name,
         Pageable pageable
 ) {

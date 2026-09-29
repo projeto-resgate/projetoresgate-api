@@ -12,10 +12,7 @@ BEGIN
 
     INSERT INTO user_roles (user_id, role) VALUES
         ('00000000-0000-0000-0000-000000000001', 'ADMIN'),
-        ('00000000-0000-0000-0000-000000000001', 'ADMIN'),
         ('00000000-0000-0000-0000-000000000002', 'ADMIN'),
-        ('00000000-0000-0000-0000-000000000002', 'ADMIN'),
-        ('00000000-0000-0000-0000-000000000003', 'ADMIN'),
         ('00000000-0000-0000-0000-000000000003', 'ADMIN');
 
     INSERT INTO natural_person (id, name, email, nickname, cpf, rg, birth_date, gender, phone, cellphone, is_email_verified, date_created, date_updated) VALUES
@@ -52,7 +49,7 @@ BEGIN
         ('00000000-0000-0000-0000-000000000062', 'FAM-2', 'Família Pereira', 3200.00, 800.00, 600.00, 300.00, 1200.00, 4, '00000000-0000-0000-0000-000000000022', now(), now()),
         ('00000000-0000-0000-0000-000000000063', 'FAM-3', 'Família Souza', 1800.00, 600.00, 250.00, 150.00, 900.00, 3, '00000000-0000-0000-0000-000000000023', now(), now());
 
-    SELECT setval('family_group_friendly_id_seq', 3, true);
+    PERFORM setval('family_group_friendly_id_seq', 3, true);
 
     INSERT INTO family_group_natural_person (family_group_id, natural_person_id) VALUES
         ('00000000-0000-0000-0000-000000000061', '00000000-0000-0000-0000-000000000011'),

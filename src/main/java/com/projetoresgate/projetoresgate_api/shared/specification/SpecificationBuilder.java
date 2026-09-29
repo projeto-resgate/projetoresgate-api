@@ -12,6 +12,9 @@ public class SpecificationBuilder<T> {
     private final List<SearchCriteria> params = new ArrayList<>();
 
     public SpecificationBuilder<T> with(String key, String operation, Object value) {
+        if (!GenericSpecification.isSupported(operation)) {
+            throw new IllegalArgumentException("Operação não suportada: \"%s\"".formatted(operation));
+        }
         if (nonNull(value) && !value.toString().trim().isEmpty()) {
             params.add(new SearchCriteria(key, operation, value));
         }
@@ -26,7 +29,7 @@ public class SpecificationBuilder<T> {
         Specification<T> result = new GenericSpecification<>(params.get(0));
 
         for (int i = 1; i < params.size(); i++) {
-            result = Specification.where(result).and(new GenericSpecification<>(params.get(i)));
+            result = result.and(new GenericSpecification<>(params.get(i)));
         }
 
         return result;

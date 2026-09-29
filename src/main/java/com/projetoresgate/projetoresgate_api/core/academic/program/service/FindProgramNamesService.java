@@ -27,7 +27,7 @@ public class FindProgramNamesService implements FindProgramNamesUseCase {
     public List<ProgramNameResponse> handle(FindProgramNamesQuery query) {
 
         Specification<Program> nameFilter = new SpecificationBuilder<Program>()
-                .with("name", ":", query.name())
+                .with("name", "~", query.name())
                 .build();
 
         Pageable pageable = PageRequest.of(0, query.limit(), Sort.by("name").ascending());

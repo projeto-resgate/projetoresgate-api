@@ -45,6 +45,6 @@ services:
       - ./docker/database/init.sql:/seed/init.sql:ro
     entrypoint: ["/bin/sh", "-ec"]
     command: >
-      "echo 'Flyway concluído! Rodando o init.sql...'; PGPASSWORD=$$POSTGRES_PASSWORD psql -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -f /seed/init.sql"
+      "echo 'Flyway concluído! Rodando o init.sql...'; PGPASSWORD=$$POSTGRES_PASSWORD psql -v ON_ERROR_STOP=1 -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -f /seed/init.sql"
 volumes:
   postgres_data:

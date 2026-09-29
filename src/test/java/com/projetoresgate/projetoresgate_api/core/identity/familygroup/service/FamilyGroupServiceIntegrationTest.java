@@ -8,7 +8,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.familygroup.domain.Fa
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.repository.FamilyGroupRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.command.*;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindFamilyGroupNaturalPersonsQuery;
-import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.SearchFamilyGroupQuery;
+import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindAllFamilyGroupsQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
@@ -46,7 +46,7 @@ class FamilyGroupServiceIntegrationTest extends PostgresIntegrationTest {
 
     private CreateFamilyGroupService createService;
     private UpdateFamilyGroupService updateService;
-    private SearchFamilyGroupService searchService;
+    private FindAllFamilyGroupsService searchService;
     private FindFamilyGroupNaturalPersonsService findNaturalPersonsService;
     private AddNaturalPersonToFamilyGroupService addNaturalPersonService;
     private RemoveNaturalPersonFromFamilyGroupService removeNaturalPersonService;
@@ -57,7 +57,7 @@ class FamilyGroupServiceIntegrationTest extends PostgresIntegrationTest {
 
         createService = new CreateFamilyGroupService(familyGroupRepository);
         updateService = new UpdateFamilyGroupService(familyGroupRepository);
-        searchService = new SearchFamilyGroupService(familyGroupRepository);
+        searchService = new FindAllFamilyGroupsService(familyGroupRepository);
         findNaturalPersonsService = new FindFamilyGroupNaturalPersonsService(familyGroupRepository);
         addNaturalPersonService = new AddNaturalPersonToFamilyGroupService(
                 familyGroupRepository, naturalPersonRepository);
@@ -182,7 +182,7 @@ class FamilyGroupServiceIntegrationTest extends PostgresIntegrationTest {
         familyGroupRepository.flush();
 
         Page<FamilyGroupSummaryResponse> result = searchService.handle(
-                new SearchFamilyGroupQuery(null, PageRequest.of(0, 10)));
+                new FindAllFamilyGroupsQuery(null, PageRequest.of(0, 10)));
 
         assertEquals(2, result.getTotalElements());
 
@@ -351,7 +351,7 @@ class FamilyGroupServiceIntegrationTest extends PostgresIntegrationTest {
         familyGroupRepository.flush();
 
         Page<FamilyGroupSummaryResponse> result = searchService.handle(
-                new SearchFamilyGroupQuery("silva", PageRequest.of(0, 10)));
+                new FindAllFamilyGroupsQuery("silva", PageRequest.of(0, 10)));
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Família Silva", result.getContent().getFirst().name());

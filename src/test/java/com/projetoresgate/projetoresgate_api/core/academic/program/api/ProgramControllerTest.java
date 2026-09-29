@@ -66,7 +66,7 @@ class ProgramControllerTest {
     private FindProgramByIdUseCase findByIdUseCase;
 
     @MockitoBean
-    private SearchProgramUseCase searchUseCase;
+    private FindAllProgramsUseCase findAllUseCase;
 
     @MockitoBean
     private FindProgramNamesUseCase findProgramNamesUseCase;
@@ -175,7 +175,7 @@ class ProgramControllerTest {
         ProgramResponse response = ProgramResponse.fromEntity(buildProgram("Programa A"), null);
         Page<ProgramResponse> pageResult = new PageImpl<>(List.of(response));
 
-        when(searchUseCase.handle(any())).thenReturn(pageResult);
+        when(findAllUseCase.handle(any())).thenReturn(pageResult);
 
         mockMvc.perform(get("/program")
                         .param("page", "0")
