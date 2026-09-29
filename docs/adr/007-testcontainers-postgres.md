@@ -14,8 +14,10 @@ H2 do projeto.**
 Toda classe de teste que toca banco segue:
 
 ```java
+
 @DataJpaTest
-class MeuRepositoryTest extends PostgresIntegrationTest { ... }
+class MeuRepositoryTest extends PostgresIntegrationTest { ...
+}
 ```
 
 A classe base fica em `src/test/java/.../shared/testcontainers/PostgresIntegrationTest.java` e:

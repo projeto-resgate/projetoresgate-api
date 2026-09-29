@@ -5,11 +5,11 @@ Como os testes são organizados e executados. Para o porquê da estratégia, vej
 
 ## Panorama
 
-| Tipo | Anotação | Quantidade | Sobe contexto Spring? | Toca banco? |
-| --- | --- | --- | --- | --- |
-| Unitário | `@ExtendWith(MockitoExtension.class)` | 42 | Não | Não |
-| Controller | `@WebMvcTest` | 5 | Parcial | Não |
-| Integração de dados | `@DataJpaTest` + `PostgresIntegrationTest` | 3 | Parcial | Sim, em Postgres real |
+| Tipo                | Anotação                                   | Quantidade | Sobe contexto Spring? | Toca banco?           |
+|---------------------|--------------------------------------------|------------|-----------------------|-----------------------|
+| Unitário            | `@ExtendWith(MockitoExtension.class)`      | 42         | Não                   | Não                   |
+| Controller          | `@WebMvcTest`                              | 5          | Parcial               | Não                   |
+| Integração de dados | `@DataJpaTest` + `PostgresIntegrationTest` | 3          | Parcial               | Sim, em Postgres real |
 
 Total: 69 classes de teste, 377 testes. Mais a classe base `PostgresIntegrationTest`, que não tem teste próprio.
 
@@ -37,6 +37,7 @@ via Testcontainers.
 Testa a lógica de um service, entidade ou componente isolado. Não sobe o Spring.
 
 ```java
+
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CreateFamilyGroupService - Test")
 class CreateFamilyGroupServiceTest {
@@ -84,6 +85,7 @@ você mandou não testa nada. Asserte o que importa:
 Usa `@WebMvcTest` com o controller específico e `MockMvc`. Os use cases são `@Mock`.
 
 ```java
+
 @WebMvcTest(FamilyGroupController.class)
 @Import(SecurityConfigurations.class)
 @DisplayName("FamilyGroupController - Test")
@@ -126,6 +128,7 @@ Estende `PostgresIntegrationTest`, que sobe um container PostgreSQL compartilhad
 Flyway aplicadas de verdade.
 
 ```java
+
 @DataJpaTest
 @DisplayName("FamilyGroupService - Integração")
 class FamilyGroupServiceIntegrationTest extends PostgresIntegrationTest {

@@ -43,7 +43,7 @@ services:
       - POSTGRES_DB=projetoresgatedb
     volumes:
       - ./docker/database/init.sql:/seed/init.sql:ro
-    entrypoint: ["/bin/sh", "-ec"]
+    entrypoint: [ "/bin/sh", "-ec" ]
     command: >
       "echo 'Flyway concluído! Rodando o init.sql...'; PGPASSWORD=$$POSTGRES_PASSWORD psql -v ON_ERROR_STOP=1 -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -f /seed/init.sql"
 volumes:

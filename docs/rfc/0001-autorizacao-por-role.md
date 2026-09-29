@@ -14,10 +14,18 @@ Na prática, a autorização está assim:
 
 ```java
 // infrastructure/security/SecurityConfigurations.java
-.authorizeHttpRequests(auth -> auth
-        .requestMatchers(HttpMethod.POST, "/user/login").permitAll()
-        // ... outras rotas públicas
-        .anyRequest().authenticated()
+.authorizeHttpRequests(auth ->auth
+        .
+
+requestMatchers(HttpMethod.POST, "/user/login").
+
+permitAll()
+// ... outras rotas públicas
+        .
+
+anyRequest().
+
+authenticated()
 )
 ```
 
@@ -53,9 +61,10 @@ O que não existe:
 Anotar os métodos do controller:
 
 ```java
+
 @GetMapping("/{id}")
 @PreAuthorize("hasAnyRole('ADMIN', 'VOLUNTEER')")
-public ResponseEntity<FamilyGroupResponse> findById(@PathVariable UUID id) { ... }
+public ResponseEntity<FamilyGroupResponse> findById(@PathVariable UUID id) { ...}
 ```
 
 **Prós**
@@ -76,8 +85,14 @@ public ResponseEntity<FamilyGroupResponse> findById(@PathVariable UUID id) { ...
 Configurar tudo no `SecurityConfigurations`, com `requestMatchers` por padrão HTTP:
 
 ```java
-.requestMatchers(HttpMethod.GET, "/family-group/**").hasAnyRole("ADMIN", "VOLUNTEER")
-.requestMatchers(HttpMethod.POST, "/family-group/**").hasRole("ADMIN")
+.requestMatchers(HttpMethod.GET, "/family-group/**").
+
+hasAnyRole("ADMIN","VOLUNTEER")
+.
+
+requestMatchers(HttpMethod.POST, "/family-group/**").
+
+hasRole("ADMIN")
 ```
 
 **Prós**
@@ -131,14 +146,24 @@ Estrutura sugerida:
 
 ```java
 // SecurityConfigurations: padrão por recurso
-.requestMatchers(HttpMethod.GET, "/family-group/**").hasAnyRole("ADMIN", "VOLUNTEER")
-.requestMatchers(HttpMethod.POST, "/family-group/**").hasRole("ADMIN")
-.anyRequest().authenticated()
+.requestMatchers(HttpMethod.GET, "/family-group/**").
+
+hasAnyRole("ADMIN","VOLUNTEER")
+.
+
+requestMatchers(HttpMethod.POST, "/family-group/**").
+
+hasRole("ADMIN")
+.
+
+anyRequest().
+
+authenticated()
 
 // no método, só quando a URL não basta
 @GetMapping("/{id}")
 @PreAuthorize("hasAnyRole('ADMIN', 'VOLUNTEER')")
-public ResponseEntity<FamilyGroupResponse> findById(@PathVariable UUID id) { ... }
+public ResponseEntity<FamilyGroupResponse> findById(@PathVariable UUID id) { ...}
 ```
 
 ## Impacto

@@ -8,11 +8,11 @@ Autor: Documentação inicial do projeto
 
 O projeto roda **duas versões diferentes de PostgreSQL** e ninguém decidiu qual é a correta.
 
-| Onde | Versão | Fonte |
-| --- | --- | --- |
-| Ambiente local (`docker-compose.yml`) | `postgres:15-alpine` | serviço `db` |
+| Onde                                  | Versão               | Fonte                     |
+|---------------------------------------|----------------------|---------------------------|
+| Ambiente local (`docker-compose.yml`) | `postgres:15-alpine` | serviço `db`              |
 | Testes de integração (Testcontainers) | `postgres:16-alpine` | `PostgresIntegrationTest` |
-| Produção | desconhecido | não documentado |
+| Produção                              | desconhecido         | não documentado           |
 
 O teste de integração valida contra a 16, o dev trabalha contra a 15, e a produção contra o que
 for. Isso significa que **a suíte verde não garante que a aplicação funcione no banco de

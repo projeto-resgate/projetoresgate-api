@@ -2,6 +2,7 @@ package com.projetoresgate.projetoresgate_api.core.identity.legalperson.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projetoresgate.projetoresgate_api.config.security.WithMockCustomUser;
+import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.api.dto.LegalPersonSummaryResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
@@ -9,7 +10,6 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Re
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.*;
-import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.CreateLegalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.SoftDeleteLegalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.UpdateLegalPersonCommand;
@@ -25,11 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -58,23 +54,23 @@ class LegalPersonControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-@MockitoBean
-private CreateLegalPersonUseCase createUseCase;
+    @MockitoBean
+    private CreateLegalPersonUseCase createUseCase;
 
-@MockitoBean
-private UpdateLegalPersonUseCase updateUseCase;
+    @MockitoBean
+    private UpdateLegalPersonUseCase updateUseCase;
 
-@MockitoBean
-private SoftDeleteLegalPersonUseCase softDeleteUseCase;
+    @MockitoBean
+    private SoftDeleteLegalPersonUseCase softDeleteUseCase;
 
-@MockitoBean
-private FindLegalPersonByIdUseCase findByIdUseCase;
+    @MockitoBean
+    private FindLegalPersonByIdUseCase findByIdUseCase;
 
-@MockitoBean
-private FindAllLegalPersonsUseCase findAllUseCase;
+    @MockitoBean
+    private FindAllLegalPersonsUseCase findAllUseCase;
 
-@MockitoBean
-private AutocompleteLegalPersonUseCase autocompleteUseCase;
+    @MockitoBean
+    private AutocompleteLegalPersonUseCase autocompleteUseCase;
 
     @MockitoBean
     private UserDetailsService userDetailsService;
@@ -316,76 +312,76 @@ private AutocompleteLegalPersonUseCase autocompleteUseCase;
                 .andExpect(status().isUnauthorized());
     }
 
-@Test
-@WithMockCustomUser
-@DisplayName("DELETE /legal-person/{id} - Deve retornar 204 No Content ao excluir")
-void delete_ShouldReturn204() throws Exception {
-    UUID id = UUID.randomUUID();
+    @Test
+    @WithMockCustomUser
+    @DisplayName("DELETE /legal-person/{id} - Deve retornar 204 No Content ao excluir")
+    void delete_ShouldReturn204() throws Exception {
+        UUID id = UUID.randomUUID();
 
-    mockMvc.perform(delete("/legal-person/{id}", id)
-                    .with(csrf()))
-            .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/legal-person/{id}", id)
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
 
-    verify(softDeleteUseCase).handle(any(SoftDeleteLegalPersonCommand.class));
-}
+        verify(softDeleteUseCase).handle(any(SoftDeleteLegalPersonCommand.class));
+    }
 
-@Test
-@WithMockCustomUser
-@DisplayName("DELETE /legal-person/{id} - Deve retornar 404 NotFound quando a pessoa jurídica não existir")
-void delete_ShouldReturn404WhenNotFound() throws Exception {
-    UUID id = UUID.randomUUID();
+    @Test
+    @WithMockCustomUser
+    @DisplayName("DELETE /legal-person/{id} - Deve retornar 404 NotFound quando a pessoa jurídica não existir")
+    void delete_ShouldReturn404WhenNotFound() throws Exception {
+        UUID id = UUID.randomUUID();
 
-    doThrow(new ResourceNotFoundException("Pessoa jurídica não encontrada com ID: " + id))
-            .when(softDeleteUseCase).handle(any());
+        doThrow(new ResourceNotFoundException("Pessoa jurídica não encontrada com ID: " + id))
+                .when(softDeleteUseCase).handle(any());
 
-    mockMvc.perform(delete("/legal-person/{id}", id)
-                    .with(csrf()))
-            .andExpect(status().isNotFound());
-}
+        mockMvc.perform(delete("/legal-person/{id}", id)
+                        .with(csrf()))
+                .andExpect(status().isNotFound());
+    }
 
-@Test
-@DisplayName("DELETE /legal-person/{id} - Deve retornar 401 Unauthorized sem autenticação")
-void delete_ShouldReturn401WithoutAuth() throws Exception {
-    UUID id = UUID.randomUUID();
+    @Test
+    @DisplayName("DELETE /legal-person/{id} - Deve retornar 401 Unauthorized sem autenticação")
+    void delete_ShouldReturn401WithoutAuth() throws Exception {
+        UUID id = UUID.randomUUID();
 
-    mockMvc.perform(delete("/legal-person/{id}", id))
-            .andExpect(status().isUnauthorized());
-}
+        mockMvc.perform(delete("/legal-person/{id}", id))
+                .andExpect(status().isUnauthorized());
+    }
 
-@Test
-@DisplayName("GET /legal-person/{id} - Deve retornar 401 Unauthorized sem autenticação")
-void findById_ShouldReturn401WithoutAuth() throws Exception {
-    UUID id = UUID.randomUUID();
+    @Test
+    @DisplayName("GET /legal-person/{id} - Deve retornar 401 Unauthorized sem autenticação")
+    void findById_ShouldReturn401WithoutAuth() throws Exception {
+        UUID id = UUID.randomUUID();
 
-    mockMvc.perform(get("/legal-person/{id}", id))
-            .andExpect(status().isUnauthorized());
-}
+        mockMvc.perform(get("/legal-person/{id}", id))
+                .andExpect(status().isUnauthorized());
+    }
 
-@Test
-@WithMockCustomUser
-@DisplayName("GET /legal-person/autocomplete - Deve retornar 200 OK com sugestões")
-void autocomplete_ShouldReturn200() throws Exception {
-    LegalPersonSummaryResponse summary = new LegalPersonSummaryResponse(
-            UUID.randomUUID(), "Acme LTDA", "11222333000181");
+    @Test
+    @WithMockCustomUser
+    @DisplayName("GET /legal-person/autocomplete - Deve retornar 200 OK com sugestões")
+    void autocomplete_ShouldReturn200() throws Exception {
+        LegalPersonSummaryResponse summary = new LegalPersonSummaryResponse(
+                UUID.randomUUID(), "Acme LTDA", "11222333000181");
 
-    when(autocompleteUseCase.handle(any())).thenReturn(List.of(summary));
+        when(autocompleteUseCase.handle(any())).thenReturn(List.of(summary));
 
-    mockMvc.perform(get("/legal-person/autocomplete")
-                    .param("searchTerm", "acme"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$[0].displayName").value("Acme LTDA"))
-            .andExpect(jsonPath("$[0].cnpj").value("11222333000181"));
+        mockMvc.perform(get("/legal-person/autocomplete")
+                        .param("searchTerm", "acme"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].displayName").value("Acme LTDA"))
+                .andExpect(jsonPath("$[0].cnpj").value("11222333000181"));
 
-    verify(autocompleteUseCase).handle(eq(new AutocompleteLegalPersonQuery("acme", 10)));
-}
+        verify(autocompleteUseCase).handle(eq(new AutocompleteLegalPersonQuery("acme", 10)));
+    }
 
-@Test
-@DisplayName("GET /legal-person/autocomplete - Deve retornar 401 Unauthorized sem autenticação")
-void autocomplete_ShouldReturn401WithoutAuth() throws Exception {
-    mockMvc.perform(get("/legal-person/autocomplete")
-                    .param("searchTerm", "acme"))
-            .andExpect(status().isUnauthorized());
-}
+    @Test
+    @DisplayName("GET /legal-person/autocomplete - Deve retornar 401 Unauthorized sem autenticação")
+    void autocomplete_ShouldReturn401WithoutAuth() throws Exception {
+        mockMvc.perform(get("/legal-person/autocomplete")
+                        .param("searchTerm", "acme"))
+                .andExpect(status().isUnauthorized());
+    }
 
     private AddressCommand buildAddress() {
         return new AddressCommand(null, null, "01310-100", "1000", null, null, "Bela Vista", "São Paulo", "SP");

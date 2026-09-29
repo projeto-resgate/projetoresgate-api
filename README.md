@@ -27,15 +27,15 @@ detalhes de infraestrutura.
 
 Comece pelo índice: **[`docs/README.md`](docs/README.md)**.
 
-| Documento | Para quê |
-| --- | --- |
-| [`AGENTS.md`](AGENTS.md) | Regras e comandos. **Leia antes de escrever código.** |
-| [`docs/architecture.md`](docs/architecture.md) | Onde cada tipo de classe mora e por quê |
-| [`docs/convencoes.md`](docs/convencoes.md) | Padrões práticos com código real para copiar |
-| [`docs/testes.md`](docs/testes.md) | Como os testes são organizados e executados |
-| [`docs/banco-de-dados.md`](docs/banco-de-dados.md) | Migrations, nomenclatura SQL e ambiente local |
-| [`docs/adr/`](docs/adr/README.md) | Decisões arquiteturais e o porquê de cada uma |
-| [`docs/rfc/`](docs/rfc/README.md) | Propostas em discussão |
+| Documento                                          | Para quê                                              |
+|----------------------------------------------------|-------------------------------------------------------|
+| [`AGENTS.md`](AGENTS.md)                           | Regras e comandos. **Leia antes de escrever código.** |
+| [`docs/architecture.md`](docs/architecture.md)     | Onde cada tipo de classe mora e por quê               |
+| [`docs/convencoes.md`](docs/convencoes.md)         | Padrões práticos com código real para copiar          |
+| [`docs/testes.md`](docs/testes.md)                 | Como os testes são organizados e executados           |
+| [`docs/banco-de-dados.md`](docs/banco-de-dados.md) | Migrations, nomenclatura SQL e ambiente local         |
+| [`docs/adr/`](docs/adr/README.md)                  | Decisões arquiteturais e o porquê de cada uma         |
+| [`docs/rfc/`](docs/rfc/README.md)                  | Propostas em discussão                                |
 
 ### 📄 Decisões Arquiteturais (ADR)
 
@@ -103,7 +103,8 @@ Por que foi feito.
 
 - [ ] Regras de domínio na entidade
 - [ ] Utilizou padrão service implementando usecase
-- [ ] Está utilizando DTOs (`*Command` na entrada, `*Response` na saída) — ver [ADR 008](docs/adr/008-formato-dtos-api.md)
+- [ ] Está utilizando DTOs (`*Command` na entrada, `*Response` na saída) —
+  ver [ADR 008](docs/adr/008-formato-dtos-api.md)
 - [ ] Testes unitários (JUnit 5 + Mockito)
 - [ ] Testes de controller (`@WebMvcTest`) e de integração (`@DataJpaTest` + `PostgresIntegrationTest`)
 - [ ] Swagger documentado

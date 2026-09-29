@@ -22,19 +22,19 @@ a coluna faltando. Isso é intencional: melhor falhar no boot do que quebrar em 
 
 ## Migrations existentes
 
-| Script | Conteúdo |
-| --- | --- |
-| `V001__Initial_setup.sql` | Schema inicial, extensões. |
-| `V002__Create_natural_persons_table.sql` | Tabela de pessoa física. |
-| `V003__Create_refresh_tokens_table.sql` | Tokens de refresh. |
-| `V004__Optimize_natural_person_search.sql` | Índices de busca. |
-| `V005__Separate_natural_person_from_user.sql` | Separa pessoa física de usuário. |
-| `V006__Move_email_confirmation_to_natural_person.sql` | Confirmação de e-mail migra para a pessoa. |
-| `V007__Add_token_version_to_users.sql` | Versão de token para invalidação. |
-| `V008__Create_legal_persons_table.sql` | Tabela de pessoa jurídica. |
-| `V009__Add_performance_indexes.sql` | Índices de performance. |
-| `V010__Create_program_tables.sql` | Tabelas do núcleo acadêmico. |
-| `V011__Create_family_groups_tables.sql` | Grupos familiares, junction table e sequence de `friendlyId`. |
+| Script                                                | Conteúdo                                                      |
+|-------------------------------------------------------|---------------------------------------------------------------|
+| `V001__Initial_setup.sql`                             | Schema inicial, extensões.                                    |
+| `V002__Create_natural_persons_table.sql`              | Tabela de pessoa física.                                      |
+| `V003__Create_refresh_tokens_table.sql`               | Tokens de refresh.                                            |
+| `V004__Optimize_natural_person_search.sql`            | Índices de busca.                                             |
+| `V005__Separate_natural_person_from_user.sql`         | Separa pessoa física de usuário.                              |
+| `V006__Move_email_confirmation_to_natural_person.sql` | Confirmação de e-mail migra para a pessoa.                    |
+| `V007__Add_token_version_to_users.sql`                | Versão de token para invalidação.                             |
+| `V008__Create_legal_persons_table.sql`                | Tabela de pessoa jurídica.                                    |
+| `V009__Add_performance_indexes.sql`                   | Índices de performance.                                       |
+| `V010__Create_program_tables.sql`                     | Tabelas do núcleo acadêmico.                                  |
+| `V011__Create_family_groups_tables.sql`               | Grupos familiares, junction table e sequence de `friendlyId`. |
 
 ## Criar uma migration
 
@@ -76,23 +76,23 @@ estar em migration versionada, senão o próximo `./mvnw test` ou o próximo dep
 
 ## Nomenclatura SQL
 
-| Objeto | Padrão | Exemplo |
-| --- | --- | --- |
-| Tabela | `snake_case` plural | `family_group_natural_person` |
-| Coluna | `snake_case` | `birth_date`, `deleted_at` |
-| Chave primária | `id` | `id` |
-| Chave estrangeira | `fk_{origem}_{destino}` | `fk_family_group_address` |
-| Índice | `idx_{tabela}_{coluna}` | `idx_natural_person_cpf` |
-| Unique | `uq_{tabela}_{coluna}` | `uq_user_email` |
-| Sequence | `{dominio}_{finalidade}_seq` | `family_group_friendly_id_seq` |
+| Objeto            | Padrão                       | Exemplo                        |
+|-------------------|------------------------------|--------------------------------|
+| Tabela            | `snake_case` plural          | `family_group_natural_person`  |
+| Coluna            | `snake_case`                 | `birth_date`, `deleted_at`     |
+| Chave primária    | `id`                         | `id`                           |
+| Chave estrangeira | `fk_{origem}_{destino}`      | `fk_family_group_address`      |
+| Índice            | `idx_{tabela}_{coluna}`      | `idx_natural_person_cpf`       |
+| Unique            | `uq_{tabela}_{coluna}`       | `uq_user_email`                |
+| Sequence          | `{dominio}_{finalidade}_seq` | `family_group_friendly_id_seq` |
 
 Colunas de auditoria, herdadas de `AuditableEntity`, são padrão em todas as tabelas de domínio:
 
-| Coluna | Tipo | Papel |
-| --- | --- | --- |
+| Coluna         | Tipo          | Papel                               |
+|----------------|---------------|-------------------------------------|
 | `date_created` | `timestamptz` | Criação, preenchida pelo Hibernate. |
-| `date_updated` | `timestamptz` | Última alteração. |
-| `deleted_at` | `timestamptz` | Soft delete. `NULL` significa vivo. |
+| `date_updated` | `timestamptz` | Última alteração.                   |
+| `deleted_at`   | `timestamptz` | Soft delete. `NULL` significa vivo. |
 
 A coluna `deleted_at` só ganha efeito automático se a entidade tiver `@SQLRestriction`. Confira
 antes de filtrar à mão.
@@ -111,6 +111,7 @@ CREATE SEQUENCE IF NOT EXISTS family_group_friendly_id_seq START WITH 1;
 E consumida com `nextval`, que é atômico:
 
 ```java
+
 @Query(value = "select nextval('family_group_friendly_id_seq')", nativeQuery = true)
 Long nextFriendlyIdValue();
 ```

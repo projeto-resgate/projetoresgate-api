@@ -6,15 +6,15 @@ resto.
 
 ## Nomenclatura
 
-| Tipo | Padrão | Exemplo |
-| --- | --- | --- |
-| Classe | PascalCase com sufixo | `CreateFamilyGroupService` |
-| Método | camelCase | `handle`, `findByIdOrThrow` |
-| Variável | camelCase | `familyGroup`, `naturalPersons` |
-| Constante | `UPPER_SNAKE_CASE` | `MAX_LOGIN_ATTEMPTS` |
-| Pacote | minúsculas, sem separador | `naturalperson`, `familygroup` |
-| Tabela/coluna | `snake_case` | `family_group_natural_person`, `birth_date` |
-| Índice | `idx_{tabela}_{coluna}` | `idx_natural_person_cpf` |
+| Tipo          | Padrão                    | Exemplo                                     |
+|---------------|---------------------------|---------------------------------------------|
+| Classe        | PascalCase com sufixo     | `CreateFamilyGroupService`                  |
+| Método        | camelCase                 | `handle`, `findByIdOrThrow`                 |
+| Variável      | camelCase                 | `familyGroup`, `naturalPersons`             |
+| Constante     | `UPPER_SNAKE_CASE`        | `MAX_LOGIN_ATTEMPTS`                        |
+| Pacote        | minúsculas, sem separador | `naturalperson`, `familygroup`              |
+| Tabela/coluna | `snake_case`              | `family_group_natural_person`, `birth_date` |
+| Índice        | `idx_{tabela}_{coluna}`   | `idx_natural_person_cpf`                    |
 
 **Código em inglês, documentação em português.** Isso vale para classes, métodos, variáveis e
 comentários. Ver [ADR 005](adr/005-padroes-nomenclatura-idioma.md).
@@ -26,6 +26,7 @@ Os pacotes de feature são **uma palavra**: `familygroup`, não `family-group` n
 A regra de negócio mora na entidade. Ela não é anêmica e não usa Lombok.
 
 ```java
+
 @Entity
 public class FamilyGroup extends AuditableEntity {
 
@@ -52,8 +53,13 @@ public class FamilyGroup extends AuditableEntity {
     }
 
     public static class Updater {
-        public Updater name(String name) { /* ... */ return this; }
-        public FamilyGroup apply() { /* valida e aplica */ return familyGroup; }
+        public Updater name(String name) { /* ... */
+            return this;
+        }
+
+        public FamilyGroup apply() { /* valida e aplica */
+            return familyGroup;
+        }
     }
 }
 ```
@@ -64,8 +70,10 @@ O padrão `update()...apply()` existe para deixar explícito que a alteração s
 Soft delete é **automático** quando a entidade tem a anotação:
 
 ```java
+
 @SQLRestriction("deleted_at IS NULL")
-public class NaturalPerson extends AuditableEntity { /* ... */ }
+public class NaturalPerson extends AuditableEntity { /* ... */
+}
 ```
 
 Com isso, `findById` já ignora deletados. **Não** filtre `deletedAt` à mão em query: é redundante
@@ -104,11 +112,11 @@ Page<FamilyGroup> page = repository.findAll(filters, query.pageable());
 
 A operação vem do que o filtro precisa casar:
 
-| Operação | Faz | Use para |
-| --- | --- | --- |
-| `:` | igualdade exata, case-sensitive | enum, UUID, CPF, CNPJ, status |
-| `~` | ILIKE: contém, ignorando caixa | nome, razão social, busca parcial |
-| `>` `<` `>=` `<=` | comparação | intervalo de data ou número |
+| Operação          | Faz                             | Use para                          |
+|-------------------|---------------------------------|-----------------------------------|
+| `:`               | igualdade exata, case-sensitive | enum, UUID, CPF, CNPJ, status     |
+| `~`               | ILIKE: contém, ignorando caixa  | nome, razão social, busca parcial |
+| `>` `<` `>=` `<=` | comparação                      | intervalo de data ou número       |
 
 `~` **só funciona em propriedade de texto**; em coluna numérica, de data ou enum a query falha com
 mensagem sugerindo `:`. A operação vem do que o filtro precisa casar, não do tipo da coluna.
@@ -151,9 +159,9 @@ Leitura e escrita são separadas em tipos diferentes, seguindo CQRS leve.
 ```java
 // usecase/command/ — intenção de escrever
 public record CreateFamilyGroupCommand(
-        String name,
-        AddressCommand address
-) {
+                String name,
+                AddressCommand address
+        ) {
     public CreateFamilyGroupCommand withId(UUID id) {
         return new CreateFamilyGroupCommand(name, address); // devolve nova instância
     }
@@ -165,7 +173,8 @@ vez de mutar. Para consulta, o padrão é receber o `Pageable` pronto quando a p
 cliente:
 
 ```java
-public record FindAllFamilyGroupsQuery(String name, Pageable pageable) { }
+public record FindAllFamilyGroupsQuery(String name, Pageable pageable) {
+}
 ```
 
 ## DTOs da API
@@ -176,11 +185,11 @@ public record FindAllFamilyGroupsQuery(String name, Pageable pageable) { }
 ```java
 // api/dto/ — saída
 public record FamilyGroupSummaryResponse(
-        UUID id,
-        String friendlyId,
-        String name,
-        Long registeredPeopleCount
-) {
+                UUID id,
+                String friendlyId,
+                String name,
+                Long registeredPeopleCount
+        ) {
     public static FamilyGroupSummaryResponse fromEntity(FamilyGroup entity, Long count) {
         return new FamilyGroupSummaryResponse(
                 entity.getId(),
@@ -197,7 +206,13 @@ separado. O retorno de `Page<XResponse>` é montado com `PageImpl`, preservando 
 `totalElements`:
 
 ```java
-return new PageImpl<>(toSummaries(page.getContent()), page.getPageable(), page.getTotalElements());
+return new PageImpl<>(
+
+toSummaries(page.getContent()),page.
+
+getPageable(),page.
+
+getTotalElements());
 ```
 
 ## Controller
@@ -205,6 +220,7 @@ return new PageImpl<>(toSummaries(page.getContent()), page.getPageable(), page.g
 Sem anotações de escrita no controller, sem regra de negócio, sem acesso a repository.
 
 ```java
+
 @RestController
 @RequestMapping("/family-group")
 @Tag(name = "Family Group", description = "Endpoints para gerenciamento de Grupos Familiares")
@@ -259,13 +275,13 @@ A resposta é a página do Spring serializada, com os dados em `$.content` e o t
 
 Exceção específica de negócio, nunca `null` como sinal de erro.
 
-| Exceção | HTTP | Quando usar |
-| --- | --- | --- |
-| `ResourceNotFoundException` | 404 | Recurso não existe. |
-| `InternalException` | 400 | Regra de negócio violada. |
-| `IllegalArgumentException` | 400 | Argumento inválido (validação). |
-| `IllegalStateException` | 409 | Estado inconsistente (ex: vincular duas vezes). |
-| `DataIntegrityViolationException` | 409 | Violação de constraint no banco. |
+| Exceção                           | HTTP | Quando usar                                     |
+|-----------------------------------|------|-------------------------------------------------|
+| `ResourceNotFoundException`       | 404  | Recurso não existe.                             |
+| `InternalException`               | 400  | Regra de negócio violada.                       |
+| `IllegalArgumentException`        | 400  | Argumento inválido (validação).                 |
+| `IllegalStateException`           | 409  | Estado inconsistente (ex: vincular duas vezes). |
+| `DataIntegrityViolationException` | 409  | Violação de constraint no banco.                |
 
 O mapeamento está em `infrastructure/handler/GlobalExceptionHandler.java`. A resposta é sempre
 `ErrorResponse`, com o formato `{code, message, errors?}` — **não** é RFC 7807. O `code` é o
@@ -279,6 +295,7 @@ mensagem genérica. Prefira sempre as exceções de negócio.
 Anotações em `shared/validation/annotation/`, implementadas em `shared/validation/validator/`.
 
 ```java
+
 @NotBlank(message = "Nome é obrigatório")
 @Size(max = 150, message = "Nome deve ter no máximo 150 caracteres")
 private String name;
@@ -297,13 +314,13 @@ CPF e email usam o bean validation padrão (`@Email`). No controller, sempre `@V
 
 O nome do método segue o que o endpoint faz, e é o mesmo nome do caso de uso:
 
-| Endpoint | Verbo | Caso de uso |
-| --- | --- | --- |
-| `POST /recurso` | `create` | `Create*UseCase` |
-| `PUT /recurso/{id}` | `update` | `Update*UseCase` |
-| `DELETE /recurso/{id}` | `delete` | `SoftDelete*UseCase` |
-| `GET /recurso` | `findAll` | `FindAll*UseCase` |
-| `GET /recurso/{id}` | `findById` | `Find*ByIdUseCase` |
+| Endpoint                    | Verbo          | Caso de uso            |
+|-----------------------------|----------------|------------------------|
+| `POST /recurso`             | `create`       | `Create*UseCase`       |
+| `PUT /recurso/{id}`         | `update`       | `Update*UseCase`       |
+| `DELETE /recurso/{id}`      | `delete`       | `SoftDelete*UseCase`   |
+| `GET /recurso`              | `findAll`      | `FindAll*UseCase`      |
+| `GET /recurso/{id}`         | `findById`     | `Find*ByIdUseCase`     |
 | `GET /recurso/autocomplete` | `autocomplete` | `Autocomplete*UseCase` |
 
 `search` não é verbo de listagem neste projeto. Listagem é `findAll`, com ou sem filtro.
@@ -313,6 +330,7 @@ O nome do método segue o que o endpoint faz, e é o mesmo nome do caso de uso:
 `@Transactional` fica no service. Leituras usam `@Transactional(readOnly = true)`.
 
 ```java
+
 @Override
 @Transactional(readOnly = true)
 public Page<FamilyGroupSummaryResponse> handle(FindAllFamilyGroupsQuery query) { /* ... */ }
@@ -325,6 +343,7 @@ isolado, o padrão do projeto é **não** tratar o vínculo como entidade. Em ve
 agregado, modificar a coleção e salvar, insere-se direto na tabela de junção com query nativa.
 
 ```java
+
 @Modifying
 @Query(value = """
         insert into family_group_natural_person (family_group_id, natural_person_id)
@@ -350,13 +369,14 @@ Para **ler** um vínculo paginado, o padrão é um JPQL com `join` interno, e n�
 coleução:
 
 ```java
+
 @Query("""
         select np from FamilyGroup fg
         join fg.naturalPersonList np
         where fg.id = :familyGroupId
         """)
 Page<NaturalPerson> findNaturalPersonsByFamilyGroupId(@Param("familyGroupId") UUID familyGroupId,
-                                                       Pageable pageable);
+                                                      Pageable pageable);
 ```
 
 O `join` interno é obrigatório: com `left join`, um grupo sem pessoas devolveria uma linha com
@@ -374,7 +394,9 @@ String name = group.getName();
 // bom: explica a decisão
 // Valida o grupo antes de criar a pessoa: a confirmação por e-mail não é
 // transacional, então o grupo precisa existir antes do envio.
-repository.findByIdOrThrow(query.familyGroupId());
+repository.
+
+findByIdOrThrow(query.familyGroupId());
 ```
 
 Nada de comentário explicando a assinatura de um método que já se lê sozinho.

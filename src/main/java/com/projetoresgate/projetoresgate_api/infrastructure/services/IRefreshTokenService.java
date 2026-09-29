@@ -6,9 +6,14 @@ import java.util.Optional;
 
 public interface IRefreshTokenService {
     String createRefreshToken(User user);
+
     User validateRefreshToken(String plainTextToken);
+
     Optional<User> revokeRefreshToken(String plainTextToken);
+
     void revokeAllUserTokens(User user);
+
     void cleanupExpiredTokens();
+
     long countActiveTokens(User user);
 }

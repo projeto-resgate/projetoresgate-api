@@ -10,8 +10,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class ProjetoResgateApiApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(ProjetoResgateApiApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(ProjetoResgateApiApplication.class, args);
+    }
 
 }

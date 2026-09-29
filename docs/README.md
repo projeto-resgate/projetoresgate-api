@@ -5,16 +5,16 @@
 
 ## Ordem de leitura sugerida
 
-| Arquivo | Quando abrir |
-| --- | --- |
-| [`AGENTS.md`](../AGENTS.md) | Sempre, antes de codar. Regras invioláveis e comandos de build/teste. |
+| Arquivo                                     | Quando abrir                                                                                  |
+|---------------------------------------------|-----------------------------------------------------------------------------------------------|
+| [`AGENTS.md`](../AGENTS.md)                 | Sempre, antes de codar. Regras invioláveis e comandos de build/teste.                         |
 | [`.opencode/skills/`](../.opencode/skills/) | Quando a tarefa é uma das quatro: feature, endpoint, migration, teste. Carregada sob demanda. |
-| [`architecture.md`](architecture.md) | Para saber onde uma classe nova deve morar e o que pode importar o quê. |
-| [`convencoes.md`](convencoes.md) | Para copiar o formato de uma entidade, repository, service ou controller. |
-| [`testes.md`](testes.md) | Para escrever ou consertar um teste. |
-| [`banco-de-dados.md`](banco-de-dados.md) | Para criar migration, índice, sequence ou subir o ambiente local. |
-| [`adr/README.md`](adr/README.md) | Para achar a decisão de uma linha que rege o que você está fazendo. |
-| [`rfc/README.md`](rfc/README.md) | Antes de propor algo que ainda não é decisão. |
+| [`architecture.md`](architecture.md)        | Para saber onde uma classe nova deve morar e o que pode importar o quê.                       |
+| [`convencoes.md`](convencoes.md)            | Para copiar o formato de uma entidade, repository, service ou controller.                     |
+| [`testes.md`](testes.md)                    | Para escrever ou consertar um teste.                                                          |
+| [`banco-de-dados.md`](banco-de-dados.md)    | Para criar migration, índice, sequence ou subir o ambiente local.                             |
+| [`adr/README.md`](adr/README.md)            | Para achar a decisão de uma linha que rege o que você está fazendo.                           |
+| [`rfc/README.md`](rfc/README.md)            | Antes de propor algo que ainda não é decisão.                                                 |
 
 ## ADRs e RFCs
 

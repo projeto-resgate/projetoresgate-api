@@ -5,12 +5,12 @@ registra o que **foi decidido**; a RFC registra o que está **em aberto**.
 
 ## ADR ou RFC?
 
-| | ADR | RFC |
-| --- | --- | --- |
-| Momento | Depois de decidir | Antes de decidir |
-| Conteúdo | Decisão e consequências | Problema, opções, recomendação |
-| Muda depois de aceito? | Não, marca-se como superado | Sim, enquanto não aceita |
-| Seguir como regra? | Sim | **Não** |
+|                        | ADR                         | RFC                            |
+|------------------------|-----------------------------|--------------------------------|
+| Momento                | Depois de decidir           | Antes de decidir               |
+| Conteúdo               | Decisão e consequências     | Problema, opções, recomendação |
+| Muda depois de aceito? | Não, marca-se como superado | Sim, enquanto não aceita       |
+| Seguir como regra?     | Sim                         | **Não**                        |
 
 **Não trate uma RFC como regra ao escrever código.** Se a sua tarefa depende do que a RFC propõe,
 é escopo novo e precisa de alinhamento antes.
@@ -34,9 +34,9 @@ registra o que **foi decidido**; a RFC registra o que está **em aberto**.
 
 ## Propostas abertas
 
-| RFC | Título | Status |
-| --- | --- | --- |
-| [0001](0001-autorizacao-por-role.md) | Autorização por role | Proposta |
+| RFC                                     | Título                                          | Status   |
+|-----------------------------------------|-------------------------------------------------|----------|
+| [0001](0001-autorizacao-por-role.md)    | Autorização por role                            | Proposta |
 | [0002](0002-alinhar-versao-postgres.md) | Alinhar versão do PostgreSQL entre dev e testes | Proposta |
 
 ## Template

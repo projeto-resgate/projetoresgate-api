@@ -1,7 +1,8 @@
 ---
 name: banco-de-dados
 status: aceito
-summary: Flyway é o único dono do schema e ddl-auto=validate. Nunca edite migration já commitada: crie a próxima.
+summary:
+  Flyway é o único dono do schema e ddl-auto=validate. Nunca edite migration já commitada: crie a próxima.
 ---
 
 # 3. Banco de dados e migrations

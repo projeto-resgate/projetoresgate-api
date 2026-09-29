@@ -20,12 +20,12 @@ forçar dois tipos onde um basta.
 
 ## Onde fica
 
-| Papel | Sufixo | Onde |
-| --- | --- | --- |
-| Entrada da API | `*Command` | `api/dto/` |
-| Saída da API | `*Response` | `api/dto/` |
-| Objeto de caso de uso (escrita) | `*Command` | `usecase/command/` |
-| Objeto de caso de uso (leitura) | `*Query` | `usecase/query/` |
+| Papel                           | Sufixo      | Onde               |
+|---------------------------------|-------------|--------------------|
+| Entrada da API                  | `*Command`  | `api/dto/`         |
+| Saída da API                    | `*Response` | `api/dto/`         |
+| Objeto de caso de uso (escrita) | `*Command`  | `usecase/command/` |
+| Objeto de caso de uso (leitura) | `*Query`    | `usecase/query/`   |
 
 ## DTO de resposta
 

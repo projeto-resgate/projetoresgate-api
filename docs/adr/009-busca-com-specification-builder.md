@@ -1,7 +1,8 @@
 ---
 name: specification-builder
 status: aceito
-summary: Filtros dinâmicos via SpecificationBuilder: igualdade com :, ILIKE com ~ (só texto), comparações > < >= <=. build() devolve null sem filtro.
+summary:
+  Filtros dinâmicos via SpecificationBuilder: igualdade com :, ILIKE com ~ (só texto), comparações > < >= <=. build() devolve null sem filtro.
 ---
 
 # 9. Busca dinâmica com SpecificationBuilder
@@ -24,11 +25,11 @@ O repository implementa `JpaSpecificationExecutor<T>`.
 
 A operação vem do **que o filtro precisa casar**, não do tipo da coluna.
 
-| Operação | Faz | Use para |
-| --- | --- | --- |
-| `:` | igualdade exata, case-sensitive | enum, UUID, CPF, CNPJ, status |
-| `~` | ILIKE: contém, ignorando caixa | nome, razão social, busca parcial |
-| `>` `<` `>=` `<=` | comparação | intervalo de data ou número |
+| Operação          | Faz                             | Use para                          |
+|-------------------|---------------------------------|-----------------------------------|
+| `:`               | igualdade exata, case-sensitive | enum, UUID, CPF, CNPJ, status     |
+| `~`               | ILIKE: contém, ignorando caixa  | nome, razão social, busca parcial |
+| `>` `<` `>=` `<=` | comparação                      | intervalo de data ou número       |
 
 `:` e `~` são operações diferentes de propósito: pedir igualdade em `String` não pode custar a
 busca parcial, que é o que o usuário faz ao digitar num campo de nome.
@@ -49,8 +50,12 @@ lança exceção em coluna numérica, de data ou enum: o Postgres não tem `nume
 
 ```java
 new SpecificationBuilder<FamilyGroup>()
-        .with("name", "~", query.name())      // null: sem filtro
-        .build();
+        .
+
+with("name","~",query.name())      // null: sem filtro
+        .
+
+build();
 ```
 
 Com todos os filtros desligados, `build()` devolve `null`, e `findAll(null, pageable)` funciona.
@@ -58,8 +63,10 @@ Com todos os filtros desligados, `build()` devolve `null`, e `findAll(null, page
 ## Propriedade aninhada usa ponto
 
 ```java
-.with("program.id", ":", programId)
-.with("address.city", "~", city)
+.with("program.id",":",programId)
+.
+
+with("address.city","~",city)
 ```
 
 ## Combinação
@@ -69,10 +76,10 @@ explícito — é mais legível que forçar o builder.
 
 ## Validação
 
-| Entrada inválida | Quando falha |
-| --- | --- |
-| Operação desconhecida (`=`, `LIKE`) | no `with()`, não na query |
-| `~` em propriedade não textual | na execução da query, com mensagem dizendo para usar `:` |
+| Entrada inválida                    | Quando falha                                             |
+|-------------------------------------|----------------------------------------------------------|
+| Operação desconhecida (`=`, `LIKE`) | no `with()`, não na query                                |
+| `~` em propriedade não textual      | na execução da query, com mensagem dizendo para usar `:` |
 
 Falhar no `with()` é intencional: erro de digitação na operação aparece na hora de escrever a
 linha, não em produção depois do deploy.

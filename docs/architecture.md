@@ -27,18 +27,18 @@ O fluxo é sempre o mesmo e nessa ordem: **Controller → UseCase → Service �
 
 ## Divisão de responsabilidades
 
-| Pacote | Responsabilidade | Pode depender de |
-| --- | --- | --- |
-| `core/*/api` | HTTP: rotas, status, validação de entrada, Swagger | `usecase`, `api/dto` |
-| `core/*/api/dto` | Contrato de entrada e saída da API | `domain` (só para o `fromEntity`) |
-| `core/*/usecase` | Interface do caso de uso, sem implementação | `domain` |
-| `core/*/usecase/command` | Intenção de escrita | — |
-| `core/*/usecase/query` | Pedido de leitura | — |
-| `core/*/service` | Orquestração e transação | `domain`, `repository` |
-| `core/*/domain` | Regras de negócio e estado | **nada** |
-| `core/*/repository` | Acesso a dados | `domain` |
-| `infrastructure` | Detalhe técnico (segurança, e-mail, erro) | `core` |
-| `shared` | Utilitários transversais | — |
+| Pacote                   | Responsabilidade                                   | Pode depender de                  |
+|--------------------------|----------------------------------------------------|-----------------------------------|
+| `core/*/api`             | HTTP: rotas, status, validação de entrada, Swagger | `usecase`, `api/dto`              |
+| `core/*/api/dto`         | Contrato de entrada e saída da API                 | `domain` (só para o `fromEntity`) |
+| `core/*/usecase`         | Interface do caso de uso, sem implementação        | `domain`                          |
+| `core/*/usecase/command` | Intenção de escrita                                | —                                 |
+| `core/*/usecase/query`   | Pedido de leitura                                  | —                                 |
+| `core/*/service`         | Orquestração e transação                           | `domain`, `repository`            |
+| `core/*/domain`          | Regras de negócio e estado                         | **nada**                          |
+| `core/*/repository`      | Acesso a dados                                     | `domain`                          |
+| `infrastructure`         | Detalhe técnico (segurança, e-mail, erro)          | `core`                            |
+| `shared`                 | Utilitários transversais                           | —                                 |
 
 A regra que importa: **`domain` não importa nada de fora dele.** Se uma entidade importa
 `org.springframework.http`, o desenho está errado. Hoje as entidades usam anotações JPA
@@ -52,18 +52,18 @@ diretório com todos os seus tipos.
 
 ### `core/identity`
 
-| Módulo | Responsabilidade |
-| --- | --- |
-| `address` | Entidade de endereço compartilhada entre pessoa física e jurídica. É a única entidade compartilhada entre features. |
-| `user` | Autenticação, login, refresh token, papéis. |
-| `naturalperson` | Pessoa física. |
-| `legalperson` | Pessoa jurídica. |
-| `familygroup` | Grupo familiar e o vínculo com pessoas físicas. |
+| Módulo          | Responsabilidade                                                                                                    |
+|-----------------|---------------------------------------------------------------------------------------------------------------------|
+| `address`       | Entidade de endereço compartilhada entre pessoa física e jurídica. É a única entidade compartilhada entre features. |
+| `user`          | Autenticação, login, refresh token, papéis.                                                                         |
+| `naturalperson` | Pessoa física.                                                                                                      |
+| `legalperson`   | Pessoa jurídica.                                                                                                    |
+| `familygroup`   | Grupo familiar e o vínculo com pessoas físicas.                                                                     |
 
 ### `core/academic`
 
-| Módulo | Responsabilidade |
-| --- | --- |
+| Módulo    | Responsabilidade                                                            |
+|-----------|-----------------------------------------------------------------------------|
 | `program` | Programa, categoria de programa e item de categoria (usado por educadores). |
 
 ### `infrastructure`
@@ -96,14 +96,14 @@ Exceções de qualquer camada sobem até o `GlobalExceptionHandler`, que as trad
 
 Entidades persistentes, todas herdando de `AuditableEntity`:
 
-| Entidade | Observações |
-| --- | --- |
-| `User` | Autenticação. Guarda papéis. Sem soft delete. |
-| `NaturalPerson` | Pessoa física. Tem `@SQLRestriction("deleted_at IS NULL")`. |
-| `LegalPerson` | Pessoa jurídica. |
-| `FamilyGroup` | Grupo familiar. `friendlyId` é gerado por sequence do Postgres. |
-| `Address` | Compartilhada, com `OneToOne` a partir de quem a possui. |
-| `Program`, `Category`, `Item` | Núcleo acadêmico. |
+| Entidade                      | Observações                                                     |
+|-------------------------------|-----------------------------------------------------------------|
+| `User`                        | Autenticação. Guarda papéis. Sem soft delete.                   |
+| `NaturalPerson`               | Pessoa física. Tem `@SQLRestriction("deleted_at IS NULL")`.     |
+| `LegalPerson`                 | Pessoa jurídica.                                                |
+| `FamilyGroup`                 | Grupo familiar. `friendlyId` é gerado por sequence do Postgres. |
+| `Address`                     | Compartilhada, com `OneToOne` a partir de quem a possui.        |
+| `Program`, `Category`, `Item` | Núcleo acadêmico.                                               |
 
 ### Vínculo de muitos para muitos
 

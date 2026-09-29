@@ -3,7 +3,8 @@ package com.projetoresgate.projetoresgate_api.infrastructure.utils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @DisplayName("CnpjUtils - Util Test")
 class CnpjUtilsTest {

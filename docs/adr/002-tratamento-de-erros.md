@@ -18,14 +18,14 @@ negócio sem nada de HTTP dentro dela.
 
 Existem em `infrastructure/exception/`. São lançadas no service ou na entidade.
 
-| Exceção | HTTP | Quando |
-| --- | --- | --- |
-| `ResourceNotFoundException` | 404 | Registro pedido não existe |
-| `InternalException` | 400 | Regra de negócio violada |
-| `IllegalStateException` | 409 | Estado inconsistente (ex: e-mail já confirmado) |
-| `IllegalArgumentException` | 400 | Argumento inválido vindo de dentro do sistema |
-| `BadCredentialsException` | 401 | Login ou senha errados |
-| `AccessDeniedException` | 403 | Autenticado, mas sem permissão |
+| Exceção                     | HTTP | Quando                                          |
+|-----------------------------|------|-------------------------------------------------|
+| `ResourceNotFoundException` | 404  | Registro pedido não existe                      |
+| `InternalException`         | 400  | Regra de negócio violada                        |
+| `IllegalStateException`     | 409  | Estado inconsistente (ex: e-mail já confirmado) |
+| `IllegalArgumentException`  | 400  | Argumento inválido vindo de dentro do sistema   |
+| `BadCredentialsException`   | 401  | Login ou senha errados                          |
+| `AccessDeniedException`     | 403  | Autenticado, mas sem permissão                  |
 
 `IllegalArgumentException` e `IllegalStateException` já são mapeadas. Para "não encontrado", use
 `ResourceNotFoundException`; `Optional.orElseThrow(() -> new ResourceNotFoundException(...))` é o
@@ -35,18 +35,18 @@ padrão do projeto.
 
 São as exceções que **não** precisam ser tratadas de novo. Escolha a mais específica.
 
-| Exceção | HTTP | Quem lança |
-| --- | --- | --- |
-| `ResourceNotFoundException` | 404 | Você, no service |
-| `InternalException` | 400 | Você, quando a regra de negócio nega |
-| `IllegalStateException` | 409 | Você, para estado inconsistente |
-| `IllegalArgumentException` | 400 | Qualquer camada; é o erro de código, não de dado |
-| `BadCredentialsException` | 401 | Spring Security, no login |
-| `AccessDeniedException` | 403 | Spring Security |
-| `EntityNotFoundException` | 404 | JPA/Hibernate. Use `ResourceNotFoundException` no seu código |
-| `DataIntegrityViolationException` | 409 | Banco: chave duplicada, violação de FK |
-| `MethodArgumentNotValidException` | 400 | Spring, para `@Valid` que falhou; preenche `errors` |
-| `Exception` | 500 | Rede de segurança; mensagem genérica, erro real no log |
+| Exceção                           | HTTP | Quem lança                                                   |
+|-----------------------------------|------|--------------------------------------------------------------|
+| `ResourceNotFoundException`       | 404  | Você, no service                                             |
+| `InternalException`               | 400  | Você, quando a regra de negócio nega                         |
+| `IllegalStateException`           | 409  | Você, para estado inconsistente                              |
+| `IllegalArgumentException`        | 400  | Qualquer camada; é o erro de código, não de dado             |
+| `BadCredentialsException`         | 401  | Spring Security, no login                                    |
+| `AccessDeniedException`           | 403  | Spring Security                                              |
+| `EntityNotFoundException`         | 404  | JPA/Hibernate. Use `ResourceNotFoundException` no seu código |
+| `DataIntegrityViolationException` | 409  | Banco: chave duplicada, violação de FK                       |
+| `MethodArgumentNotValidException` | 400  | Spring, para `@Valid` que falhou; preenche `errors`          |
+| `Exception`                       | 500  | Rede de segurança; mensagem genérica, erro real no log       |
 
 ## Formato da resposta
 
@@ -56,7 +56,12 @@ O DTO é o `ErrorResponse`, com três campos:
 {
   "code": "Not Found",
   "message": "Pessoa não encontrada com ID: 123",
-  "errors": [{ "field": "email", "message": "Email inválido" }]
+  "errors": [
+    {
+      "field": "email",
+      "message": "Email inválido"
+    }
+  ]
 }
 ```
 
