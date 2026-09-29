@@ -6,7 +6,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Re
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.AddressCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.UpdateLegalPersonCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,14 +41,14 @@ class UpdateLegalPersonServiceTest {
 
     @BeforeEach
     void setUp() {
-        address = Address.create("01310-100", "1000", null, "Bela Vista", "São Paulo", "SP");
+        address = Address.create(null, null, "01310-100", "1000", null, null, "Bela Vista", "São Paulo", "SP");
         person = LegalPerson.create("12345678000195", "Razão Social LTDA", null, null, null,
                 RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, address, null);
         personId = person.getId();
     }
 
     private AddressCommand buildAddressCommand(String zipCode, String number, String city, String state) {
-        return new AddressCommand(zipCode, number, null, "Centro", city, state);
+        return new AddressCommand(null, null, zipCode, number, null, null, "Centro", city, state);
     }
 
     @Test

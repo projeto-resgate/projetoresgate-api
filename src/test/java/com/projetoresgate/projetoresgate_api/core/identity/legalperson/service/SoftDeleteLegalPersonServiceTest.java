@@ -39,7 +39,7 @@ class SoftDeleteLegalPersonServiceTest {
         LegalPerson person = LegalPerson.create(
                 "11222333000181", "Razão Social LTDA", null, null, null,
                 RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE,
-                Address.create("01310-100", "1000", null, "Bela Vista", "São Paulo", "SP"), null);
+                Address.create(null, null, "01310-100", "1000", null, null, "Bela Vista", "São Paulo", "SP"), null);
         SoftDeleteLegalPersonCommand command = new SoftDeleteLegalPersonCommand(id);
 
         when(repository.findByIdOrThrow(id)).thenReturn(person);

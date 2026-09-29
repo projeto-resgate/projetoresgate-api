@@ -1,5 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.identity.legalperson.api.dto;
 
+import com.projetoresgate.projetoresgate_api.core.identity.address.api.dto.AddressResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;

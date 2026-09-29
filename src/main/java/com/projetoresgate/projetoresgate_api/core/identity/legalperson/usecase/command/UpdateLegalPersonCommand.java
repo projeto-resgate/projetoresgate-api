@@ -1,6 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Representative;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;

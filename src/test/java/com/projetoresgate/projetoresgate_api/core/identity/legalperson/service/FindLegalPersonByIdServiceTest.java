@@ -38,7 +38,7 @@ class FindLegalPersonByIdServiceTest {
         UUID id = UUID.randomUUID();
         LocalDateTime dateCreated = LocalDateTime.of(2025, 6, 15, 14, 30, 0);
 
-        Address address = Address.create("01310-100", "1000", "Apto 101", "Bela Vista", "São Paulo", "SP");
+        Address address = Address.create(null, null, "01310-100", "1000", null, "Apto 101", "Bela Vista", "São Paulo", "SP");
         Representative representative = Representative.create("John Doe", "11988887777", "1133334444", "john@doe.com");
 
         LegalPerson person = LegalPerson.create(

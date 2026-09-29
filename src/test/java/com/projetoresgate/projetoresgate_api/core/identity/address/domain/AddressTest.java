@@ -14,12 +14,16 @@ class AddressTest {
     @Test
     @DisplayName("Deve criar um endereço com sucesso")
     void create_ShouldSucceed() {
-        Address address = Address.create("01310-100", "1000", "Apto 101", "Bela Vista", "São Paulo", "SP");
+        Address address = Address.create("Rua", "das Palmeiras", "01310-100", "1000", "Próximo à praça",
+                "Apto 101", "Bela Vista", "São Paulo", "SP");
 
         assertNotNull(address);
         assertNotNull(address.getId());
+        assertEquals("Rua", address.getStreetType());
+        assertEquals("das Palmeiras", address.getStreetName());
         assertEquals("01310-100", address.getZipCode());
         assertEquals("1000", address.getNumber());
+        assertEquals("Próximo à praça", address.getReferencePoint());
         assertEquals("Apto 101", address.getComplement());
         assertEquals("Bela Vista", address.getNeighborhood());
         assertEquals("São Paulo", address.getCity());
@@ -27,10 +31,47 @@ class AddressTest {
     }
 
     @Test
+    @DisplayName("Deve criar um endereço sem os campos opcionais de logradouro")
+    void create_ShouldSucceedWithoutOptionalStreetFields() {
+        Address address = Address.create(null, null, "01310-100", "1000", null, "Apto 101", "Bela Vista", "São Paulo", "SP");
+
+        assertNull(address.getStreetType());
+        assertNull(address.getStreetName());
+        assertNull(address.getReferencePoint());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção na validação se o tipo de logradouro exceder 50 caracteres")
+    void validate_ShouldFailIfStreetTypeTooLong() {
+        InternalException exception = assertThrows(InternalException.class, () -> Address.create(
+                "R".repeat(51), "das Palmeiras", "01310-100", "1000", null, null, "Bela Vista", "São Paulo", "SP"));
+
+        assertEquals("O tipo de logradouro não pode exceder 50 caracteres.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção na validação se o nome do logradouro exceder 255 caracteres")
+    void validate_ShouldFailIfStreetNameTooLong() {
+        InternalException exception = assertThrows(InternalException.class, () -> Address.create(
+                "Rua", "L".repeat(256), "01310-100", "1000", null, null, "Bela Vista", "São Paulo", "SP"));
+
+        assertEquals("O nome do logradouro não pode exceder 255 caracteres.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção na validação se o ponto de referência exceder 255 caracteres")
+    void validate_ShouldFailIfReferencePointTooLong() {
+        InternalException exception = assertThrows(InternalException.class, () -> Address.create(
+                "Rua", "das Palmeiras", "01310-100", "1000", "P".repeat(256), null, "Bela Vista", "São Paulo", "SP"));
+
+        assertEquals("O ponto de referência não pode exceder 255 caracteres.", exception.getMessage());
+    }
+
+    @Test
     @DisplayName("Deve lançar exceção ao criar sem CEP")
     void create_ShouldFailWithoutZipCode() {
         InternalException exception = assertThrows(InternalException.class, () ->
-                Address.create("", "1000", null, null, "São Paulo", "SP")
+                Address.create(null, null, "", "1000", null, null, null, "São Paulo", "SP")
         );
         assertEquals("O CEP não pode ser vazio.", exception.getMessage());
     }
@@ -39,7 +80,7 @@ class AddressTest {
     @DisplayName("Deve lançar exceção ao criar sem cidade")
     void create_ShouldFailWithoutCity() {
         InternalException exception = assertThrows(InternalException.class, () ->
-                Address.create("01310-100", "1000", null, null, "", "SP")
+                Address.create(null, null, "01310-100", "1000", null, null, null, "", "SP")
         );
         assertEquals("A cidade não pode ser vazia.", exception.getMessage());
     }
@@ -48,7 +89,7 @@ class AddressTest {
     @DisplayName("Deve lançar exceção ao criar sem estado")
     void create_ShouldFailWithoutState() {
         InternalException exception = assertThrows(InternalException.class, () ->
-                Address.create("01310-100", "1000", null, null, "São Paulo", null)
+                Address.create(null, null, "01310-100", "1000", null, null, null, "São Paulo", null)
         );
         assertEquals("O estado não pode ser vazio.", exception.getMessage());
     }
@@ -57,7 +98,7 @@ class AddressTest {
     @DisplayName("Deve lançar exceção na validação se o CEP exceder 20 caracteres")
     void validate_ShouldFailIfZipCodeTooLong() {
         InternalException exception = assertThrows(InternalException.class, () ->
-                Address.create("0123456789012345678901", "1000", null, null, "São Paulo", "SP")
+                Address.create(null, null, "0123456789012345678901", "1000", null, null, null, "São Paulo", "SP")
         );
         assertEquals("O CEP não pode exceder 20 caracteres.", exception.getMessage());
     }
@@ -65,8 +106,8 @@ class AddressTest {
     @Test
     @DisplayName("Endereços com os mesmos valores devem ser iguais")
     void equals_ShouldBeTrueForSameValues() {
-        Address address1 = Address.create("01310-100", "1000", null, "Bela Vista", "São Paulo", "SP");
-        Address address2 = Address.create("01310-100", "1000", null, "Bela Vista", "São Paulo", "SP");
+        Address address1 = Address.create(null, null, "01310-100", "1000", null, null, "Bela Vista", "São Paulo", "SP");
+        Address address2 = Address.create(null, null, "01310-100", "1000", null, null, "Bela Vista", "São Paulo", "SP");
 
         assertEquals(address1, address2);
         assertEquals(address1.hashCode(), address2.hashCode());
@@ -75,8 +116,8 @@ class AddressTest {
     @Test
     @DisplayName("Endereços com valores diferentes devem ser diferentes")
     void equals_ShouldBeFalseForDifferentValues() {
-        Address address1 = Address.create("01310-100", "1000", null, "Bela Vista", "São Paulo", "SP");
-        Address address2 = Address.create("01310-200", "2000", null, "Consolação", "São Paulo", "SP");
+        Address address1 = Address.create(null, null, "01310-100", "1000", null, null, "Bela Vista", "São Paulo", "SP");
+        Address address2 = Address.create(null, null, "01310-200", "2000", null, null, "Consolação", "São Paulo", "SP");
 
         assertNotEquals(address1, address2);
     }
@@ -84,12 +125,15 @@ class AddressTest {
     @Test
     @DisplayName("Deve atualizar os campos usando o Inner Updater mantendo o mesmo id")
     void updater_ShouldUpdateFields() {
-        Address address = Address.create("01310-100", "1000", null, "Bela Vista", "São Paulo", "SP");
+        Address address = Address.create(null, null, "01310-100", "1000", null, null, "Bela Vista", "São Paulo", "SP");
         UUID originalId = address.getId();
 
         address.update()
+                .streetType("Avenida")
+                .streetName("Paulista")
                 .zipCode("20040-020")
                 .number("200")
+                .referencePoint("Em frente ao museu")
                 .complement("Sala 5")
                 .neighborhood("Centro")
                 .city("Rio de Janeiro")
@@ -97,8 +141,11 @@ class AddressTest {
                 .apply();
 
         assertEquals(originalId, address.getId());
+        assertEquals("Avenida", address.getStreetType());
+        assertEquals("Paulista", address.getStreetName());
         assertEquals("20040-020", address.getZipCode());
         assertEquals("200", address.getNumber());
+        assertEquals("Em frente ao museu", address.getReferencePoint());
         assertEquals("Sala 5", address.getComplement());
         assertEquals("Centro", address.getNeighborhood());
         assertEquals("Rio de Janeiro", address.getCity());
@@ -108,7 +155,7 @@ class AddressTest {
     @Test
     @DisplayName("Deve lançar exceção no apply do Updater se a validação falhar")
     void updater_ShouldRevalidateOnApply() {
-        Address address = Address.create("01310-100", "1000", null, "Bela Vista", "São Paulo", "SP");
+        Address address = Address.create(null, null, "01310-100", "1000", null, null, "Bela Vista", "São Paulo", "SP");
 
         InternalException exception = assertThrows(InternalException.class, () ->
                 address.update().zipCode("").apply()
@@ -120,7 +167,7 @@ class AddressTest {
     @DisplayName("Deve lançar exceção na validação se o número exceder 20 caracteres")
     void validate_ShouldFailIfNumberTooLong() {
         InternalException exception = assertThrows(InternalException.class, () ->
-                Address.create("01310-100", "123456789012345678901", null, null, "São Paulo", "SP")
+                Address.create(null, null, "01310-100", "123456789012345678901", null, null, null, "São Paulo", "SP")
         );
         assertEquals("O número não pode exceder 20 caracteres.", exception.getMessage());
     }
@@ -129,7 +176,7 @@ class AddressTest {
     @DisplayName("Deve lançar exceção na validação se o complemento exceder 100 caracteres")
     void validate_ShouldFailIfComplementTooLong() {
         InternalException exception = assertThrows(InternalException.class, () ->
-                Address.create("01310-100", "1000", "A".repeat(101), null, "São Paulo", "SP")
+                Address.create(null, null, "01310-100", "1000", null, "A".repeat(101), null, "São Paulo", "SP")
         );
         assertEquals("O complemento não pode exceder 100 caracteres.", exception.getMessage());
     }
@@ -138,7 +185,7 @@ class AddressTest {
     @DisplayName("Deve lançar exceção na validação se a cidade exceder 100 caracteres")
     void validate_ShouldFailIfCityTooLong() {
         InternalException exception = assertThrows(InternalException.class, () ->
-                Address.create("01310-100", "1000", null, null, "A".repeat(101), "SP")
+                Address.create(null, null, "01310-100", "1000", null, null, null, "A".repeat(101), "SP")
         );
         assertEquals("A cidade não pode exceder 100 caracteres.", exception.getMessage());
     }
@@ -147,7 +194,7 @@ class AddressTest {
     @DisplayName("Deve lançar exceção na validação se o estado exceder 50 caracteres")
     void validate_ShouldFailIfStateTooLong() {
         InternalException exception = assertThrows(InternalException.class, () ->
-                Address.create("01310-100", "1000", null, null, "São Paulo", "A".repeat(51))
+                Address.create(null, null, "01310-100", "1000", null, null, null, "São Paulo", "A".repeat(51))
         );
         assertEquals("O estado não pode exceder 50 caracteres.", exception.getMessage());
     }
@@ -156,7 +203,7 @@ class AddressTest {
     @DisplayName("Deve lançar exceção na validação se o bairro exceder 100 caracteres")
     void validate_ShouldFailIfNeighborhoodTooLong() {
         InternalException exception = assertThrows(InternalException.class, () ->
-                Address.create("01310-100", "1000", null, "A".repeat(101), "São Paulo", "SP")
+                Address.create(null, null, "01310-100", "1000", null, null, "A".repeat(101), "São Paulo", "SP")
         );
         assertEquals("O bairro não pode exceder 100 caracteres.", exception.getMessage());
     }

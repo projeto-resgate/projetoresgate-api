@@ -61,7 +61,7 @@ class SearchLegalPersonServiceTest {
     private SearchLegalPersonService service;
 
     private Address buildAddress() {
-        return Address.create("01310-100", "1000", null, "Bela Vista", "São Paulo", "SP");
+        return Address.create(null, null, "01310-100", "1000", null, null, "Bela Vista", "São Paulo", "SP");
     }
 
     private LegalPerson buildPerson() {
