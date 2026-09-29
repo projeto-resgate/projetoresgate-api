@@ -96,7 +96,7 @@ class AutocompleteNaturalPersonServiceTest {
     @DisplayName("Deve buscar o top-N mesmo sem searchTerm (em branco)")
     void handle_ShouldSearchAllWhenBlankSearchTerm() {
         Pageable pageable = PageRequest.of(0, 10, Sort.by("name").ascending());
-        AutocompleteNaturalPersonQuery query = new AutocompleteNaturalPersonQuery("  ");
+        AutocompleteNaturalPersonQuery query = new AutocompleteNaturalPersonQuery("  ", 10);
 
         NaturalPerson person = buildPerson("João Silva", "51086174968", "1234567");
         when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(new PageImpl<>(List.of(person)));
@@ -112,7 +112,7 @@ class AutocompleteNaturalPersonServiceTest {
     @DisplayName("Deve buscar o top-N mesmo sem searchTerm (nulo)")
     void handle_ShouldSearchAllWhenNullSearchTerm() {
         Pageable pageable = PageRequest.of(0, 10, Sort.by("name").ascending());
-        AutocompleteNaturalPersonQuery query = new AutocompleteNaturalPersonQuery(null);
+        AutocompleteNaturalPersonQuery query = new AutocompleteNaturalPersonQuery(null, 10);
 
         when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(new PageImpl<>(List.of()));
 

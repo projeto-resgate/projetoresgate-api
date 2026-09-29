@@ -4,7 +4,4 @@ public record AutocompleteLegalPersonQuery(
         String searchTerm,
         int limit
 ) {
-    public AutocompleteLegalPersonQuery(String searchTerm) {
-        this(searchTerm, 10);
-    }
 }

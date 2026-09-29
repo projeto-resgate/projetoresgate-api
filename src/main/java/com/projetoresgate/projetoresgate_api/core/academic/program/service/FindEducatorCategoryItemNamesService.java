@@ -7,6 +7,9 @@ import com.projetoresgate.projetoresgate_api.core.academic.program.repository.Pr
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.FindEducatorCategoryItemNamesUseCase;
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.query.FindEducatorCategoryItemNamesQuery;
 import com.projetoresgate.projetoresgate_api.shared.specification.SpecificationBuilder;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +36,8 @@ public class FindEducatorCategoryItemNamesService implements FindEducatorCategor
                 .with("name", ":", query.name())
                 .build();
 
-        return itemRepository.findAll(filter).stream()
+        Pageable pageable = PageRequest.of(0, query.limit(), Sort.by("name").ascending());
+        return itemRepository.findAll(filter, pageable).getContent().stream()
                 .map(EducatorCategoryItemNameResponse::fromEntity)
                 .toList();
     }

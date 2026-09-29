@@ -11,10 +11,14 @@ import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNo
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.domain.PageImpl;
 
 import java.util.List;
 import java.util.UUID;
@@ -47,14 +51,36 @@ class FindEducatorCategoryItemNamesServiceTest {
         EducatorCategoryItem item = EducatorCategoryItem.create("Fonoaudiólogo", program);
 
         when(programRepository.findByIdOrThrow(programId)).thenReturn(program);
-        when(itemRepository.findAll(any(Specification.class))).thenReturn(List.of(item));
+        when(itemRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(item)));
 
         List<EducatorCategoryItemNameResponse> names =
-                service.handle(new FindEducatorCategoryItemNamesQuery(programId, "Fono"));
+                service.handle(new FindEducatorCategoryItemNamesQuery(programId, "Fono", 10));
 
         assertEquals(1, names.size());
         assertEquals(item.getId(), names.get(0).id());
         assertEquals("Fonoaudiólogo", names.get(0).name());
+    }
+
+    @Test
+    @DisplayName("Deve aplicar o limite e a ordenação alfabética na consulta")
+    void handle_ShouldLimitAndSortAlphabetically() {
+        UUID programId = UUID.randomUUID();
+
+        when(programRepository.findByIdOrThrow(programId))
+                .thenReturn(Program.create("Programa A", null, ProgramStatus.ACTIVE, null));
+        when(itemRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        service.handle(new FindEducatorCategoryItemNamesQuery(programId, "", 3));
+
+        ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
+        verify(itemRepository).findAll(any(Specification.class), captor.capture());
+
+        Pageable pageable = captor.getValue();
+        assertEquals(0, pageable.getPageNumber());
+        assertEquals(3, pageable.getPageSize());
+        assertEquals(Sort.by(Sort.Direction.ASC, "name"), pageable.getSort());
     }
 
     @Test
@@ -66,8 +92,8 @@ class FindEducatorCategoryItemNamesServiceTest {
                 .thenThrow(new ResourceNotFoundException("Programa não encontrado com ID: " + programId));
 
         assertThrows(ResourceNotFoundException.class,
-                () -> service.handle(new FindEducatorCategoryItemNamesQuery(programId, null)));
+                () -> service.handle(new FindEducatorCategoryItemNamesQuery(programId, null, 10)));
 
-        verify(itemRepository, never()).findAll(any(Specification.class));
+        verify(itemRepository, never()).findAll(any(Specification.class), any(Pageable.class));
     }
 }

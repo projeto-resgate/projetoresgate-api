@@ -11,11 +11,14 @@ import com.projetoresgate.projetoresgate_api.core.academic.program.domain.enums.
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.*;
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.command.CreateProgramCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.command.UpdateProgramCommand;
+import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.query.FindEducatorCategoryItemNamesQuery;
+import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.query.FindProgramNamesQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.security.SecurityConfigurations;
 import com.projetoresgate.projetoresgate_api.infrastructure.services.ITokenService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -30,6 +33,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
@@ -223,10 +227,33 @@ class ProgramControllerTest {
                 .thenReturn(List.of(new ProgramNameResponse(programId, "Programa A")));
 
         mockMvc.perform(get("/program/names")
-                        .param("name", "Programa"))
+                        .param("name", "Programa")
+                        .param("limit", "5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(programId.toString()))
                 .andExpect(jsonPath("$[0].name").value("Programa A"));
+
+        ArgumentCaptor<FindProgramNamesQuery> captor = ArgumentCaptor.forClass(FindProgramNamesQuery.class);
+        verify(findProgramNamesUseCase).handle(captor.capture());
+
+        assertEquals("Programa", captor.getValue().name());
+        assertEquals(5, captor.getValue().limit());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("GET /program/names - Deve assumir limit 10 quando não informado")
+    void findNames_ShouldDefaultLimitToTen() throws Exception {
+        when(findProgramNamesUseCase.handle(any())).thenReturn(List.of());
+
+        mockMvc.perform(get("/program/names"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<FindProgramNamesQuery> captor = ArgumentCaptor.forClass(FindProgramNamesQuery.class);
+        verify(findProgramNamesUseCase).handle(captor.capture());
+
+        assertEquals("", captor.getValue().name());
+        assertEquals(10, captor.getValue().limit());
     }
 
     @Test
@@ -239,10 +266,37 @@ class ProgramControllerTest {
                 .thenReturn(List.of(new EducatorCategoryItemNameResponse(itemId, "Fonoaudiólogo")));
 
         mockMvc.perform(get("/program/{id}/educator-category-items/names", id)
-                        .param("name", "Fono"))
+                        .param("name", "Fono")
+                        .param("limit", "5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(itemId.toString()))
                 .andExpect(jsonPath("$[0].name").value("Fonoaudiólogo"));
+
+        ArgumentCaptor<FindEducatorCategoryItemNamesQuery> captor =
+                ArgumentCaptor.forClass(FindEducatorCategoryItemNamesQuery.class);
+        verify(findEducatorCategoryItemNamesUseCase).handle(captor.capture());
+
+        assertEquals(id, captor.getValue().programId());
+        assertEquals("Fono", captor.getValue().name());
+        assertEquals(5, captor.getValue().limit());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("GET /program/{id}/educator-category-items/names - Deve assumir limit 10 quando não informado")
+    void findEducatorCategoryItemNames_ShouldDefaultLimitToTen() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(findEducatorCategoryItemNamesUseCase.handle(any())).thenReturn(List.of());
+
+        mockMvc.perform(get("/program/{id}/educator-category-items/names", id))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<FindEducatorCategoryItemNamesQuery> captor =
+                ArgumentCaptor.forClass(FindEducatorCategoryItemNamesQuery.class);
+        verify(findEducatorCategoryItemNamesUseCase).handle(captor.capture());
+
+        assertEquals("", captor.getValue().name());
+        assertEquals(10, captor.getValue().limit());
     }
 
     @Test

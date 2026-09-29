@@ -5,13 +5,16 @@ import com.projetoresgate.projetoresgate_api.core.academic.program.api.dto.Progr
 import com.projetoresgate.projetoresgate_api.core.academic.program.api.dto.ProgramResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.enums.ProgramStatus;
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.*;
-import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.command.*;
+import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.command.CreateProgramCommand;
+import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.command.SoftDeleteProgramCommand;
+import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.command.UpdateProgramCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.query.FindEducatorCategoryItemNamesQuery;
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.query.FindProgramByIdQuery;
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.query.FindProgramNamesQuery;
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.query.SearchProgramQuery;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -113,16 +116,16 @@ public class ProgramController {
     }
 
     @GetMapping("/names")
-    @Operation(summary = "Listar Nomes de Programas", description = "Retorna o id e o nome dos programas, com filtro opcional por nome (ilike).")
+    @Operation(summary = "Listar Nomes de Programas", description = "Busca leve de programas para componentes de seleção do front. Retorna o id e o nome em ordem alfabética.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de nomes retornada com sucesso",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProgramNameResponse.class)))
+                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ProgramNameResponse.class))))
     })
     public ResponseEntity<List<ProgramNameResponse>> findNames(
-            @Parameter(description = "Filtro opcional por nome") @RequestParam(required = false) String name
+            @Parameter(description = "Filtro opcional por nome") @RequestParam(defaultValue = "") String name,
+            @Parameter(description = "Quantidade máxima de resultados") @RequestParam(defaultValue = "10") int limit
     ) {
-        List<ProgramNameResponse> names = findProgramNamesUseCase.handle(new FindProgramNamesQuery(name));
-        return ResponseEntity.ok(names);
+        return ResponseEntity.ok(findProgramNamesUseCase.handle(new FindProgramNamesQuery(name, limit)));
     }
 
     @GetMapping("/{id}")
@@ -138,19 +141,19 @@ public class ProgramController {
     }
 
     @GetMapping("/{id}/educator-category-items/names")
-    @Operation(summary = "Listar Nomes de Categorias de Educadores", description = "Retorna o id e o nome das categorias de educadores de um programa, com filtro opcional por nome (ilike).")
+    @Operation(summary = "Listar Nomes de Categorias de Educadores", description = "Busca leve de categorias de educadores para componentes de seleção do front. Retorna o id e o nome em ordem alfabética.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de nomes retornada com sucesso",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = EducatorCategoryItemNameResponse.class))),
+                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = EducatorCategoryItemNameResponse.class)))),
             @ApiResponse(responseCode = "404", description = "Programa não encontrado", content = @Content)
     })
     public ResponseEntity<List<EducatorCategoryItemNameResponse>> findEducatorCategoryItemNames(
             @PathVariable UUID id,
-            @Parameter(description = "Filtro opcional por nome") @RequestParam(required = false) String name
+            @Parameter(description = "Filtro opcional por nome") @RequestParam(defaultValue = "") String name,
+            @Parameter(description = "Quantidade máxima de resultados") @RequestParam(defaultValue = "10") int limit
     ) {
-        List<EducatorCategoryItemNameResponse> names =
-                findEducatorCategoryItemNamesUseCase.handle(new FindEducatorCategoryItemNamesQuery(id, name));
-        return ResponseEntity.ok(names);
+        return ResponseEntity.ok(
+                findEducatorCategoryItemNamesUseCase.handle(new FindEducatorCategoryItemNamesQuery(id, name, limit)));
     }
 
 }

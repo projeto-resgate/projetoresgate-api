@@ -4,6 +4,7 @@ import java.util.UUID;
 
 public record FindEducatorCategoryItemNamesQuery(
         UUID programId,
-        String name
+        String name,
+        int limit
 ) {
 }

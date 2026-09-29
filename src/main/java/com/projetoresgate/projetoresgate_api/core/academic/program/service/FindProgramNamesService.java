@@ -6,6 +6,9 @@ import com.projetoresgate.projetoresgate_api.core.academic.program.repository.Pr
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.FindProgramNamesUseCase;
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.query.FindProgramNamesQuery;
 import com.projetoresgate.projetoresgate_api.shared.specification.SpecificationBuilder;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +30,8 @@ public class FindProgramNamesService implements FindProgramNamesUseCase {
                 .with("name", ":", query.name())
                 .build();
 
-        return repository.findAll(nameFilter).stream()
+        Pageable pageable = PageRequest.of(0, query.limit(), Sort.by("name").ascending());
+        return repository.findAll(nameFilter, pageable).getContent().stream()
                 .map(ProgramNameResponse::fromEntity)
                 .toList();
     }
