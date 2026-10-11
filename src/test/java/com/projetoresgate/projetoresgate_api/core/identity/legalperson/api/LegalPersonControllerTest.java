@@ -2,7 +2,7 @@ package com.projetoresgate.projetoresgate_api.core.identity.legalperson.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projetoresgate.projetoresgate_api.config.security.WithMockCustomUser;
-import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.address.usecase.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.api.dto.LegalPersonSummaryResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;

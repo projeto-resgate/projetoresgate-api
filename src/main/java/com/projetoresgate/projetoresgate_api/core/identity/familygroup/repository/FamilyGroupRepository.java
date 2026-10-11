@@ -32,16 +32,53 @@ public interface FamilyGroupRepository extends JpaRepository<FamilyGroup, UUID>,
             """)
     List<NaturalPersonCountProjection> countRegisteredPeopleByIds(@Param("ids") Collection<UUID> ids);
 
+    interface NaturalPersonNameProjection {
+        UUID getFamilyGroupId();
+
+        String getName();
+    }
+
+    @Query("""
+            select fg.id as familyGroupId, np.name as name
+            from FamilyGroup fg
+            join fg.naturalPersonList np
+            where fg.id in :ids
+            order by fg.id, np.name
+            """)
+    List<NaturalPersonNameProjection> findNaturalPersonNamesByFamilyGroupIds(@Param("ids") Collection<UUID> ids);
+
     @Query(value = "select nextval('family_group_friendly_id_seq')", nativeQuery = true)
     Long nextFriendlyIdValue();
 
     @Query("""
-            select np from FamilyGroup fg
-            join fg.naturalPersonList np
-            where fg.id = :familyGroupId
+            select np from NaturalPerson np
+            where np.id in (
+                select linked.id from FamilyGroup fg join fg.naturalPersonList linked
+                where fg.id = :familyGroupId
+            )
             """)
     Page<NaturalPerson> findNaturalPersonsByFamilyGroupId(@Param("familyGroupId") UUID familyGroupId,
                                                           Pageable pageable);
+
+    @Query("""
+            select np from NaturalPerson np
+            where np.id in (
+                select linked.id from FamilyGroup fg join fg.naturalPersonList linked
+                where fg.id = :familyGroupId and linked.id <> :excludeNaturalPersonId
+            )
+            """)
+    Page<NaturalPerson> findEligibleResponsiblesByFamilyGroupId(@Param("familyGroupId") UUID familyGroupId,
+                                                                @Param("excludeNaturalPersonId") UUID excludeNaturalPersonId,
+                                                                Pageable pageable);
+
+    @Query(value = """
+            select exists (
+                select 1 from family_group_natural_person
+                where family_group_id = :familyGroupId and natural_person_id = :naturalPersonId
+            )
+            """, nativeQuery = true)
+    boolean existsNaturalPersonMember(@Param("familyGroupId") UUID familyGroupId,
+                                      @Param("naturalPersonId") UUID naturalPersonId);
 
     @Modifying
     @Query(value = """

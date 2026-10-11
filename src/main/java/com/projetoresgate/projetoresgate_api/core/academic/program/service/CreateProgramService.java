@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 @Service
 public class CreateProgramService implements CreateProgramUseCase {
 
@@ -41,7 +44,7 @@ public class CreateProgramService implements CreateProgramUseCase {
                 command.institutionId()
         );
 
-        if (command.educatorCategoryItems() != null && !command.educatorCategoryItems().isEmpty()) {
+        if (nonNull(command.educatorCategoryItems()) && !command.educatorCategoryItems().isEmpty()) {
             List<EducatorCategoryItem> items = command.educatorCategoryItems().stream()
                     .map(item -> EducatorCategoryItem.create(
                             item.name(),
@@ -59,9 +62,10 @@ public class CreateProgramService implements CreateProgramUseCase {
     }
 
     private LegalPersonSummaryResponse resolveInstitution(UUID institutionId) {
-        if (institutionId == null) {
+        if (isNull(institutionId)) {
             return null;
         }
+
         return findLegalPersonSummariesUseCase.handle(Set.of(institutionId))
                 .stream()
                 .findFirst()

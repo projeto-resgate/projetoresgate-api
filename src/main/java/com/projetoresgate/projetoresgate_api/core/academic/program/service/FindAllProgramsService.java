@@ -16,6 +16,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.isNull;
+
 @Service
 public class FindAllProgramsService implements FindAllProgramsUseCase {
 
@@ -41,7 +43,7 @@ public class FindAllProgramsService implements FindAllProgramsUseCase {
                 page.getContent().stream().map(Program::getInstitutionId).toList());
 
         return page.map(program -> ProgramResponse.fromEntity(program,
-                program.getInstitutionId() == null ? null : institutionMap.get(program.getInstitutionId())));
+                isNull(program.getInstitutionId()) ? null : institutionMap.get(program.getInstitutionId())));
     }
 
     private Map<UUID, LegalPersonSummaryResponse> findInstitutionSummaries(List<UUID> institutionIds) {

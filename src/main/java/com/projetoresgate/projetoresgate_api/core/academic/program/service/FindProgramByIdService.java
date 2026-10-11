@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import java.util.Set;
 import java.util.UUID;
 
+import static java.util.Objects.isNull;
+
 @Service
 public class FindProgramByIdService implements FindProgramByIdUseCase {
 
@@ -34,7 +36,7 @@ public class FindProgramByIdService implements FindProgramByIdUseCase {
     }
 
     private LegalPersonSummaryResponse resolveInstitution(UUID institutionId) {
-        if (institutionId == null) {
+        if (isNull(institutionId)) {
             return null;
         }
         return findLegalPersonSummariesUseCase.handle(Set.of(institutionId))

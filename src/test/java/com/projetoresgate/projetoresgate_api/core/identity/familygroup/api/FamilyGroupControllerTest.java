@@ -2,7 +2,7 @@ package com.projetoresgate.projetoresgate_api.core.identity.familygroup.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projetoresgate.projetoresgate_api.config.security.WithMockCustomUser;
-import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.address.usecase.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.api.dto.FamilyGroupNaturalPersonResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.api.dto.FamilyGroupSummaryResponse;
@@ -12,6 +12,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.c
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindAllFamilyGroupsQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindFamilyGroupNaturalPersonsQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.NaturalPersonRoleType;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.CreateNaturalPersonCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
@@ -218,7 +219,7 @@ class FamilyGroupControllerTest {
     void search_ShouldReturn200() throws Exception {
         Pageable pageable = PageRequest.of(0, 10, Sort.by("name").ascending());
         Page<FamilyGroupSummaryResponse> page =
-                new PageImpl<>(List.of(new FamilyGroupSummaryResponse(UUID.randomUUID(), "FAM-1", "Família Silva", 3L)),
+                new PageImpl<>(List.of(new FamilyGroupSummaryResponse(UUID.randomUUID(), "FAM-1", "Família Silva", 3L, List.of())),
                         pageable, 1);
 
         when(findAllUseCase.handle(any())).thenReturn(page);
@@ -264,8 +265,8 @@ class FamilyGroupControllerTest {
 
         when(findNaturalPersonsUseCase.handle(any())).thenReturn(
                 new PageImpl<>(List.of(
-                        FamilyGroupNaturalPersonResponse.fromEntity(daniela),
-                        FamilyGroupNaturalPersonResponse.fromEntity(breno)), PAGEABLE, 2));
+                        FamilyGroupNaturalPersonResponse.fromEntity(daniela, List.of(NaturalPersonRoleType.LEARNER)),
+                        FamilyGroupNaturalPersonResponse.fromEntity(breno, List.of(NaturalPersonRoleType.RESPONSIBLE))), PAGEABLE, 2));
 
         mockMvc.perform(get("/family-group/{id}/natural-person", id))
                 .andExpect(status().isOk())

@@ -1,7 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.identity.familygroup.service;
 
-import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
+import com.projetoresgate.projetoresgate_api.core.identity.address.usecase.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.domain.FamilyGroup;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.repository.FamilyGroupRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.UpdateFamilyGroupUseCase;
@@ -10,6 +10,7 @@ import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalEx
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @Service
@@ -24,52 +25,61 @@ public class UpdateFamilyGroupService implements UpdateFamilyGroupUseCase {
     @Override
     @Transactional
     public FamilyGroup handle(UpdateFamilyGroupCommand command) {
-        FamilyGroup familyGroup = repository.findByIdOrThrow(command.id());
+        if (isNull(command)) {
+            throw new InternalException("O comando não pode ser nulo.");
+        }
+
+        FamilyGroup existing = repository.findByIdOrThrow(command.id());
 
         if (nonNull(command.name()) && !command.name().isBlank()
-                && repository.existsByNameAndIdNot(command.name(), familyGroup.getId())) {
+                && repository.existsByNameAndIdNot(command.name(), command.id())) {
             throw new InternalException("Já existe um grupo familiar cadastrado com este nome.");
         }
 
-        updateAddress(familyGroup, command.address());
+        Address address = toAddress(command.address(), existing.getAddress());
 
-        return repository.save(
-                familyGroup.update()
-                        .name(command.name())
-                        .householdIncome(command.householdIncome())
-                        .perCapitaIncome(command.perCapitaIncome())
-                        .educationExpense(command.educationExpense())
-                        .healthExpense(command.healthExpense())
-                        .housingExpense(command.housingExpense())
-                        .numberOfResidents(command.numberOfResidents())
-                        .apply()
-        );
-    }
-
-    private void updateAddress(FamilyGroup familyGroup, AddressCommand command) {
-        if (command == null) {
-            return;
-        }
-
-        Address current = nonNull(familyGroup.getAddress())
-                ? familyGroup.getAddress()
-                : Address.create(command.streetType(), command.streetName(), command.zipCode(), command.number(),
-                command.referencePoint(), command.complement(), command.neighborhood(), command.city(),
-                command.state());
-        current.update()
-                .streetType(command.streetType())
-                .streetName(command.streetName())
-                .zipCode(command.zipCode())
-                .number(command.number())
-                .referencePoint(command.referencePoint())
-                .complement(command.complement())
-                .neighborhood(command.neighborhood())
-                .city(command.city())
-                .state(command.state())
+        FamilyGroup updated = existing.update()
+                .name(command.name())
+                .householdIncome(command.householdIncome())
+                .perCapitaIncome(command.perCapitaIncome())
+                .educationExpense(command.educationExpense())
+                .healthExpense(command.healthExpense())
+                .housingExpense(command.housingExpense())
+                .numberOfResidents(command.numberOfResidents())
+                .address(address)
                 .apply();
 
-        if (!nonNull(familyGroup.getAddress())) {
-            familyGroup.update().address(current).apply();
+        return repository.save(updated);
+    }
+
+    private Address toAddress(AddressCommand addressCommand, Address existingAddress) {
+        if (isNull(addressCommand)) {
+            return existingAddress;
         }
+        if (nonNull(existingAddress)) {
+            existingAddress.update()
+                    .streetType(addressCommand.streetType())
+                    .streetName(addressCommand.streetName())
+                    .zipCode(addressCommand.zipCode())
+                    .number(addressCommand.number())
+                    .referencePoint(addressCommand.referencePoint())
+                    .complement(addressCommand.complement())
+                    .neighborhood(addressCommand.neighborhood())
+                    .city(addressCommand.city())
+                    .state(addressCommand.state())
+                    .apply();
+            return existingAddress;
+        }
+        return Address.create(
+                addressCommand.streetType(),
+                addressCommand.streetName(),
+                addressCommand.zipCode(),
+                addressCommand.number(),
+                addressCommand.referencePoint(),
+                addressCommand.complement(),
+                addressCommand.neighborhood(),
+                addressCommand.city(),
+                addressCommand.state()
+        );
     }
 }

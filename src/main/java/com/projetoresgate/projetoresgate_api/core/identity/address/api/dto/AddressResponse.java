@@ -4,6 +4,8 @@ import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Addres
 
 import java.util.UUID;
 
+import static java.util.Objects.isNull;
+
 public record AddressResponse(
         UUID id,
         String streetType,
@@ -17,7 +19,7 @@ public record AddressResponse(
         String state
 ) {
     public static AddressResponse fromEntity(Address address) {
-        if (address == null) {
+        if (isNull(address)) {
             return null;
         }
 

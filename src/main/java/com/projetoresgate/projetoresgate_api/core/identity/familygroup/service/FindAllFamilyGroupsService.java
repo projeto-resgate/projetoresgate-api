@@ -50,9 +50,14 @@ public class FindAllFamilyGroupsService implements FindAllFamilyGroupsUseCase {
                 .forEach(projection -> countsById.put(projection.getFamilyGroupId(),
                         projection.getRegisteredPeopleCount()));
 
+        Map<UUID, List<String>> namesById = new HashMap<>();
+        repository.findNaturalPersonNamesByFamilyGroupIds(familyGroups.stream().map(FamilyGroup::getId).toList())
+                .forEach(proj -> namesById.computeIfAbsent(proj.getFamilyGroupId(), k -> new ArrayList<>()).add(proj.getName()));
+
         return familyGroups.stream()
                 .map(familyGroup -> FamilyGroupSummaryResponse.fromEntity(familyGroup,
-                        countsById.getOrDefault(familyGroup.getId(), 0L)))
+                        countsById.getOrDefault(familyGroup.getId(), 0L),
+                        namesById.getOrDefault(familyGroup.getId(), Collections.emptyList())))
                 .toList();
     }
 }

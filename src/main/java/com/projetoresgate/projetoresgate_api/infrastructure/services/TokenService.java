@@ -14,6 +14,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
+import static java.util.Objects.isNull;
+
 @Service
 public class TokenService implements ITokenService {
 
@@ -70,7 +72,7 @@ public class TokenService implements ITokenService {
                     .build()
                     .verify(token);
             Long tokenVersion = decodedJWT.getClaim("tokenVersion").asLong();
-            return tokenVersion == null ? -1L : tokenVersion;
+            return isNull(tokenVersion) ? -1L : tokenVersion;
         } catch (JWTVerificationException exception) {
             throw new InternalException("Token inválido ou expirado.");
         }

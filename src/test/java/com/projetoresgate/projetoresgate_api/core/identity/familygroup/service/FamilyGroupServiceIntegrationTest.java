@@ -1,6 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.identity.familygroup.service;
 
-import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.address.usecase.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.api.dto.FamilyGroupNaturalPersonResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.api.dto.FamilyGroupResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.api.dto.FamilyGroupSummaryResponse;
@@ -10,7 +10,11 @@ import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.c
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindAllFamilyGroupsQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindFamilyGroupNaturalPersonsQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.repository.LearnerRepository;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.repository.ResponsibleRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRoleRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service.FindNaturalPersonRolesService;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
 import com.projetoresgate.projetoresgate_api.shared.testcontainers.PostgresIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +46,15 @@ class FamilyGroupServiceIntegrationTest extends PostgresIntegrationTest {
     private NaturalPersonRepository naturalPersonRepository;
 
     @Autowired
+    private NaturalPersonRoleRepository naturalPersonRoleRepository;
+
+    @Autowired
+    private LearnerRepository learnerRepository;
+
+    @Autowired
+    private ResponsibleRepository responsibleRepository;
+
+    @Autowired
     private jakarta.persistence.EntityManager entityManager;
 
     private CreateFamilyGroupService createService;
@@ -58,7 +71,8 @@ class FamilyGroupServiceIntegrationTest extends PostgresIntegrationTest {
         createService = new CreateFamilyGroupService(familyGroupRepository);
         updateService = new UpdateFamilyGroupService(familyGroupRepository);
         searchService = new FindAllFamilyGroupsService(familyGroupRepository);
-        findNaturalPersonsService = new FindFamilyGroupNaturalPersonsService(familyGroupRepository);
+        findNaturalPersonsService = new FindFamilyGroupNaturalPersonsService(familyGroupRepository,
+                new FindNaturalPersonRolesService(naturalPersonRoleRepository));
         addNaturalPersonService = new AddNaturalPersonToFamilyGroupService(
                 familyGroupRepository, naturalPersonRepository);
         removeNaturalPersonService = new RemoveNaturalPersonFromFamilyGroupService(familyGroupRepository);
@@ -257,9 +271,9 @@ class FamilyGroupServiceIntegrationTest extends PostgresIntegrationTest {
                 new FindFamilyGroupNaturalPersonsQuery(saved.getId(), PAGE_ALL));
 
         assertEquals(2, result.getTotalElements());
-        assertEquals("Daniela Ferreira", result.getContent().getFirst().name());
-        assertEquals("11144477735", result.getContent().getFirst().cpf());
-        assertEquals("11911112222", result.getContent().getFirst().cellphone());
+        assertEquals("Breno Ferreira", result.getContent().getFirst().name());
+        assertEquals("11144477736", result.getContent().getFirst().cpf());
+        assertEquals("11911113333", result.getContent().getFirst().cellphone());
     }
 
     @Test

@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static java.util.Objects.isNull;
+
 @Service
 public class FindLegalPersonSummariesService implements FindLegalPersonSummariesUseCase {
 
@@ -20,7 +22,7 @@ public class FindLegalPersonSummariesService implements FindLegalPersonSummaries
 
     @Override
     public List<LegalPersonSummaryResponse> handle(Set<UUID> ids) {
-        if (ids == null || ids.isEmpty()) {
+        if (isNull(ids) || ids.isEmpty()) {
             return List.of();
         }
         return repository.findAllById(ids).stream()

@@ -1,4 +1,4 @@
-package com.projetoresgate.projetoresgate_api.core.identity.address.api.command;
+package com.projetoresgate.projetoresgate_api.core.identity.address.usecase.command;
 
 public record AddressCommand(
         String streetType,

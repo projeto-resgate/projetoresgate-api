@@ -22,19 +22,8 @@ a coluna faltando. Isso é intencional: melhor falhar no boot do que quebrar em 
 
 ## Migrations existentes
 
-| Script                                                | Conteúdo                                                      |
-|-------------------------------------------------------|---------------------------------------------------------------|
-| `V001__Initial_setup.sql`                             | Schema inicial, extensões.                                    |
-| `V002__Create_natural_persons_table.sql`              | Tabela de pessoa física.                                      |
-| `V003__Create_refresh_tokens_table.sql`               | Tokens de refresh.                                            |
-| `V004__Optimize_natural_person_search.sql`            | Índices de busca.                                             |
-| `V005__Separate_natural_person_from_user.sql`         | Separa pessoa física de usuário.                              |
-| `V006__Move_email_confirmation_to_natural_person.sql` | Confirmação de e-mail migra para a pessoa.                    |
-| `V007__Add_token_version_to_users.sql`                | Versão de token para invalidação.                             |
-| `V008__Create_legal_persons_table.sql`                | Tabela de pessoa jurídica.                                    |
-| `V009__Add_performance_indexes.sql`                   | Índices de performance.                                       |
-| `V010__Create_program_tables.sql`                     | Tabelas do núcleo acadêmico.                                  |
-| `V011__Create_family_groups_tables.sql`               | Grupos familiares, junction table e sequence de `friendlyId`. |
+Toda a história do schema está em `src/main/resources/db/migration/`. A lista completa é sempre
+a desse diretório — não é mantida aqui para não ficar desatualizada a cada migration nova.
 
 ## Criar uma migration
 
@@ -148,11 +137,18 @@ zero.
 O `psql` do seeder roda com `ON_ERROR_STOP=1`: um erro no `init.sql` derruba o container em vez de
 ser engolido. Sem essa flag o `psql` imprime o erro no log e **sai com exit 0**, e o
 `service_completed_successfully` enxerga sucesso — é assim que um seed pela metade passa despercebido.
-O `init.sql` é idempotente: num bloco `DO` ele checa se o `admin@projetoresgate.com` já existe e,
-se sim, não faz nada.
+O `init.sql` é idempotente: num bloco `DO` cada `INSERT` usa `ON CONFLICT DO NOTHING` (ou
+`NOT EXISTS`, onde a tabela não tem restrição única, como `user_roles`). Rodar o seeder de novo
+sobre um banco já populado não duplica linhas nem falha — inclusive quando o banco foi semado por
+uma versão antiga do script, que parava no primeiro `admin@projetoresgate.com` encontrado. Esse
+comportamento vale para todo o script, não só para o usuário administrador.
 
-O `init.sql` popula os dados de exemplo e faz `setval` na sequence do `friendlyId` para que o
-primeiro grupo do ambiente local continue a numeração do seed. Como o script inteiro é um único
+O `init.sql` popula os dados de exemplo de todos os domínios — usuários, pessoas físicas,
+endereços, instituições, programas, grupos familiares e membros, séries escolares, educandos,
+responsáveis e os papéis `LEARNER`/`RESPONSIBLE` de `natural_person_role` — e faz `setval` na
+sequence do `friendlyId` para que o próximo grupo criado no ambiente local continue a numeração do
+seed (o valor aplicado é o maior entre o maior `FAM-<n>` já existente e o último `last_value` da
+sequence, então o setval também cobre cadastros feitos pela API). Como o script inteiro é um único
 bloco `DO`, qualquer erro faz rollback de tudo — ou o seed inteiro entra, ou nada entra.
 
 ## Variáveis de ambiente

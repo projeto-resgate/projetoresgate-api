@@ -1,7 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.identity.familygroup.service;
 
-import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
+import com.projetoresgate.projetoresgate_api.core.identity.address.usecase.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.domain.FamilyGroup;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.repository.FamilyGroupRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.CreateFamilyGroupUseCase;
@@ -10,6 +10,7 @@ import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalEx
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @Service
@@ -24,12 +25,20 @@ public class CreateFamilyGroupService implements CreateFamilyGroupUseCase {
     @Override
     @Transactional
     public FamilyGroup handle(CreateFamilyGroupCommand command) {
+        if (isNull(command)) {
+            throw new InternalException("O comando não pode ser nulo.");
+        }
+
         if (nonNull(command.name()) && !command.name().isBlank() && repository.existsByName(command.name())) {
             throw new InternalException("Já existe um grupo familiar cadastrado com este nome.");
         }
 
+        String friendlyId = generateFriendlyId();
+
+        Address address = toAddress(command.address());
+
         FamilyGroup familyGroup = FamilyGroup.create(
-                nextFriendlyId(),
+                friendlyId,
                 command.name(),
                 command.householdIncome(),
                 command.perCapitaIncome(),
@@ -37,31 +46,30 @@ public class CreateFamilyGroupService implements CreateFamilyGroupUseCase {
                 command.healthExpense(),
                 command.housingExpense(),
                 command.numberOfResidents(),
-                toAddress(command.address())
+                address
         );
 
         return repository.save(familyGroup);
     }
 
-    private String nextFriendlyId() {
+    private String generateFriendlyId() {
         return FamilyGroup.FRIENDLY_ID_PREFIX + repository.nextFriendlyIdValue();
     }
 
-    private Address toAddress(AddressCommand command) {
-        if (command == null) {
+    private Address toAddress(AddressCommand addressCommand) {
+        if (isNull(addressCommand)) {
             return null;
         }
-
         return Address.create(
-                command.streetType(),
-                command.streetName(),
-                command.zipCode(),
-                command.number(),
-                command.referencePoint(),
-                command.complement(),
-                command.neighborhood(),
-                command.city(),
-                command.state()
+                addressCommand.streetType(),
+                addressCommand.streetName(),
+                addressCommand.zipCode(),
+                addressCommand.number(),
+                addressCommand.referencePoint(),
+                addressCommand.complement(),
+                addressCommand.neighborhood(),
+                addressCommand.city(),
+                addressCommand.state()
         );
     }
 }

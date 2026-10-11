@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import static java.util.Objects.isNull;
+
 public record ProgramResponse(
         UUID id,
         String name,
@@ -18,7 +20,7 @@ public record ProgramResponse(
         LocalDateTime dateCreated
 ) {
     public static ProgramResponse fromEntity(Program entity, LegalPersonSummaryResponse institution) {
-        List<EducatorCategoryItemResponse> items = entity.getEducatorCategoryItemList() == null
+        List<EducatorCategoryItemResponse> items = isNull(entity.getEducatorCategoryItemList())
                 ? List.of()
                 : entity.getEducatorCategoryItemList().stream()
                 .map(EducatorCategoryItemResponse::fromEntity)

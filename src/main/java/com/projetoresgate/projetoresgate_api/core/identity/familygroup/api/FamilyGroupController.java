@@ -114,7 +114,7 @@ public class FamilyGroupController {
 
     @GetMapping("/{id}/natural-person")
     @Operation(summary = "Listar Pessoas Físicas do Grupo Familiar",
-            description = "Lista as pessoas físicas vinculadas a um grupo familiar com paginação, retornando apenas os dados da grid (id, nome, rg, cpf e celular). O id é usado para desvincular a pessoa do grupo.")
+            description = "Lista as pessoas físicas vinculadas a um grupo familiar com paginação, retornando apenas os dados da grid (id, nome, rg, cpf e celular) e as tags de papel da pessoa (LEARNER, RESPONSIBLE). O id é usado para desvincular a pessoa do grupo.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),

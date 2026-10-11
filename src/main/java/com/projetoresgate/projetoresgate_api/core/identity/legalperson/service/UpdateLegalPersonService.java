@@ -1,7 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.identity.legalperson.service;
 
-import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
+import com.projetoresgate.projetoresgate_api.core.identity.address.usecase.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.UpdateLegalPersonUseCase;
@@ -11,6 +11,7 @@ import com.projetoresgate.projetoresgate_api.infrastructure.utils.CnpjUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @Service
@@ -49,7 +50,7 @@ public class UpdateLegalPersonService implements UpdateLegalPersonUseCase {
     }
 
     private void updateAddress(LegalPerson person, AddressCommand command) {
-        if (command == null) {
+        if (isNull(command)) {
             return;
         }
 

@@ -1,6 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.identity.legalperson.service;
 
-import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.address.usecase.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Representative;

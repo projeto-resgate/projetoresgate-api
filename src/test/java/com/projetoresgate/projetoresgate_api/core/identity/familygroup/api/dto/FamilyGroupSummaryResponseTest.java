@@ -3,8 +3,9 @@ package com.projetoresgate.projetoresgate_api.core.identity.familygroup.api.dto;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.domain.FamilyGroup;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.List;
 
 @DisplayName("FamilyGroupSummaryResponse - DTO Test")
 class FamilyGroupSummaryResponseTest {
@@ -15,11 +16,12 @@ class FamilyGroupSummaryResponseTest {
         FamilyGroup familyGroup = FamilyGroup.create(
                 "FAM-7", "Família Silva", null, null, null, null, null, null, null);
 
-        FamilyGroupSummaryResponse response = FamilyGroupSummaryResponse.fromEntity(familyGroup, 3L);
+        FamilyGroupSummaryResponse response = FamilyGroupSummaryResponse.fromEntity(familyGroup, 3L, List.of("Maria Silva", "João Silva"));
 
         assertEquals(familyGroup.getId(), response.id());
         assertEquals("FAM-7", response.friendlyId());
         assertEquals("Família Silva", response.name());
         assertEquals(3L, response.registeredPeopleCount());
+        assertEquals(2, response.registeredPeopleNames().size());
     }
 }

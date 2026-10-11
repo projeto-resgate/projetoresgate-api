@@ -1,6 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.identity.familygroup.service;
 
-import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.address.usecase.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.domain.FamilyGroup;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.repository.FamilyGroupRepository;

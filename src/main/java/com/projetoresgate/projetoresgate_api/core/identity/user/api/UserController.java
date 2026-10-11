@@ -27,6 +27,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.UUID;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @RestController
@@ -118,7 +119,7 @@ public class UserController {
             @CookieValue(value = "refreshToken", required = false) String refreshToken,
             HttpServletResponse httpResponse) {
 
-        if (refreshToken == null || refreshToken.isBlank()) {
+        if (isNull(refreshToken) || refreshToken.isBlank()) {
             throw new InternalException("Cookie de renovação não fornecido");
         }
 

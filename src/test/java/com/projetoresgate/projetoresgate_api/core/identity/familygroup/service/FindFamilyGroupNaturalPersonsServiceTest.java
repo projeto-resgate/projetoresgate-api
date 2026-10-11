@@ -5,6 +5,8 @@ import com.projetoresgate.projetoresgate_api.core.identity.familygroup.domain.Fa
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.repository.FamilyGroupRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindFamilyGroupNaturalPersonsQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.NaturalPersonRoleType;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.FindNaturalPersonRolesUseCase;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,6 +33,9 @@ class FindFamilyGroupNaturalPersonsServiceTest {
 
     @Mock
     private FamilyGroupRepository repository;
+
+    @Mock
+    private FindNaturalPersonRolesUseCase findNaturalPersonRolesUseCase;
 
     @InjectMocks
     private FindFamilyGroupNaturalPersonsService service;
@@ -47,6 +53,8 @@ class FindFamilyGroupNaturalPersonsServiceTest {
         when(repository.findByIdOrThrow(id)).thenReturn(familyGroup);
         when(repository.findNaturalPersonsByFamilyGroupId(eq(id), eq(PAGEABLE)))
                 .thenReturn(new PageImpl<>(List.of(daniela, breno), PAGEABLE, 2));
+        when(findNaturalPersonRolesUseCase.handle(any()))
+                .thenReturn(Map.of(daniela.getId(), List.of(NaturalPersonRoleType.LEARNER)));
 
         Page<FamilyGroupNaturalPersonResponse> result =
                 service.handle(new FindFamilyGroupNaturalPersonsQuery(id, PAGEABLE));
@@ -109,5 +117,47 @@ class FindFamilyGroupNaturalPersonsServiceTest {
         service.handle(new FindFamilyGroupNaturalPersonsQuery(id, customPageable));
 
         verify(repository).findNaturalPersonsByFamilyGroupId(id, customPageable);
+    }
+
+    @Test
+    @DisplayName("Deve retornar os papéis da pessoa física e lista vazia quando não tiver nenhum")
+    void handle_ShouldReturnRolesPerNaturalPerson() {
+        UUID id = UUID.randomUUID();
+        FamilyGroup familyGroup = FamilyGroup.create("FAM-1", "Família Ferreira", null, null, null, null, null, 4, null);
+        NaturalPerson daniela = NaturalPerson.create(
+                "Daniela Ferreira", "daniela@email.com", null, "11144477735", "123456789", null, null, null, "11911112222");
+        NaturalPerson breno = NaturalPerson.create(
+                "Breno Ferreira", "breno@email.com", null, "11144477736", "223456789", null, null, null, "11911113333");
+
+        when(repository.findByIdOrThrow(id)).thenReturn(familyGroup);
+        when(repository.findNaturalPersonsByFamilyGroupId(eq(id), eq(PAGEABLE)))
+                .thenReturn(new PageImpl<>(List.of(daniela, breno), PAGEABLE, 2));
+        when(findNaturalPersonRolesUseCase.handle(any())).thenReturn(Map.of(
+                daniela.getId(), List.of(NaturalPersonRoleType.LEARNER, NaturalPersonRoleType.RESPONSIBLE)));
+
+        Page<FamilyGroupNaturalPersonResponse> result =
+                service.handle(new FindFamilyGroupNaturalPersonsQuery(id, PAGEABLE));
+
+        assertEquals(List.of(NaturalPersonRoleType.LEARNER, NaturalPersonRoleType.RESPONSIBLE),
+                result.getContent().getFirst().roles());
+        assertTrue(result.getContent().get(1).roles().isEmpty());
+    }
+
+    @Test
+    @DisplayName("Deve consultar os papéis apenas das pessoas da página atual")
+    void handle_ShouldResolveRolesForCurrentPageOnly() {
+        UUID id = UUID.randomUUID();
+        FamilyGroup familyGroup = FamilyGroup.create("FAM-1", "Família Ferreira", null, null, null, null, null, 4, null);
+        NaturalPerson daniela = NaturalPerson.create(
+                "Daniela Ferreira", "daniela@email.com", null, "11144477735", "123456789", null, null, null, "11911112222");
+
+        when(repository.findByIdOrThrow(id)).thenReturn(familyGroup);
+        when(repository.findNaturalPersonsByFamilyGroupId(eq(id), eq(PAGEABLE)))
+                .thenReturn(new PageImpl<>(List.of(daniela), PAGEABLE, 1));
+        when(findNaturalPersonRolesUseCase.handle(any())).thenReturn(Map.of());
+
+        service.handle(new FindFamilyGroupNaturalPersonsQuery(id, PAGEABLE));
+
+        verify(findNaturalPersonRolesUseCase).handle(List.of(daniela.getId()));
     }
 }

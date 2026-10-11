@@ -16,6 +16,8 @@ import org.springframework.util.StringUtils;
 
 import java.util.*;
 
+import static java.util.Objects.isNull;
+
 @Service
 public class UpdateProgramService implements UpdateProgramUseCase {
 
@@ -54,7 +56,7 @@ public class UpdateProgramService implements UpdateProgramUseCase {
     }
 
     private void reconcileEducatorCategoryItems(Program program, List<UpdateProgramCommand.UpdateEducatorCategoryItemCommand> items) {
-        List<UpdateProgramCommand.UpdateEducatorCategoryItemCommand> requested = items == null ? List.of() : items;
+        List<UpdateProgramCommand.UpdateEducatorCategoryItemCommand> requested = isNull(items) ? List.of() : items;
 
         Map<UUID, EducatorCategoryItem> existingById = new HashMap<>();
         for (EducatorCategoryItem existing : program.getEducatorCategoryItemList()) {
@@ -63,7 +65,7 @@ public class UpdateProgramService implements UpdateProgramUseCase {
 
         Set<UUID> requestedIds = new HashSet<>();
         for (UpdateProgramCommand.UpdateEducatorCategoryItemCommand itemCommand : requested) {
-            if (itemCommand.id() == null) {
+            if (isNull(itemCommand.id())) {
                 EducatorCategoryItem created = EducatorCategoryItem.create(itemCommand.name(), program);
                 program.getEducatorCategoryItemList().add(created);
                 requestedIds.add(created.getId());
@@ -71,7 +73,7 @@ public class UpdateProgramService implements UpdateProgramUseCase {
             }
 
             EducatorCategoryItem existing = existingById.get(itemCommand.id());
-            if (existing == null) {
+            if (isNull(existing)) {
                 throw new InternalException(
                         "Categoria de educador com ID " + itemCommand.id() + " não pertence ao programa " + program.getId() + ".");
             }
@@ -97,7 +99,7 @@ public class UpdateProgramService implements UpdateProgramUseCase {
     }
 
     private LegalPersonSummaryResponse resolveInstitution(UUID institutionId) {
-        if (institutionId == null) {
+        if (isNull(institutionId)) {
             return null;
         }
         return findLegalPersonSummariesUseCase.handle(Set.of(institutionId))

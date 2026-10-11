@@ -2,6 +2,8 @@ package com.projetoresgate.projetoresgate_api.core.identity.legalperson.api.dto;
 
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Representative;
 
+import static java.util.Objects.isNull;
+
 public record RepresentativeResponse(
         String name,
         String cellphone,
@@ -9,7 +11,7 @@ public record RepresentativeResponse(
         String email
 ) {
     public static RepresentativeResponse fromEntity(Representative representative) {
-        if (representative == null) {
+        if (isNull(representative)) {
             return null;
         }
 

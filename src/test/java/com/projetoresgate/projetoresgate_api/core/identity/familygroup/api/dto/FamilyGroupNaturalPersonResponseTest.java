@@ -4,6 +4,8 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -17,7 +19,7 @@ class FamilyGroupNaturalPersonResponseTest {
                 "Daniela Ferreira", "daniela@email.com", "Dani", "11144477735", "123456789",
                 null, null, null, "11911112222");
 
-        FamilyGroupNaturalPersonResponse response = FamilyGroupNaturalPersonResponse.fromEntity(person);
+        FamilyGroupNaturalPersonResponse response = FamilyGroupNaturalPersonResponse.fromEntity(person, List.of());
 
         assertEquals(person.getId(), response.id());
         assertEquals("Daniela Ferreira", response.name());
@@ -32,7 +34,7 @@ class FamilyGroupNaturalPersonResponseTest {
         NaturalPerson person = NaturalPerson.create(
                 "Breno Ferreira", "breno@email.com", null, null, null, null, null, null, null);
 
-        FamilyGroupNaturalPersonResponse response = FamilyGroupNaturalPersonResponse.fromEntity(person);
+        FamilyGroupNaturalPersonResponse response = FamilyGroupNaturalPersonResponse.fromEntity(person, List.of());
 
         assertEquals("Breno Ferreira", response.name());
         assertNull(response.rg());

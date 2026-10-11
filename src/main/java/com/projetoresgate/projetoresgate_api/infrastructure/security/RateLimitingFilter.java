@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 @Component
 @Order(1)
 public class RateLimitingFilter extends OncePerRequestFilter {
@@ -49,8 +52,8 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             Instant now = Instant.now();
 
             List<Instant> timestamps = requestLog.compute(clientId, (key, existing) -> {
-                List<Instant> valid = (existing == null ? List.<Instant>of() : existing)
-                        .stream()
+            List<Instant> valid = (isNull(existing) ? List.<Instant>of() : existing)
+                    .stream()
                         .filter(t -> Duration.between(t, now).compareTo(window) < 0)
                         .collect(Collectors.toList());
                 valid.add(now);
@@ -71,7 +74,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     private String resolveClientId(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
+        if (nonNull(xForwardedFor) && !xForwardedFor.isBlank()) {
             return xForwardedFor.split(",")[0].trim();
         }
         return request.getRemoteAddr();

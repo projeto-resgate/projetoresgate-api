@@ -1,6 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.command;
 
-import com.projetoresgate.projetoresgate_api.core.identity.address.api.command.AddressCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.address.usecase.command.AddressCommand;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
