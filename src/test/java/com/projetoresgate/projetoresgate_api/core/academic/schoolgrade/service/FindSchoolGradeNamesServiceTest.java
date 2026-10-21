@@ -37,8 +37,8 @@ class FindSchoolGradeNamesServiceTest {
     @Test
     @DisplayName("Deve converter as séries em respostas enxutas com id, nome e ordem")
     void handle_ShouldMapToNameResponses() {
-        SchoolGrade first = SchoolGrade.create("Primeiro ano", 1);
-        SchoolGrade second = SchoolGrade.create("Segundo ano", 2);
+        SchoolGrade first = SchoolGrade.create("Primeiro ano", null, 1);
+        SchoolGrade second = SchoolGrade.create("Segundo ano", null, 2);
         when(repository.findAll(nullable(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(first, second)));
 

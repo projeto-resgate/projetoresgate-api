@@ -14,21 +14,19 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.reposit
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service.FindNaturalPersonRolesService;
 import com.projetoresgate.projetoresgate_api.shared.testcontainers.PostgresIntegrationTest;
 import jakarta.persistence.EntityManager;
+import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.hibernate.exception.ConstraintViolationException;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
 @DisplayName("NaturalPersonRole - Integração")
@@ -117,8 +115,6 @@ class NaturalPersonRoleConsistencyIntegrationTest extends PostgresIntegrationTes
         entityManager.flush();
         entityManager.clear();
 
-        // A idempotência é do LearnerRoleSynchronizer; aqui é o banco que impede a segunda linha,
-        // e o índice único parcial só é avaliado no flush.
         assertThrows(ConstraintViolationException.class, () -> {
             givenRole(person.getId(), NaturalPersonRoleType.LEARNER);
             entityManager.flush();

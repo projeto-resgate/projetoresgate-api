@@ -20,26 +20,30 @@ import static java.util.Objects.nonNull;
 public class SchoolGrade extends AuditableEntity {
 
     private static final int NAME_MAX_LENGTH = 255;
+    private static final int ABBREVIATION_MAX_LENGTH = 50;
 
     @Id
     private UUID id;
 
     private String name;
 
+    private String abbreviation;
+
     private Integer gradeOrder;
 
     protected SchoolGrade() {
     }
 
-    private SchoolGrade(UUID id, String name, Integer gradeOrder) {
+    private SchoolGrade(UUID id, String name, String abbreviation, Integer gradeOrder) {
         this.id = id;
         this.name = name;
+        this.abbreviation = abbreviation;
         this.gradeOrder = gradeOrder;
         validate();
     }
 
-    public static SchoolGrade create(String name, Integer gradeOrder) {
-        return new SchoolGrade(UUID.randomUUID(), name, gradeOrder);
+    public static SchoolGrade create(String name, String abbreviation, Integer gradeOrder) {
+        return new SchoolGrade(UUID.randomUUID(), name, abbreviation, gradeOrder);
     }
 
     public void validate() {
@@ -48,6 +52,9 @@ public class SchoolGrade extends AuditableEntity {
         }
         if (this.name.length() > NAME_MAX_LENGTH) {
             throw new InternalException("O nome da série escolar não pode exceder 255 caracteres.");
+        }
+        if (nonNull(this.abbreviation) && this.abbreviation.length() > ABBREVIATION_MAX_LENGTH) {
+            throw new InternalException("A abreviação da série escolar não pode exceder 50 caracteres.");
         }
         if (!nonNull(this.gradeOrder)) {
             throw new InternalException("A ordem da série escolar é obrigatória.");
@@ -68,6 +75,11 @@ public class SchoolGrade extends AuditableEntity {
             return this;
         }
 
+        public Updater abbreviation(String abbreviation) {
+            SchoolGrade.this.abbreviation = abbreviation;
+            return this;
+        }
+
         public Updater gradeOrder(Integer gradeOrder) {
             SchoolGrade.this.gradeOrder = gradeOrder;
             return this;
@@ -85,6 +97,10 @@ public class SchoolGrade extends AuditableEntity {
 
     public String getName() {
         return name;
+    }
+
+    public String getAbbreviation() {
+        return abbreviation;
     }
 
     public Integer getGradeOrder() {

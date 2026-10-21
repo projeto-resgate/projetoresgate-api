@@ -12,7 +12,7 @@ class SchoolGradeTest {
     @Test
     @DisplayName("Deve criar uma série escolar com sucesso")
     void create_ShouldSucceed() {
-        SchoolGrade schoolGrade = SchoolGrade.create("Primeiro ano do ensino médio", 1);
+        SchoolGrade schoolGrade = SchoolGrade.create("Primeiro ano do ensino médio", null, 1);
 
         assertNotNull(schoolGrade);
         assertNotNull(schoolGrade.getId());
@@ -23,8 +23,8 @@ class SchoolGradeTest {
     @Test
     @DisplayName("Deve gerar ids diferentes para séries criadas em sequência")
     void create_ShouldGenerateDistinctIds() {
-        SchoolGrade first = SchoolGrade.create("Primeiro ano", 1);
-        SchoolGrade second = SchoolGrade.create("Segundo ano", 2);
+        SchoolGrade first = SchoolGrade.create("Primeiro ano", null, 1);
+        SchoolGrade second = SchoolGrade.create("Segundo ano", null, 2);
 
         assertNotEquals(first.getId(), second.getId());
     }
@@ -33,7 +33,7 @@ class SchoolGradeTest {
     @DisplayName("Deve lançar exceção ao criar série sem nome")
     void create_ShouldFailWithoutName() {
         InternalException exception = assertThrows(InternalException.class,
-                () -> SchoolGrade.create("  ", 1));
+                () -> SchoolGrade.create("  ", null, 1));
         assertEquals("O nome da série escolar não pode ser vazio.", exception.getMessage());
     }
 
@@ -41,14 +41,14 @@ class SchoolGradeTest {
     @DisplayName("Deve lançar exceção ao criar série com nome acima de 255 caracteres")
     void create_ShouldFailWhenNameTooLong() {
         InternalException exception = assertThrows(InternalException.class,
-                () -> SchoolGrade.create("a".repeat(256), 1));
+                () -> SchoolGrade.create("a".repeat(256), null, 1));
         assertEquals("O nome da série escolar não pode exceder 255 caracteres.", exception.getMessage());
     }
 
     @Test
     @DisplayName("Deve aceitar nome com exatamente 255 caracteres")
     void create_ShouldAcceptNameAtMaxLength() {
-        SchoolGrade schoolGrade = SchoolGrade.create("a".repeat(255), 1);
+        SchoolGrade schoolGrade = SchoolGrade.create("a".repeat(255), null, 1);
 
         assertEquals(255, schoolGrade.getName().length());
     }
@@ -57,7 +57,7 @@ class SchoolGradeTest {
     @DisplayName("Deve lançar exceção ao criar série sem ordem")
     void create_ShouldFailWithoutGradeOrder() {
         InternalException exception = assertThrows(InternalException.class,
-                () -> SchoolGrade.create("Primeiro ano", null));
+                () -> SchoolGrade.create("Primeiro ano", null, null));
         assertEquals("A ordem da série escolar é obrigatória.", exception.getMessage());
     }
 
@@ -65,18 +65,18 @@ class SchoolGradeTest {
     @DisplayName("Deve lançar exceção ao criar série com ordem zero ou negativa")
     void create_ShouldFailWhenGradeOrderNotPositive() {
         InternalException zeroException = assertThrows(InternalException.class,
-                () -> SchoolGrade.create("Primeiro ano", 0));
+                () -> SchoolGrade.create("Primeiro ano", null, 0));
         assertEquals("A ordem da série escolar deve ser maior que zero.", zeroException.getMessage());
 
         InternalException negativeException = assertThrows(InternalException.class,
-                () -> SchoolGrade.create("Primeiro ano", -3));
+                () -> SchoolGrade.create("Primeiro ano", null, -3));
         assertEquals("A ordem da série escolar deve ser maior que zero.", negativeException.getMessage());
     }
 
     @Test
     @DisplayName("Deve atualizar nome e ordem via Updater com sucesso")
     void updater_ShouldUpdateFields() {
-        SchoolGrade schoolGrade = SchoolGrade.create("Primeiro ano", 1);
+        SchoolGrade schoolGrade = SchoolGrade.create("Primeiro ano", null, 1);
 
         schoolGrade.update()
                 .name("Segundo ano")
@@ -91,7 +91,7 @@ class SchoolGradeTest {
     @Test
     @DisplayName("Deve lançar exceção ao validar série com nome apagado na atualização")
     void updater_ShouldFailWhenNameBlanked() {
-        SchoolGrade schoolGrade = SchoolGrade.create("Primeiro ano", 1);
+        SchoolGrade schoolGrade = SchoolGrade.create("Primeiro ano", null, 1);
 
         InternalException exception = assertThrows(InternalException.class,
                 () -> schoolGrade.update().name("").apply());
@@ -101,7 +101,7 @@ class SchoolGradeTest {
     @Test
     @DisplayName("Deve lançar exceção ao validar série sem ordem na atualização")
     void updater_ShouldFailWhenGradeOrderNull() {
-        SchoolGrade schoolGrade = SchoolGrade.create("Primeiro ano", 1);
+        SchoolGrade schoolGrade = SchoolGrade.create("Primeiro ano", null, 1);
 
         InternalException exception = assertThrows(InternalException.class,
                 () -> schoolGrade.update().gradeOrder(null).apply());
@@ -111,7 +111,7 @@ class SchoolGradeTest {
     @Test
     @DisplayName("O apply deve devolver a própria entidade já com os campos alterados")
     void updater_ShouldReturnSameEntity() {
-        SchoolGrade schoolGrade = SchoolGrade.create("Primeiro ano", 1);
+        SchoolGrade schoolGrade = SchoolGrade.create("Primeiro ano", null, 1);
 
         SchoolGrade result = schoolGrade.update().name("Segundo ano").gradeOrder(2).apply();
 

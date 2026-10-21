@@ -189,8 +189,6 @@ class UpdateLearnerServiceTest {
         Learner existing = givenLearner();
         when(repository.findByIdOrThrow(existing.getId())).thenReturn(existing);
 
-
-        // O próprio educando vem na lista de responsáveis, que o domínio recusa.
         List<ResponsibleCommand> forbidden = List.of(
                 new ResponsibleCommand(NATURAL_PERSON_ID, ResponsibleType.FINANCIAL, Kinship.MOTHER, null));
 

@@ -62,9 +62,13 @@ diretório com todos os seus tipos.
 
 ### `core/academic`
 
-| Módulo    | Responsabilidade                                                            |
-|-----------|-----------------------------------------------------------------------------|
-| `program` | Programa, categoria de programa e item de categoria (usado por educadores). |
+| Módulo         | Responsabilidade                                                                                        |
+|----------------|---------------------------------------------------------------------------------------------------------|
+| `program`      | Programa, categoria de programa e item de categoria (usado por educadores).                             |
+| `learner`      | Educando, responsáveis, matrícula e vínculo com pessoas físicas.                                        |
+| `schoolgrade`  | Série escolar.                                                                                          |
+| `classgroup`   | Turma, séries da turma, educandos e educadores vinculados.                                              |
+| `collaborator` | Colaborador (educador), a partir de uma pessoa física obrigatória e uma pessoa jurídica opcional.       |
 
 ### `infrastructure`
 

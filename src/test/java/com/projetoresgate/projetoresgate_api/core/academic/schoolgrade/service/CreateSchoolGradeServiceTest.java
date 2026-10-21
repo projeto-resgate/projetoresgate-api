@@ -32,7 +32,7 @@ class CreateSchoolGradeServiceTest {
         when(repository.existsByName("Primeiro ano")).thenReturn(false);
         when(repository.save(any(SchoolGrade.class))).thenAnswer(i -> i.getArgument(0));
 
-        SchoolGrade result = service.handle(new CreateSchoolGradeCommand("Primeiro ano", 1));
+        SchoolGrade result = service.handle(new CreateSchoolGradeCommand("Primeiro ano", null, 1));
 
         assertNotNull(result.getId());
         assertEquals("Primeiro ano", result.getName());
@@ -47,7 +47,7 @@ class CreateSchoolGradeServiceTest {
         when(repository.existsByName("Primeiro ano")).thenReturn(true);
 
         InternalException exception = assertThrows(InternalException.class,
-                () -> service.handle(new CreateSchoolGradeCommand("Primeiro ano", 1)));
+                () -> service.handle(new CreateSchoolGradeCommand("Primeiro ano", null, 1)));
 
         assertEquals("Já existe uma série escolar cadastrada com este nome.", exception.getMessage());
         verify(repository, never()).save(any());
@@ -59,7 +59,7 @@ class CreateSchoolGradeServiceTest {
         when(repository.existsByName("Primeiro ano")).thenReturn(false);
 
         assertThrows(InternalException.class,
-                () -> service.handle(new CreateSchoolGradeCommand("Primeiro ano", 0)));
+                () -> service.handle(new CreateSchoolGradeCommand("Primeiro ano", null, 0)));
 
         verify(repository, never()).save(any());
     }
@@ -70,7 +70,7 @@ class CreateSchoolGradeServiceTest {
         when(repository.existsByName("Primeiro ano do Ensino Médio")).thenReturn(false);
         when(repository.save(any(SchoolGrade.class))).thenAnswer(i -> i.getArgument(0));
 
-        service.handle(new CreateSchoolGradeCommand("Primeiro ano do Ensino Médio", 1));
+        service.handle(new CreateSchoolGradeCommand("Primeiro ano do Ensino Médio", null, 1));
 
         ArgumentCaptor<SchoolGrade> captor = ArgumentCaptor.forClass(SchoolGrade.class);
         verify(repository).save(captor.capture());

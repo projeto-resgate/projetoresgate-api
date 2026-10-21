@@ -8,6 +8,7 @@ import java.util.UUID;
 public record SchoolGradeResponse(
         UUID id,
         String name,
+        String abbreviation,
         Integer gradeOrder,
         LocalDateTime dateCreated
 ) {
@@ -15,6 +16,7 @@ public record SchoolGradeResponse(
         return new SchoolGradeResponse(
                 entity.getId(),
                 entity.getName(),
+                entity.getAbbreviation(),
                 entity.getGradeOrder(),
                 entity.getDateCreated()
         );

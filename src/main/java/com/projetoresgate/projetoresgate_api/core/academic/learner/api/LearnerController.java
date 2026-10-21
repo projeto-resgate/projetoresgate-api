@@ -1,6 +1,8 @@
 package com.projetoresgate.projetoresgate_api.core.academic.learner.api;
 
+import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.DropoutLearnerResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.EligibleResponsibleResponse;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerAutocompleteResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerSummaryResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.LearnerStatus;
@@ -10,6 +12,7 @@ import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.comma
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.command.ReactivateLearnerCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.command.SoftDeleteLearnerCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.command.UpdateLearnerCommand;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.AutocompleteLearnerQuery;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.FindAllLearnersQuery;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.FindEligibleResponsiblesQuery;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.FindLearnerByIdQuery;
@@ -31,6 +34,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -46,6 +50,7 @@ public class LearnerController {
     private final FindEligibleResponsiblesUseCase findEligibleResponsiblesUseCase;
     private final DropoutLearnerUseCase dropoutUseCase;
     private final ReactivateLearnerUseCase reactivateUseCase;
+    private final AutocompleteLearnerUseCase autocompleteUseCase;
 
     public LearnerController(CreateLearnerUseCase createUseCase,
                              UpdateLearnerUseCase updateUseCase,
@@ -54,7 +59,8 @@ public class LearnerController {
                              FindAllLearnersUseCase findAllUseCase,
                              FindEligibleResponsiblesUseCase findEligibleResponsiblesUseCase,
                              DropoutLearnerUseCase dropoutUseCase,
-                             ReactivateLearnerUseCase reactivateUseCase) {
+                             ReactivateLearnerUseCase reactivateUseCase,
+                             AutocompleteLearnerUseCase autocompleteUseCase) {
         this.createUseCase = createUseCase;
         this.updateUseCase = updateUseCase;
         this.softDeleteUseCase = softDeleteUseCase;
@@ -63,6 +69,7 @@ public class LearnerController {
         this.findEligibleResponsiblesUseCase = findEligibleResponsiblesUseCase;
         this.dropoutUseCase = dropoutUseCase;
         this.reactivateUseCase = reactivateUseCase;
+        this.autocompleteUseCase = autocompleteUseCase;
     }
 
     @PostMapping
@@ -107,16 +114,17 @@ public class LearnerController {
     @Operation(summary = "Registrar Desistência",
             description = "Marca o educando como desistente sem removê-lo das consultas. Exige o motivo e aceita "
                     + "opcionalmente a data da desistência (padrão: hoje). O vínculo com responsáveis é mantido para "
-                    + "permitir uma futura reativação.")
+                    + "permitir uma futura reativação. Todos os vínculos ativos do educando com turmas são inativados "
+                    + "automaticamente e a resposta informa quantos foram.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Desistência registrada com sucesso",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = LearnerResponse.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = DropoutLearnerResponse.class))),
             @ApiResponse(responseCode = "400", description = "Motivo não informado", content = @Content),
             @ApiResponse(responseCode = "404", description = "Educando não encontrado", content = @Content),
             @ApiResponse(responseCode = "409", description = "Educando já está desistente", content = @Content)
     })
-    public ResponseEntity<LearnerResponse> dropOut(@PathVariable UUID id,
-                                                   @RequestBody @Valid DropoutLearnerCommand command) {
+    public ResponseEntity<DropoutLearnerResponse> dropOut(@PathVariable UUID id,
+                                                          @RequestBody @Valid DropoutLearnerCommand command) {
         return ResponseEntity.ok(dropoutUseCase.handle(command.withId(id)));
     }
 
@@ -156,6 +164,21 @@ public class LearnerController {
         FindAllLearnersQuery query = new FindAllLearnersQuery(
                 searchTerm, status, institutionId, schoolGradeId, academicYear, pageable);
         return ResponseEntity.ok(findAllUseCase.handle(query));
+    }
+
+    @GetMapping("/autocomplete")
+    @Operation(summary = "Autocomplete de Educandos",
+            description = "Busca leve de educandos (por nome, apelido ou CPF da pessoa física) para componentes de "
+                    + "seleção do front, como o modal de vínculo de educando à turma.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = LearnerAutocompleteResponse.class)))
+    })
+    public ResponseEntity<List<LearnerAutocompleteResponse>> autocomplete(
+            @Parameter(description = "Termo de pesquisa (Nome, apelido ou CPF do educando)") @RequestParam(required = false) String searchTerm,
+            @Parameter(description = "Quantidade máxima de resultados") @RequestParam(defaultValue = "10") int limit
+    ) {
+        return ResponseEntity.ok(autocompleteUseCase.handle(new AutocompleteLearnerQuery(searchTerm, limit)));
     }
 
     @GetMapping("/{id}")

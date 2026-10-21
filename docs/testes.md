@@ -11,7 +11,7 @@ Como os testes são organizados e executados. Para o porquê da estratégia, vej
 | Controller          | `@WebMvcTest`                              | 5          | Parcial               | Não                   |
 | Integração de dados | `@DataJpaTest` + `PostgresIntegrationTest` | 3          | Parcial               | Sim, em Postgres real |
 
-Total: 69 classes de teste, 377 testes. Mais a classe base `PostgresIntegrationTest`, que não tem teste próprio.
+Total: 117 classes de teste, 669 testes. Mais a classe base `PostgresIntegrationTest`, que não tem teste próprio.
 
 O projeto **não usa `@SpringBootTest`**. Ele sobe o contexto inteiro sem necessidade e deixa a
 suíte lenta. `@WebMvcTest` carrega só a web layer; `@DataJpaTest` carrega só a persistência.

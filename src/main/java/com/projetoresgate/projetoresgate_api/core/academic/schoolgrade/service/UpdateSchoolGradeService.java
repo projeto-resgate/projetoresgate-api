@@ -1,5 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.service;
 
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.RefreshClassGroupTitlesUseCase;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.RefreshClassGroupTitlesCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.domain.SchoolGrade;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.repository.SchoolGradeRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.usecase.UpdateSchoolGradeUseCase;
@@ -13,9 +15,12 @@ import org.springframework.util.StringUtils;
 public class UpdateSchoolGradeService implements UpdateSchoolGradeUseCase {
 
     private final SchoolGradeRepository repository;
+    private final RefreshClassGroupTitlesUseCase refreshClassGroupTitlesUseCase;
 
-    public UpdateSchoolGradeService(SchoolGradeRepository repository) {
+    public UpdateSchoolGradeService(SchoolGradeRepository repository,
+                                    RefreshClassGroupTitlesUseCase refreshClassGroupTitlesUseCase) {
         this.repository = repository;
+        this.refreshClassGroupTitlesUseCase = refreshClassGroupTitlesUseCase;
     }
 
     @Override
@@ -27,9 +32,14 @@ public class UpdateSchoolGradeService implements UpdateSchoolGradeUseCase {
             throw new InternalException("Já existe uma série escolar cadastrada com este nome.");
         }
 
-        return repository.save(schoolGrade.update()
+        SchoolGrade updated = repository.save(schoolGrade.update()
                 .name(command.name())
+                .abbreviation(command.abbreviation())
                 .gradeOrder(command.gradeOrder())
                 .apply());
+
+        refreshClassGroupTitlesUseCase.handle(RefreshClassGroupTitlesCommand.bySchoolGrade(updated.getId()));
+
+        return updated;
     }
 }

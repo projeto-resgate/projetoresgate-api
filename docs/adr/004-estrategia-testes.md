@@ -8,8 +8,8 @@ summary: Unitário=@ExtendWith(MockitoExtension), controller=@WebMvcTest, banco=
 
 ## Decisão
 
-Três tipos de teste, e o tipo é escolhido pelo que a dúvida precisa responder. A suíte tem 375
-testes em 69 classes.
+Três tipos de teste, e o tipo é escolhido pelo que a dúvida precisa responder. A suíte tem 669
+testes em 117 classes.
 
 ### 1. Testes Unitários (Foco: Regra de Negócio)
 

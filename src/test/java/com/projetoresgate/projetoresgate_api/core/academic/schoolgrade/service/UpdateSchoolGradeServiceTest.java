@@ -1,5 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.service;
 
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.RefreshClassGroupTitlesUseCase;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.RefreshClassGroupTitlesCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.domain.SchoolGrade;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.repository.SchoolGradeRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.usecase.command.UpdateSchoolGradeCommand;
@@ -27,19 +29,22 @@ class UpdateSchoolGradeServiceTest {
     @Mock
     private SchoolGradeRepository repository;
 
+    @Mock
+    private RefreshClassGroupTitlesUseCase refreshClassGroupTitlesUseCase;
+
     @InjectMocks
     private UpdateSchoolGradeService service;
 
     @Test
     @DisplayName("Deve atualizar nome e ordem da série existente")
     void handle_ShouldUpdateSchoolGrade() {
-        SchoolGrade existing = SchoolGrade.create("Primeiro ano", 1);
+        SchoolGrade existing = SchoolGrade.create("Primeiro ano", null, 1);
         UUID id = existing.getId();
         when(repository.findByIdOrThrow(id)).thenReturn(existing);
         when(repository.existsByNameAndIdNot("Segundo ano", id)).thenReturn(false);
         when(repository.save(any(SchoolGrade.class))).thenAnswer(i -> i.getArgument(0));
 
-        SchoolGrade result = service.handle(new UpdateSchoolGradeCommand(id, "Segundo ano", 2));
+        SchoolGrade result = service.handle(new UpdateSchoolGradeCommand(id, "Segundo ano", null, 2));
 
         assertEquals("Segundo ano", result.getName());
         assertEquals(2, result.getGradeOrder());
@@ -47,14 +52,27 @@ class UpdateSchoolGradeServiceTest {
     }
 
     @Test
-    @DisplayName("Deve manter o mesmo id da série atualizada")
-    void handle_ShouldKeepSameId() {
-        SchoolGrade existing = SchoolGrade.create("Primeiro ano", 1);
+    @DisplayName("Deve recalcular o título das turmas afetadas após atualizar a série")
+    void handle_ShouldRefreshClassGroupTitles() {
+        SchoolGrade existing = SchoolGrade.create("Primeiro ano", null, 1);
         UUID id = existing.getId();
         when(repository.findByIdOrThrow(id)).thenReturn(existing);
         when(repository.save(any(SchoolGrade.class))).thenAnswer(i -> i.getArgument(0));
 
-        SchoolGrade result = service.handle(new UpdateSchoolGradeCommand(id, "Segundo ano", 2).withId(id));
+        service.handle(new UpdateSchoolGradeCommand(id, "Primeiro ano", "1º", 1));
+
+        verify(refreshClassGroupTitlesUseCase).handle(RefreshClassGroupTitlesCommand.bySchoolGrade(id));
+    }
+
+    @Test
+    @DisplayName("Deve manter o mesmo id da série atualizada")
+    void handle_ShouldKeepSameId() {
+        SchoolGrade existing = SchoolGrade.create("Primeiro ano", null, 1);
+        UUID id = existing.getId();
+        when(repository.findByIdOrThrow(id)).thenReturn(existing);
+        when(repository.save(any(SchoolGrade.class))).thenAnswer(i -> i.getArgument(0));
+
+        SchoolGrade result = service.handle(new UpdateSchoolGradeCommand(id, "Segundo ano", null, 2).withId(id));
 
         assertEquals(existing.getId(), result.getId());
     }
@@ -67,7 +85,7 @@ class UpdateSchoolGradeServiceTest {
                 .thenThrow(new ResourceNotFoundException("Série escolar não encontrada com ID: " + id));
 
         assertThrows(ResourceNotFoundException.class,
-                () -> service.handle(new UpdateSchoolGradeCommand(id, "Segundo ano", 2)));
+                () -> service.handle(new UpdateSchoolGradeCommand(id, "Segundo ano", null, 2)));
 
         verify(repository, never()).save(any());
     }
@@ -75,13 +93,13 @@ class UpdateSchoolGradeServiceTest {
     @Test
     @DisplayName("Deve lançar exceção quando o nome já pertence a outra série")
     void handle_ShouldFailWhenNameBelongsToAnother() {
-        SchoolGrade existing = SchoolGrade.create("Primeiro ano", 1);
+        SchoolGrade existing = SchoolGrade.create("Primeiro ano", null, 1);
         UUID id = existing.getId();
         when(repository.findByIdOrThrow(id)).thenReturn(existing);
         when(repository.existsByNameAndIdNot("Segundo ano", id)).thenReturn(true);
 
         InternalException exception = assertThrows(InternalException.class,
-                () -> service.handle(new UpdateSchoolGradeCommand(id, "Segundo ano", 2)));
+                () -> service.handle(new UpdateSchoolGradeCommand(id, "Segundo ano", null, 2)));
 
         assertEquals("Já existe uma série escolar cadastrada com este nome.", exception.getMessage());
         verify(repository, never()).save(any());
@@ -90,13 +108,13 @@ class UpdateSchoolGradeServiceTest {
     @Test
     @DisplayName("Deve permitir manter o próprio nome sem acusar duplicidade")
     void handle_ShouldAllowKeepingOwnName() {
-        SchoolGrade existing = SchoolGrade.create("Primeiro ano", 1);
+        SchoolGrade existing = SchoolGrade.create("Primeiro ano", null, 1);
         UUID id = existing.getId();
         when(repository.findByIdOrThrow(id)).thenReturn(existing);
         when(repository.existsByNameAndIdNot("Primeiro ano", id)).thenReturn(false);
         when(repository.save(any(SchoolGrade.class))).thenAnswer(i -> i.getArgument(0));
 
-        SchoolGrade result = service.handle(new UpdateSchoolGradeCommand(id, "Primeiro ano", 5));
+        SchoolGrade result = service.handle(new UpdateSchoolGradeCommand(id, "Primeiro ano", null, 5));
 
         assertEquals("Primeiro ano", result.getName());
         assertEquals(5, result.getGradeOrder());
@@ -105,12 +123,12 @@ class UpdateSchoolGradeServiceTest {
     @Test
     @DisplayName("Deve barrar nome em branco no domínio sem consultar a duplicidade")
     void handle_ShouldRejectBlankNameWithoutQueryingDuplicates() {
-        SchoolGrade existing = SchoolGrade.create("Primeiro ano", 1);
+        SchoolGrade existing = SchoolGrade.create("Primeiro ano", null, 1);
         UUID id = existing.getId();
         when(repository.findByIdOrThrow(id)).thenReturn(existing);
 
         InternalException exception = assertThrows(InternalException.class,
-                () -> service.handle(new UpdateSchoolGradeCommand(id, "   ", 2)));
+                () -> service.handle(new UpdateSchoolGradeCommand(id, "   ", null, 2)));
 
         assertEquals("O nome da série escolar não pode ser vazio.", exception.getMessage());
         verify(repository, never()).existsByNameAndIdNot(any(), any());
@@ -120,12 +138,12 @@ class UpdateSchoolGradeServiceTest {
     @Test
     @DisplayName("Deve buscar pelo id da rota e não pelo id do corpo")
     void handle_ShouldUseIdFromCommand() {
-        SchoolGrade existing = SchoolGrade.create("Primeiro ano", 1);
+        SchoolGrade existing = SchoolGrade.create("Primeiro ano", null, 1);
         UUID id = existing.getId();
         when(repository.findByIdOrThrow(id)).thenReturn(existing);
         when(repository.save(any(SchoolGrade.class))).thenAnswer(i -> i.getArgument(0));
 
-        service.handle(new UpdateSchoolGradeCommand(null, "Segundo ano", 2).withId(id));
+        service.handle(new UpdateSchoolGradeCommand(null, "Segundo ano", null, 2).withId(id));
 
         verify(repository).findByIdOrThrow(id);
         ArgumentCaptor<SchoolGrade> captor = ArgumentCaptor.forClass(SchoolGrade.class);
@@ -136,12 +154,12 @@ class UpdateSchoolGradeServiceTest {
     @Test
     @DisplayName("Não deve salvar quando a atualização deixa o estado inválido")
     void handle_ShouldNotSaveWhenUpdaterRejects() {
-        SchoolGrade existing = SchoolGrade.create("Primeiro ano", 1);
+        SchoolGrade existing = SchoolGrade.create("Primeiro ano", null, 1);
         UUID id = existing.getId();
         when(repository.findByIdOrThrow(id)).thenReturn(existing);
 
         assertThrows(InternalException.class,
-                () -> service.handle(new UpdateSchoolGradeCommand(id, "Segundo ano", 0)));
+                () -> service.handle(new UpdateSchoolGradeCommand(id, "Segundo ano", null, 0)));
 
         verify(repository, never()).save(any());
     }

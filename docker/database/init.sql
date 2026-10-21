@@ -124,22 +124,42 @@ BEGIN
     );
 
     ------------------------------------------------------------------
-    -- Sérias escolares
+    -- Séries escolares
+    -- A abreviação é o que aparece no título da turma (ver docs/turmas-e-colaboradores.md).
+    -- Quando em branco, o título cai no nome completo da série.
     ------------------------------------------------------------------
-    INSERT INTO school_grade (id, name, grade_order, date_created, date_updated) VALUES
-        ('00000000-0000-0000-0000-000000000071', 'Primeiro ano do ensino fundamental', 1, now(), now()),
-        ('00000000-0000-0000-0000-000000000072', 'Segundo ano do ensino fundamental', 2, now(), now()),
-        ('00000000-0000-0000-0000-000000000073', 'Terceiro ano do ensino fundamental', 3, now(), now()),
-        ('00000000-0000-0000-0000-000000000074', 'Quarto ano do ensino fundamental', 4, now(), now()),
-        ('00000000-0000-0000-0000-000000000075', 'Quinto ano do ensino fundamental', 5, now(), now()),
-        ('00000000-0000-0000-0000-000000000076', 'Sexto ano do ensino fundamental', 6, now(), now()),
-        ('00000000-0000-0000-0000-000000000077', 'Sétimo ano do ensino fundamental', 7, now(), now()),
-        ('00000000-0000-0000-0000-000000000078', 'Oitavo ano do ensino fundamental', 8, now(), now()),
-        ('00000000-0000-0000-0000-000000000079', 'Nono ano do ensino fundamental', 9, now(), now()),
-        ('00000000-0000-0000-0000-000000000080', 'Primeiro ano do ensino médio', 10, now(), now()),
-        ('00000000-0000-0000-0000-000000000081', 'Segundo ano do ensino médio', 11, now(), now()),
-        ('00000000-0000-0000-0000-000000000082', 'Terceiro ano do ensino médio', 12, now(), now())
+    INSERT INTO school_grade (id, name, abbreviation, grade_order, date_created, date_updated) VALUES
+        ('00000000-0000-0000-0000-000000000071', 'Primeiro ano do ensino fundamental', '1º ano', 1, now(), now()),
+        ('00000000-0000-0000-0000-000000000072', 'Segundo ano do ensino fundamental', '2º ano', 2, now(), now()),
+        ('00000000-0000-0000-0000-000000000073', 'Terceiro ano do ensino fundamental', '3º ano', 3, now(), now()),
+        ('00000000-0000-0000-0000-000000000074', 'Quarto ano do ensino fundamental', '4º ano', 4, now(), now()),
+        ('00000000-0000-0000-0000-000000000075', 'Quinto ano do ensino fundamental', '5º ano', 5, now(), now()),
+        ('00000000-0000-0000-0000-000000000076', 'Sexto ano do ensino fundamental', '6º ano', 6, now(), now()),
+        ('00000000-0000-0000-0000-000000000077', 'Sétimo ano do ensino fundamental', '7º ano', 7, now(), now()),
+        ('00000000-0000-0000-0000-000000000078', 'Oitavo ano do ensino fundamental', '8º ano', 8, now(), now()),
+        ('00000000-0000-0000-0000-000000000079', 'Nono ano do ensino fundamental', '9º ano', 9, now(), now()),
+        ('00000000-0000-0000-0000-000000000080', 'Primeiro ano do ensino médio', '1º EM', 10, now(), now()),
+        ('00000000-0000-0000-0000-000000000081', 'Segundo ano do ensino médio', '2º EM', 11, now(), now()),
+        ('00000000-0000-0000-0000-000000000082', 'Terceiro ano do ensino médio', '3º EM', 12, now(), now())
     ON CONFLICT DO NOTHING;
+
+    -- Preenche a abreviação num banco já semeado antes da coluna existir (re-execução do seeder).
+    UPDATE school_grade SET abbreviation = v.abbreviation, date_updated = now()
+    FROM (VALUES
+        ('00000000-0000-0000-0000-000000000071'::uuid, '1º ano'),
+        ('00000000-0000-0000-0000-000000000072'::uuid, '2º ano'),
+        ('00000000-0000-0000-0000-000000000073'::uuid, '3º ano'),
+        ('00000000-0000-0000-0000-000000000074'::uuid, '4º ano'),
+        ('00000000-0000-0000-0000-000000000075'::uuid, '5º ano'),
+        ('00000000-0000-0000-0000-000000000076'::uuid, '6º ano'),
+        ('00000000-0000-0000-0000-000000000077'::uuid, '7º ano'),
+        ('00000000-0000-0000-0000-000000000078'::uuid, '8º ano'),
+        ('00000000-0000-0000-0000-000000000079'::uuid, '9º ano'),
+        ('00000000-0000-0000-0000-000000000080'::uuid, '1º EM'),
+        ('00000000-0000-0000-0000-000000000081'::uuid, '2º EM'),
+        ('00000000-0000-0000-0000-000000000082'::uuid, '3º EM')
+    ) AS v(id, abbreviation)
+    WHERE school_grade.id = v.id AND school_grade.abbreviation IS DISTINCT FROM v.abbreviation;
 
     ------------------------------------------------------------------
     -- Educandos
@@ -192,6 +212,84 @@ BEGIN
         ('00000000-0000-0000-0000-000000000121', '00000000-0000-0000-0000-000000000019', 'RESPONSIBLE', now(), now()),
         ('00000000-0000-0000-0000-000000000122', '00000000-0000-0000-0000-000000000020', 'RESPONSIBLE', now(), now()),
         ('00000000-0000-0000-0000-000000000123', '00000000-0000-0000-0000-000000000022', 'RESPONSIBLE', now(), now())
+    ON CONFLICT DO NOTHING;
+
+    ------------------------------------------------------------------
+    -- Colaboradores (educadores)
+    -- Todo colaborador parte de uma pessoa física obrigatória. A pessoa
+    -- jurídica é o vínculo empregatício/voluntário, opcional. Diego e
+    -- Helena ficam sem vínculo com turma, para exercitar a listagem.
+    ------------------------------------------------------------------
+    INSERT INTO collaborator (id, is_voluntary, natural_person_id, legal_person_id, date_created, date_updated) VALUES
+        ('00000000-0000-0000-0000-000000000201', FALSE, '00000000-0000-0000-0000-000000000011', '00000000-0000-0000-0000-000000000031', now(), now()),
+        ('00000000-0000-0000-0000-000000000202', TRUE,  '00000000-0000-0000-0000-000000000012', NULL, now(), now()),
+        ('00000000-0000-0000-0000-000000000203', FALSE, '00000000-0000-0000-0000-000000000013', '00000000-0000-0000-0000-000000000033', now(), now()),
+        ('00000000-0000-0000-0000-000000000204', TRUE,  '00000000-0000-0000-0000-000000000017', '00000000-0000-0000-0000-000000000031', now(), now()),
+        ('00000000-0000-0000-0000-000000000205', FALSE, '00000000-0000-0000-0000-000000000018', '00000000-0000-0000-0000-000000000032', now(), now()),
+        ('00000000-0000-0000-0000-000000000206', TRUE,  '00000000-0000-0000-0000-000000000020', NULL, now(), now()),
+        ('00000000-0000-0000-0000-000000000207', FALSE, '00000000-0000-0000-0000-000000000022', '00000000-0000-0000-0000-000000000034', now(), now())
+    ON CONFLICT DO NOTHING;
+
+    ------------------------------------------------------------------
+    -- Turmas
+    -- O título é materializado: precisa ser exatamente o que o backend
+    -- compõe (programa - séries abreviadas - dias abreviados). Mantenha
+    -- em sincronia com os vínculos de série e os horários abaixo.
+    ------------------------------------------------------------------
+    INSERT INTO class_group (id, title, student_projections, start_date, end_date, note, program_id, institution_id, active, date_created, date_updated) VALUES
+        ('00000000-0000-0000-0000-000000000181', 'Programa Resgate Jovem - 6º ano, 7º ano - Seg, Qua', 30, '2026-02-02 08:00:00', '2026-08-02 08:00:00', 'Turma de reforço escolar no contraturno.', '00000000-0000-0000-0000-000000000041', '00000000-0000-0000-0000-000000000031', TRUE, now(), now()),
+        ('00000000-0000-0000-0000-000000000182', 'Programa Cidadania Digital - 1º EM - Ter, Qui', 25, '2026-02-02 14:00:00', '2026-06-02 14:00:00', 'Laboratório de informática, duas turmas por semana.', '00000000-0000-0000-0000-000000000042', '00000000-0000-0000-0000-000000000031', TRUE, now(), now()),
+        ('00000000-0000-0000-0000-000000000183', 'Programa Educar para Vencer - 3º EM - Sáb', 20, '2026-03-07 09:00:00', '2026-09-07 09:00:00', 'Encontro de sábado para conclusão do ensino médio.', '00000000-0000-0000-0000-000000000045', '00000000-0000-0000-0000-000000000033', TRUE, now(), now()),
+        ('00000000-0000-0000-0000-000000000184', 'Programa Amanhã na Escola - 2º ano - Sex', 18, '2026-02-06 13:00:00', '2026-07-06 13:00:00', NULL, '00000000-0000-0000-0000-000000000044', '00000000-0000-0000-0000-000000000032', FALSE, now(), now())
+    ON CONFLICT DO NOTHING;
+
+    ------------------------------------------------------------------
+    -- Séries sugeridas de cada turma
+    ------------------------------------------------------------------
+    INSERT INTO class_school_grade (class_group_id, school_grade_id) VALUES
+        ('00000000-0000-0000-0000-000000000181', '00000000-0000-0000-0000-000000000076'),
+        ('00000000-0000-0000-0000-000000000181', '00000000-0000-0000-0000-000000000077'),
+        ('00000000-0000-0000-0000-000000000182', '00000000-0000-0000-0000-000000000080'),
+        ('00000000-0000-0000-0000-000000000183', '00000000-0000-0000-0000-000000000082'),
+        ('00000000-0000-0000-0000-000000000184', '00000000-0000-0000-0000-000000000072')
+    ON CONFLICT DO NOTHING;
+
+    ------------------------------------------------------------------
+    -- Grade de horários das turmas
+    ------------------------------------------------------------------
+    INSERT INTO class_schedule (id, class_group_id, week_day, start_time, end_time, active, date_created, date_updated) VALUES
+        ('00000000-0000-0000-0000-000000000191', '00000000-0000-0000-0000-000000000181', 'MONDAY', '08:00:00', '10:00:00', TRUE, now(), now()),
+        ('00000000-0000-0000-0000-000000000192', '00000000-0000-0000-0000-000000000181', 'WEDNESDAY', '08:00:00', '10:00:00', TRUE, now(), now()),
+        ('00000000-0000-0000-0000-000000000193', '00000000-0000-0000-0000-000000000182', 'TUESDAY', '14:00:00', '16:00:00', TRUE, now(), now()),
+        ('00000000-0000-0000-0000-000000000194', '00000000-0000-0000-0000-000000000182', 'THURSDAY', '14:00:00', '16:00:00', TRUE, now(), now()),
+        ('00000000-0000-0000-0000-000000000195', '00000000-0000-0000-0000-000000000183', 'SATURDAY', '09:00:00', '12:00:00', TRUE, now(), now()),
+        ('00000000-0000-0000-0000-000000000196', '00000000-0000-0000-0000-000000000184', 'FRIDAY', '13:00:00', '15:00:00', TRUE, now(), now())
+    ON CONFLICT DO NOTHING;
+
+    ------------------------------------------------------------------
+    -- Educadores vinculados às turmas
+    -- O item de categoria precisa pertencer ao programa da turma.
+    -- O vínculo 0216 fica inativo para exercitar o filtro por situação.
+    ------------------------------------------------------------------
+    INSERT INTO class_collaborator (id, class_group_id, collaborator_id, educator_category_item_id, active, date_created, date_updated) VALUES
+        ('00000000-0000-0000-0000-000000000211', '00000000-0000-0000-0000-000000000181', '00000000-0000-0000-0000-000000000201', '00000000-0000-0000-0000-000000000052', TRUE, now(), now()),
+        ('00000000-0000-0000-0000-000000000212', '00000000-0000-0000-0000-000000000181', '00000000-0000-0000-0000-000000000204', '00000000-0000-0000-0000-000000000051', TRUE, now(), now()),
+        ('00000000-0000-0000-0000-000000000213', '00000000-0000-0000-0000-000000000182', '00000000-0000-0000-0000-000000000203', '00000000-0000-0000-0000-000000000054', TRUE, now(), now()),
+        ('00000000-0000-0000-0000-000000000214', '00000000-0000-0000-0000-000000000183', '00000000-0000-0000-0000-000000000202', '00000000-0000-0000-0000-000000000060', TRUE, now(), now()),
+        ('00000000-0000-0000-0000-000000000215', '00000000-0000-0000-0000-000000000184', '00000000-0000-0000-0000-000000000205', '00000000-0000-0000-0000-000000000058', TRUE, now(), now()),
+        ('00000000-0000-0000-0000-000000000216', '00000000-0000-0000-0000-000000000182', '00000000-0000-0000-0000-000000000205', '00000000-0000-0000-0000-000000000055', FALSE, now(), now())
+    ON CONFLICT DO NOTHING;
+
+    ------------------------------------------------------------------
+    -- Educandos vinculados às turmas
+    -- Cada educando entra na turma da sua série atual. Sofia (0095)
+    -- fica sem turma porque ainda não tem série/ano letivo definido.
+    ------------------------------------------------------------------
+    INSERT INTO class_learner (id, class_group_id, learner_id, active, date_created, date_updated) VALUES
+        ('00000000-0000-0000-0000-000000000221', '00000000-0000-0000-0000-000000000181', '00000000-0000-0000-0000-000000000091', TRUE, now(), now()),
+        ('00000000-0000-0000-0000-000000000222', '00000000-0000-0000-0000-000000000182', '00000000-0000-0000-0000-000000000093', TRUE, now(), now()),
+        ('00000000-0000-0000-0000-000000000223', '00000000-0000-0000-0000-000000000183', '00000000-0000-0000-0000-000000000094', TRUE, now(), now()),
+        ('00000000-0000-0000-0000-000000000224', '00000000-0000-0000-0000-000000000184', '00000000-0000-0000-0000-000000000092', TRUE, now(), now())
     ON CONFLICT DO NOTHING;
 
     RAISE NOTICE 'Seeder aplicado com sucesso.';

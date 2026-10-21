@@ -1,5 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.academic.program.service;
 
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.RefreshClassGroupTitlesUseCase;
 import com.projetoresgate.projetoresgate_api.core.academic.program.api.dto.ProgramResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.EducatorCategoryItem;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.Program;
@@ -36,6 +37,9 @@ class UpdateProgramServiceTest {
 
     @Mock
     private FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase;
+
+    @Mock
+    private RefreshClassGroupTitlesUseCase refreshClassGroupTitlesUseCase;
 
     @InjectMocks
     private UpdateProgramService service;

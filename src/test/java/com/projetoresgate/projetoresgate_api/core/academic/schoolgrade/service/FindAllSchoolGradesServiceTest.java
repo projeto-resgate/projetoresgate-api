@@ -39,8 +39,8 @@ class FindAllSchoolGradesServiceTest {
     @DisplayName("Deve converter a página de entidades em página de respostas preservando o total")
     void handle_ShouldMapPagePreservingTotal() {
         Pageable pageable = PageRequest.of(0, 10);
-        SchoolGrade first = SchoolGrade.create("Primeiro ano", 1);
-        SchoolGrade second = SchoolGrade.create("Segundo ano", 2);
+        SchoolGrade first = SchoolGrade.create("Primeiro ano", null, 1);
+        SchoolGrade second = SchoolGrade.create("Segundo ano", null, 2);
         Page<SchoolGrade> page = new PageImpl<>(List.of(first, second), pageable, 2L);
         when(repository.findAll(nullable(Specification.class), eq(pageable))).thenReturn(page);
 

@@ -3,7 +3,9 @@ package com.projetoresgate.projetoresgate_api.core.academic.learner.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projetoresgate.projetoresgate_api.config.security.WithMockCustomUser;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.command.ResponsibleCommand;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.DropoutLearnerResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.EligibleResponsibleResponse;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerAutocompleteResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerSummaryResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.ResponsibleResponse;
@@ -95,6 +97,9 @@ class LearnerControllerTest {
 
     @MockitoBean
     private ReactivateLearnerUseCase reactivateUseCase;
+
+    @MockitoBean
+    private AutocompleteLearnerUseCase autocompleteUseCase;
 
     @MockitoBean
     private UserDetailsService userDetailsService;
@@ -659,7 +664,8 @@ class LearnerControllerTest {
                 SCHOOL_GRADE_ID, true, ScholarshipCondition.PARTIAL, 2026, "Maria da Silva", "MAT-2026-0001",
                 LearnerStatus.DROPPED_OUT, List.of(), null);
 
-        when(dropoutUseCase.handle(any(DropoutLearnerCommand.class))).thenReturn(dropped);
+        when(dropoutUseCase.handle(any(DropoutLearnerCommand.class)))
+                .thenReturn(DropoutLearnerResponse.fromEntity(dropped, 2));
 
         mockMvc.perform(post("/learner/{id}/dropout", LEARNER_ID)
                         .with(csrf())
@@ -668,15 +674,18 @@ class LearnerControllerTest {
                                 {"reason":"Mudou de cidade"}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(LEARNER_ID.toString()))
-                .andExpect(jsonPath("$.status").value("DROPPED_OUT"));
+                .andExpect(jsonPath("$.learner.id").value(LEARNER_ID.toString()))
+                .andExpect(jsonPath("$.learner.status").value("DROPPED_OUT"))
+                .andExpect(jsonPath("$.classLinksDeactivated").value(true))
+                .andExpect(jsonPath("$.deactivatedClassLinks").value(2));
     }
 
     @Test
     @WithMockCustomUser
     @DisplayName("POST /learner/{id}/dropout - Deve usar o id da rota e repassar motivo e data")
     void dropOut_ShouldUseIdFromRouteAndPassFields() throws Exception {
-        when(dropoutUseCase.handle(any(DropoutLearnerCommand.class))).thenReturn(givenResponse());
+        when(dropoutUseCase.handle(any(DropoutLearnerCommand.class)))
+                .thenReturn(DropoutLearnerResponse.fromEntity(givenResponse(), 0));
 
         mockMvc.perform(post("/learner/{id}/dropout", LEARNER_ID)
                         .with(csrf())

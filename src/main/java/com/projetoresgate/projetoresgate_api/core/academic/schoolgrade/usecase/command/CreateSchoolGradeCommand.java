@@ -9,6 +9,8 @@ public record CreateSchoolGradeCommand(
         @NotBlank(message = "O nome é obrigatório")
         @Size(max = 255, message = "O nome não pode exceder 255 caracteres")
         String name,
+        @Size(max = 50, message = "A abreviação não pode exceder 50 caracteres")
+        String abbreviation,
         @NotNull(message = "A ordem é obrigatória")
         @Min(value = 1, message = "A ordem deve ser maior que zero")
         Integer gradeOrder

@@ -1,5 +1,9 @@
 package com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.service;
 
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassGroupRepository;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassScheduleRepository;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.service.RefreshClassGroupTitlesService;
+import com.projetoresgate.projetoresgate_api.core.academic.program.repository.ProgramRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.api.dto.SchoolGradeNameResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.api.dto.SchoolGradeResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.domain.SchoolGrade;
@@ -38,6 +42,15 @@ class SchoolGradeServiceIntegrationTest extends PostgresIntegrationTest {
     private SchoolGradeRepository repository;
 
     @Autowired
+    private ClassGroupRepository classGroupRepository;
+
+    @Autowired
+    private ClassScheduleRepository classScheduleRepository;
+
+    @Autowired
+    private ProgramRepository programRepository;
+
+    @Autowired
     private EntityManager entityManager;
 
     private CreateSchoolGradeService createService;
@@ -48,21 +61,23 @@ class SchoolGradeServiceIntegrationTest extends PostgresIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        RefreshClassGroupTitlesService refreshService = new RefreshClassGroupTitlesService(
+                classGroupRepository, classScheduleRepository, programRepository);
         createService = new CreateSchoolGradeService(repository);
-        updateService = new UpdateSchoolGradeService(repository);
-        softDeleteService = new SoftDeleteSchoolGradeService(repository);
+        updateService = new UpdateSchoolGradeService(repository, refreshService);
+        softDeleteService = new SoftDeleteSchoolGradeService(repository, refreshService);
         findAllService = new FindAllSchoolGradesService(repository);
         findNamesService = new FindSchoolGradeNamesService(repository);
     }
 
     private SchoolGrade givenGrade(String name, int order) {
-        return repository.save(SchoolGrade.create(name, order));
+        return repository.save(SchoolGrade.create(name, null, order));
     }
 
     @Test
     @DisplayName("Deve persistir a série com a ordem na coluna correta e reler do banco")
     void handle_ShouldPersistAndReload() {
-        SchoolGrade saved = createService.handle(new CreateSchoolGradeCommand("Primeiro ano do ensino médio", 1));
+        SchoolGrade saved = createService.handle(new CreateSchoolGradeCommand("Primeiro ano do ensino médio", null, 1));
         repository.flush();
         entityManager.clear();
 
@@ -94,7 +109,7 @@ class SchoolGradeServiceIntegrationTest extends PostgresIntegrationTest {
         repository.flush();
 
         assertThrows(InternalException.class,
-                () -> createService.handle(new CreateSchoolGradeCommand("Primeiro ano", 2)));
+                () -> createService.handle(new CreateSchoolGradeCommand("Primeiro ano", null, 2)));
     }
 
     @Test
@@ -235,10 +250,10 @@ class SchoolGradeServiceIntegrationTest extends PostgresIntegrationTest {
     @Test
     @DisplayName("Deve atualizar os dados persistidos")
     void handle_ShouldUpdatePersistedData() {
-        SchoolGrade saved = createService.handle(new CreateSchoolGradeCommand("Primeiro ano", 1));
+        SchoolGrade saved = createService.handle(new CreateSchoolGradeCommand("Primeiro ano", null, 1));
         repository.flush();
 
-        updateService.handle(new UpdateSchoolGradeCommand(saved.getId(), "Primeiro ano do médio", 2));
+        updateService.handle(new UpdateSchoolGradeCommand(saved.getId(), "Primeiro ano do médio", null, 2));
         repository.flush();
         entityManager.clear();
 
@@ -251,7 +266,7 @@ class SchoolGradeServiceIntegrationTest extends PostgresIntegrationTest {
     @Test
     @DisplayName("Deve excluir a série de forma lógica, escondendo-a das consultas")
     void handle_ShouldSoftDelete() {
-        SchoolGrade saved = createService.handle(new CreateSchoolGradeCommand("Primeiro ano", 1));
+        SchoolGrade saved = createService.handle(new CreateSchoolGradeCommand("Primeiro ano", null, 1));
         givenGrade("Segundo ano", 2);
         repository.flush();
 
@@ -271,7 +286,7 @@ class SchoolGradeServiceIntegrationTest extends PostgresIntegrationTest {
     @Test
     @DisplayName("A série excluída não deve aparecer na busca de nomes")
     void handle_ShouldHideSoftDeletedFromNames() {
-        SchoolGrade saved = createService.handle(new CreateSchoolGradeCommand("Primeiro ano", 1));
+        SchoolGrade saved = createService.handle(new CreateSchoolGradeCommand("Primeiro ano", null, 1));
         givenGrade("Segundo ano", 2);
         repository.flush();
 
@@ -287,14 +302,14 @@ class SchoolGradeServiceIntegrationTest extends PostgresIntegrationTest {
     @Test
     @DisplayName("Deve permitir recadastrar o mesmo nome depois da exclusão lógica")
     void handle_ShouldAllowReusingNameAfterSoftDelete() {
-        SchoolGrade saved = createService.handle(new CreateSchoolGradeCommand("Primeiro ano", 1));
+        SchoolGrade saved = createService.handle(new CreateSchoolGradeCommand("Primeiro ano", null, 1));
         repository.flush();
 
         softDeleteService.handle(new SoftDeleteSchoolGradeCommand(saved.getId()));
         repository.flush();
         entityManager.clear();
 
-        SchoolGrade recreated = createService.handle(new CreateSchoolGradeCommand("Primeiro ano", 1));
+        SchoolGrade recreated = createService.handle(new CreateSchoolGradeCommand("Primeiro ano", null, 1));
         repository.flush();
         entityManager.clear();
 
@@ -341,6 +356,6 @@ class SchoolGradeServiceIntegrationTest extends PostgresIntegrationTest {
         UUID id = UUID.randomUUID();
 
         assertThrows(ResourceNotFoundException.class,
-                () -> updateService.handle(new UpdateSchoolGradeCommand(id, "Primeiro ano", 1)));
+                () -> updateService.handle(new UpdateSchoolGradeCommand(id, "Primeiro ano", null, 1)));
     }
 }

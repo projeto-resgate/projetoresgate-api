@@ -58,7 +58,8 @@ public class SchoolGradeController {
 
     @PostMapping
     @Operation(summary = "Criar Série Escolar",
-            description = "Cadastra uma nova série escolar. O nome deve ser único entre as séries não excluídas.")
+            description = "Cadastra uma nova série escolar. O nome deve ser único entre as séries não excluídas. "
+                    + "A abreviação é opcional e, quando informada, é usada no título das turmas (ex.: \"1ª\").")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Série escolar criada com sucesso",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = SchoolGradeResponse.class))),
@@ -71,7 +72,8 @@ public class SchoolGradeController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar Série Escolar",
-            description = "Atualiza os dados de uma série escolar existente. A atualização é completa: os campos omitidos são apagados.")
+            description = "Atualiza os dados de uma série escolar existente. A atualização é completa: os campos omitidos são apagados. "
+                    + "Alterar o nome ou a abreviação recalcula o título das turmas que usam esta série.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Série escolar atualizada com sucesso",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = SchoolGradeResponse.class))),

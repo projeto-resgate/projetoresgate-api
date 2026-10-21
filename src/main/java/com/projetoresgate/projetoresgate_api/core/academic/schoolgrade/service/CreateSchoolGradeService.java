@@ -24,6 +24,6 @@ public class CreateSchoolGradeService implements CreateSchoolGradeUseCase {
             throw new InternalException("Já existe uma série escolar cadastrada com este nome.");
         }
 
-        return repository.save(SchoolGrade.create(command.name(), command.gradeOrder()));
+        return repository.save(SchoolGrade.create(command.name(), command.abbreviation(), command.gradeOrder()));
     }
 }

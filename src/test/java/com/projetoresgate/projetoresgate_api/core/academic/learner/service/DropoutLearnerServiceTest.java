@@ -1,5 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.academic.learner.service;
 
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.DeactivateClassLearnerLinksUseCase;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.DropoutLearnerResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Learner;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.LearnerStatus;
@@ -40,6 +42,9 @@ class DropoutLearnerServiceTest {
 
     @Mock
     private FindLearnerByIdUseCase findLearnerByIdUseCase;
+
+    @Mock
+    private DeactivateClassLearnerLinksUseCase deactivateClassLearnerLinksUseCase;
 
     @InjectMocks
     private DropoutLearnerService service;
@@ -86,14 +91,36 @@ class DropoutLearnerServiceTest {
         when(repository.save(any(Learner.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(findLearnerByIdUseCase.handle(any(FindLearnerByIdQuery.class))).thenReturn(expected);
 
-        LearnerResponse result = service.handle(
+        DropoutLearnerResponse result = service.handle(
                 new DropoutLearnerCommand(learner.getId(), "Mudou de cidade", null));
 
-        assertSame(expected, result);
+        assertSame(expected, result.learner());
 
         ArgumentCaptor<FindLearnerByIdQuery> queryCaptor = ArgumentCaptor.forClass(FindLearnerByIdQuery.class);
         verify(findLearnerByIdUseCase).handle(queryCaptor.capture());
         assertEquals(learner.getId(), queryCaptor.getValue().id());
+    }
+
+    @Test
+    @DisplayName("Deve inativar os vínculos do educando com turmas e reportar a quantidade")
+    void handle_ShouldDeactivateClassLinks() {
+        Learner learner = givenLearner();
+
+        when(repository.findByIdOrThrow(learner.getId())).thenReturn(learner);
+        when(repository.save(any(Learner.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(findLearnerByIdUseCase.handle(any(FindLearnerByIdQuery.class))).thenReturn(response());
+        when(deactivateClassLearnerLinksUseCase.handle(any())).thenReturn(3);
+
+        DropoutLearnerResponse result = service.handle(
+                new DropoutLearnerCommand(learner.getId(), "Mudou de cidade", null));
+
+        assertSame(true, result.classLinksDeactivated());
+        assertEquals(3, result.deactivatedClassLinks());
+
+        ArgumentCaptor<com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.DeactivateClassLearnerLinksCommand> captor =
+                ArgumentCaptor.forClass(com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.DeactivateClassLearnerLinksCommand.class);
+        verify(deactivateClassLearnerLinksUseCase).handle(captor.capture());
+        assertEquals(learner.getId(), captor.getValue().learnerId());
     }
 
     @Test

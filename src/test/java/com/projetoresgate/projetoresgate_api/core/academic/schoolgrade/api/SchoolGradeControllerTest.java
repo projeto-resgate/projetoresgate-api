@@ -80,9 +80,9 @@ class SchoolGradeControllerTest {
     @WithMockCustomUser
     @DisplayName("POST /school-grade - Deve retornar 201 Created ao criar com sucesso")
     void create_ShouldReturn201() throws Exception {
-        CreateSchoolGradeCommand command = new CreateSchoolGradeCommand("Primeiro ano do ensino médio", 1);
+        CreateSchoolGradeCommand command = new CreateSchoolGradeCommand("Primeiro ano do ensino médio", null, 1);
         when(createUseCase.handle(any(CreateSchoolGradeCommand.class)))
-                .thenReturn(SchoolGrade.create("Primeiro ano do ensino médio", 1));
+                .thenReturn(SchoolGrade.create("Primeiro ano do ensino médio", null, 1));
 
         mockMvc.perform(post("/school-grade")
                         .with(csrf())
@@ -97,7 +97,7 @@ class SchoolGradeControllerTest {
     @WithMockCustomUser
     @DisplayName("POST /school-grade - Deve retornar 400 quando o nome estiver em branco")
     void create_ShouldReturn400WhenNameIsBlank() throws Exception {
-        CreateSchoolGradeCommand command = new CreateSchoolGradeCommand("  ", 1);
+        CreateSchoolGradeCommand command = new CreateSchoolGradeCommand("  ", null, 1);
 
         mockMvc.perform(post("/school-grade")
                         .with(csrf())
@@ -113,7 +113,7 @@ class SchoolGradeControllerTest {
     @WithMockCustomUser
     @DisplayName("POST /school-grade - Deve retornar 400 quando a ordem for zero")
     void create_ShouldReturn400WhenGradeOrderIsNotPositive() throws Exception {
-        CreateSchoolGradeCommand command = new CreateSchoolGradeCommand("Primeiro ano", 0);
+        CreateSchoolGradeCommand command = new CreateSchoolGradeCommand("Primeiro ano", null, 0);
 
         mockMvc.perform(post("/school-grade")
                         .with(csrf())
@@ -129,7 +129,7 @@ class SchoolGradeControllerTest {
     @WithMockCustomUser
     @DisplayName("POST /school-grade - Deve retornar 400 quando a ordem não for informada")
     void create_ShouldReturn400WhenGradeOrderIsMissing() throws Exception {
-        CreateSchoolGradeCommand command = new CreateSchoolGradeCommand("Primeiro ano", null);
+        CreateSchoolGradeCommand command = new CreateSchoolGradeCommand("Primeiro ano", null, null);
 
         mockMvc.perform(post("/school-grade")
                         .with(csrf())
@@ -146,9 +146,9 @@ class SchoolGradeControllerTest {
     @DisplayName("PUT /school-grade/{id} - Deve retornar 200 OK e repassar o id da rota ao caso de uso")
     void update_ShouldReturn200AndForwardId() throws Exception {
         UUID id = UUID.randomUUID();
-        UpdateSchoolGradeCommand command = new UpdateSchoolGradeCommand(null, "Segundo ano", 2);
+        UpdateSchoolGradeCommand command = new UpdateSchoolGradeCommand(null, "Segundo ano", null, 2);
         when(updateUseCase.handle(any(UpdateSchoolGradeCommand.class)))
-                .thenReturn(SchoolGrade.create("Segundo ano", 2));
+                .thenReturn(SchoolGrade.create("Segundo ano", null, 2));
 
         mockMvc.perform(put("/school-grade/{id}", id)
                         .with(csrf())
@@ -170,7 +170,7 @@ class SchoolGradeControllerTest {
         UUID routeId = UUID.randomUUID();
         UUID bodyId = UUID.randomUUID();
         when(updateUseCase.handle(any(UpdateSchoolGradeCommand.class)))
-                .thenReturn(SchoolGrade.create("Segundo ano", 2));
+                .thenReturn(SchoolGrade.create("Segundo ano", null, 2));
 
         mockMvc.perform(put("/school-grade/{id}", routeId)
                         .with(csrf())
@@ -189,7 +189,7 @@ class SchoolGradeControllerTest {
     @WithMockCustomUser
     @DisplayName("GET /school-grade - Deve retornar 200 OK com a página de séries")
     void findAll_ShouldReturn200() throws Exception {
-        SchoolGradeResponse response = SchoolGradeResponse.fromEntity(SchoolGrade.create("Primeiro ano", 1));
+        SchoolGradeResponse response = SchoolGradeResponse.fromEntity(SchoolGrade.create("Primeiro ano", null, 1));
         when(findAllUseCase.handle(any(FindAllSchoolGradesQuery.class)))
                 .thenReturn(new PageImpl<>(List.of(response)));
 
@@ -250,7 +250,7 @@ class SchoolGradeControllerTest {
     void findNames_ShouldReturn200() throws Exception {
         UUID id = UUID.randomUUID();
         when(findNamesUseCase.handle(any(FindSchoolGradeNamesQuery.class)))
-                .thenReturn(List.of(new SchoolGradeNameResponse(id, "Primeiro ano", 1)));
+                .thenReturn(List.of(new SchoolGradeNameResponse(id, "Primeiro ano", null, 1)));
 
         mockMvc.perform(get("/school-grade/names")
                         .param("name", "Primeiro")
@@ -287,7 +287,7 @@ class SchoolGradeControllerTest {
     @DisplayName("GET /school-grade/{id} - Deve retornar 200 OK com os dados da série")
     void findById_ShouldReturn200() throws Exception {
         UUID id = UUID.randomUUID();
-        SchoolGrade schoolGrade = SchoolGrade.create("Primeiro ano", 1);
+        SchoolGrade schoolGrade = SchoolGrade.create("Primeiro ano", null, 1);
         when(findByIdUseCase.handle(any())).thenReturn(schoolGrade);
 
         mockMvc.perform(get("/school-grade/{id}", id))
@@ -318,7 +318,7 @@ class SchoolGradeControllerTest {
     @Test
     @DisplayName("POST /school-grade - Deve retornar 401 Unauthorized sem autenticação")
     void create_ShouldReturn401Unauthorized() throws Exception {
-        CreateSchoolGradeCommand command = new CreateSchoolGradeCommand("Primeiro ano", 1);
+        CreateSchoolGradeCommand command = new CreateSchoolGradeCommand("Primeiro ano", null, 1);
 
         mockMvc.perform(post("/school-grade")
                         .contentType(MediaType.APPLICATION_JSON)

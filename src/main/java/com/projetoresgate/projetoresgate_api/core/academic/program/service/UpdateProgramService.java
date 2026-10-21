@@ -1,5 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.academic.program.service;
 
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.RefreshClassGroupTitlesUseCase;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.RefreshClassGroupTitlesCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.program.api.dto.ProgramResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.EducatorCategoryItem;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.Program;
@@ -24,13 +26,16 @@ public class UpdateProgramService implements UpdateProgramUseCase {
     private final ProgramRepository repository;
     private final EducatorCategoryItemRepository itemRepository;
     private final FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase;
+    private final RefreshClassGroupTitlesUseCase refreshClassGroupTitlesUseCase;
 
     public UpdateProgramService(ProgramRepository repository,
                                 EducatorCategoryItemRepository itemRepository,
-                                FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase) {
+                                FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase,
+                                RefreshClassGroupTitlesUseCase refreshClassGroupTitlesUseCase) {
         this.repository = repository;
         this.itemRepository = itemRepository;
         this.findLegalPersonSummariesUseCase = findLegalPersonSummariesUseCase;
+        this.refreshClassGroupTitlesUseCase = refreshClassGroupTitlesUseCase;
     }
 
     @Override
@@ -42,6 +47,8 @@ public class UpdateProgramService implements UpdateProgramUseCase {
             throw new InternalException("Já existe um programa cadastrado com este nome.");
         }
 
+        String previousName = program.getName();
+
         reconcileEducatorCategoryItems(program, command.educatorCategoryItems());
 
         Program updated = repository.save(
@@ -51,6 +58,10 @@ public class UpdateProgramService implements UpdateProgramUseCase {
                         .status(command.status())
                         .apply()
         );
+
+        if (!updated.getName().equals(previousName)) {
+            refreshClassGroupTitlesUseCase.handle(RefreshClassGroupTitlesCommand.byProgram(updated.getId()));
+        }
 
         return toResponse(updated);
     }

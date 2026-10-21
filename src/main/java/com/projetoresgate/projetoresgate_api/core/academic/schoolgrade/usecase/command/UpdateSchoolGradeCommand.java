@@ -8,9 +8,10 @@ public record UpdateSchoolGradeCommand(
         @JsonIgnore
         UUID id,
         String name,
+        String abbreviation,
         Integer gradeOrder
 ) {
     public UpdateSchoolGradeCommand withId(UUID id) {
-        return new UpdateSchoolGradeCommand(id, this.name, this.gradeOrder);
+        return new UpdateSchoolGradeCommand(id, this.name, this.abbreviation, this.gradeOrder);
     }
 }

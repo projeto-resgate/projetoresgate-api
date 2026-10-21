@@ -32,7 +32,7 @@ class FindSchoolGradeByIdServiceTest {
     @DisplayName("Deve devolver a série solicitada com nome e ordem")
     void handle_ShouldReturnSchoolGrade() {
         UUID id = UUID.randomUUID();
-        SchoolGrade existing = SchoolGrade.create("Primeiro ano do ensino médio", 1);
+        SchoolGrade existing = SchoolGrade.create("Primeiro ano do ensino médio", null, 1);
         when(repository.findByIdOrThrow(id)).thenReturn(existing);
 
         SchoolGrade result = service.handle(new FindSchoolGradeByIdQuery(id));
