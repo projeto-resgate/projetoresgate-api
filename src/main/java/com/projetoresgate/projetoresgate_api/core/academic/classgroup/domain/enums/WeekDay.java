@@ -5,26 +5,20 @@ import java.util.Optional;
 
 public enum WeekDay {
 
-    MONDAY("Segunda-feira", "Seg", DayOfWeek.MONDAY),
-    TUESDAY("Terça-feira", "Ter", DayOfWeek.TUESDAY),
-    WEDNESDAY("Quarta-feira", "Qua", DayOfWeek.WEDNESDAY),
-    THURSDAY("Quinta-feira", "Qui", DayOfWeek.THURSDAY),
-    FRIDAY("Sexta-feira", "Sex", DayOfWeek.FRIDAY),
-    SATURDAY("Sábado", "Sáb", DayOfWeek.SATURDAY),
-    SUNDAY("Domingo", "Dom", DayOfWeek.SUNDAY);
+    MONDAY("Seg", DayOfWeek.MONDAY),
+    TUESDAY("Ter", DayOfWeek.TUESDAY),
+    WEDNESDAY("Qua", DayOfWeek.WEDNESDAY),
+    THURSDAY("Qui", DayOfWeek.THURSDAY),
+    FRIDAY("Sex", DayOfWeek.FRIDAY),
+    SATURDAY("Sáb", DayOfWeek.SATURDAY),
+    SUNDAY("Dom", DayOfWeek.SUNDAY);
 
-    private final String label;
     private final String abbreviation;
     private final DayOfWeek dayOfWeek;
 
-    WeekDay(String label, String abbreviation, DayOfWeek dayOfWeek) {
-        this.label = label;
+    WeekDay(String abbreviation, DayOfWeek dayOfWeek) {
         this.abbreviation = abbreviation;
         this.dayOfWeek = dayOfWeek;
-    }
-
-    public String getLabel() {
-        return label;
     }
 
     public String getAbbreviation() {

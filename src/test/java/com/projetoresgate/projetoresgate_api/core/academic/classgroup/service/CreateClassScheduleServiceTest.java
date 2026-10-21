@@ -60,7 +60,6 @@ class CreateClassScheduleServiceTest {
                 classGroup.getId(), WeekDay.MONDAY, LocalTime.of(8, 0), LocalTime.of(10, 0)));
 
         assertEquals(WeekDay.MONDAY, response.weekDay());
-        assertEquals("Segunda-feira", response.weekDayLabel());
         assertEquals(LocalTime.of(8, 0), response.startTime());
         assertEquals("Programa A - Seg", classGroup.getTitle());
     }
