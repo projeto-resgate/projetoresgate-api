@@ -1,6 +1,6 @@
 # Situação do sistema
 
-Comparação entre **o que a ONG pediu** (reuniões, Mapeamento, Proposta de Melhoria) e **o que o sistema já faz**.
+Comparação entre **o que a ONG pediu** e **o que o sistema já faz**.
 Atualizado em **14/11/2026**. Use este documento para priorizar.
 
 Legenda: ✅ pronto · 🟡 parcial · ⬜ não começou · ❓ depende de decisão
@@ -10,105 +10,74 @@ Legenda: ✅ pronto · 🟡 parcial · ⬜ não começou · ❓ depende de decis
 
 ```mermaid
 pie showData title Funcionalidades pedidas pela ONG
-    "Prontas" : 12
-    "Parciais" : 4
-    "Não começadas" : 27
-    "Dependem de decisão" : 2
+    "Prontas" : 14
+    "Parciais" : 1
+    "Não começadas" : 26
 ```
 
-> Contagem das 45 linhas das tabelas abaixo. **O núcleo de cadastros está pronto** (pessoas, famílias, alunos,
+> Contagem das 41 linhas das tabelas abaixo. **O núcleo de cadastros está pronto** (pessoas, famílias, alunos,
 > formações, voluntários); **o que falta é o que gera valor operacional**: presença, materiais, cálculos de
 > benefício, perfis de acesso e indicadores.
 
 ## Cadastros
 
-| Funcionalidade                                                        | Status | Observação                                                      |
-|-----------------------------------------------------------------------|--------|-----------------------------------------------------------------|
-| Cadastro e listagem de **pessoas físicas**                            | ✅ |                                                                 |
-| Cadastro e listagem de **empresas/escolas**                           | ✅ | Com endereço e representante                                    |
-| Cadastro e listagem de **grupos familiares**                          | ✅ | Com renda, despesas, moradores                                  |
-| Vincular pessoas à família (nova ou existente)                        | ✅ |                                                                 |
-| Cadastro de **aluno** com responsáveis, escola, série, bolsa          | ✅ |                                                                 |
-| Cadastrar responsável **dentro** do cadastro do aluno                 | 🟡 | O sistema aceita; a tela precisa orquestrar os passos           |
-| Cadastro de aluno em **etapas (steps)**                               | 🟡 | É uma decisão de tela (front-end)                               |
-| **Desistência e retorno** do aluno, com motivo e data                 | ✅ | Histórico é gravado mas ainda não aparece nas telas             |
-| **Pais/responsáveis como alunos**                                     | ✅ |                                                                 |
-| Cadastro de **formações (turmas)** com dias, horários e séries        | ✅ | Nome da turma é automático                                      |
-| **Matricular alunos** em formações                                    | ✅ | Vários alunos por turma; um aluno em várias turmas              |
-| **Voluntários** na formação, com função                               | ✅ | Funções vêm do programa                                         |
-| Cadastro de **programas** e **séries**                                | ✅ |                                                                 |
-| **Associar à família pelo CPF** de um membro                          | ⬜ |                                                                 |
-| **Pai e mãe** do aluno (independente de responsável)                  | 🟡 | Só o nome da mãe                                                |
-| **Renda de cada responsável** e sua origem (salário, pensão, autônomo)| ⬜ | Hoje só há a renda da família                                   |
-| **Documentos e termos** do aluno (upload)                             | ⬜ | Termo de compromisso e autorização de imagem                    |
-| **Equipes** dentro da formação                                        | ❓ | A confirmar com a ONG                                           |
-| **Disponibilidade** do aluno e do voluntário                          | ⬜ | Base da alocação nas formações                                  |
-| **Capacitação** de voluntários                                        | ⬜ |                                                                 |
+| Funcionalidade                                                         | Status | Observação                                                                         |
+|------------------------------------------------------------------------|--------|------------------------------------------------------------------------------------|
+| Cadastro e listagem de **pessoas físicas**                             | ✅      |                                                                                    |
+| Cadastro e listagem de **empresas/escolas**                            | ✅      | Com endereço e representante                                                       |
+| Cadastro e listagem de **grupos familiares**                           | ✅      | Com renda, despesas, moradores                                                     |
+| Vincular pessoas à família (nova ou existente)                         | ✅      | Busca da pessoa por CPF, RG, nome ou apelido                                       |
+| Cadastro de **aluno** com responsáveis, escola, série, bolsa           | ✅      |                                                                                    |
+| Cadastrar responsável **dentro** do cadastro do aluno                  | ✅      |                                                                                    |
+| Cadastro de aluno em **etapas (steps)**                                | ✅      |                                                                                    |
+| **Desistência e retorno** do aluno, com motivo e data                  | ✅      |                                                                                    |
+| **Pais/responsáveis como alunos**                                      | ✅      |                                                                                    |
+| Cadastro de **formações (turmas)** com dias, horários e séries         | ✅      | Nome da turma é automático                                                         |
+| **Matricular alunos** em formações                                     | ✅      | Vários alunos por turma; um aluno em várias turmas                                 |
+| **Voluntários** na formação, com função                                | ✅      | Funções vêm do programa                                                            |
+| Cadastro de **programas** e **séries**                                 | ✅      |                                                                                    |
+| **Renda de cada responsável** e sua origem (salário, pensão, autônomo) | ⬜      | Hoje só há a renda da família                                                      |
+| **Documentos e termos** do aluno (upload)                              | ⬜      | Termo de compromisso e autorização de imagem; serão guardados no **drive interno** |
+| **Disponibilidade** do aluno e do voluntário                           | ⬜      | Base da alocação nas formações                                                     |
 
 ## Cálculos e benefícios
 
 Fórmulas **definidas** pela ONG ([detalhes](beneficios-e-calculos.md)); falta implementar.
 
-| Funcionalidade                                  | Status | Observação                                                      |
-|-------------------------------------------------|--------|-----------------------------------------------------------------|
-| **Renda líquida per capita** automática         | ⬜ | `(renda − educação − habitação − saúde) ÷ moradores`; hoje é digitada |
-| **IHE** (Índice de Hipossuficiência Econômica)  | ⬜ | Min–Max com pesos 50/50; precisa definir a base (a confirmar com a ONG) |
-| **Vaquinha** com desconto por faixa de 20%      | ⬜ | 100/80/60/20/0%                                                 |
-| **Flag "boleto da vaquinha gerado"**            | ⬜ | Congela o valor de quem já teve o boleto                        |
-| **Vale-transporte** proporcional ao IHE         | ⬜ | Total informado em parâmetro                                    |
-| **Tela de parâmetros gerais** (totais de vaquinha e transporte) | ⬜ | Acesso da Administração                          |
-| **Geração do boleto** da vaquinha               | ❓ | Gerado pelo sistema ou fora?  |
-| Regra de **renovação** pela participação        | ⬜ | Depende de presença                                             |
-| **Período de cadastro** (set–nov)               | ⬜ |                                                                 |
+| Funcionalidade                                                  | Status | Observação                                                              |
+|-----------------------------------------------------------------|--------|-------------------------------------------------------------------------|
+| **Renda líquida per capita** automática                         | ⬜      | `(renda − educação − habitação − saúde) ÷ moradores`; hoje é digitada   |
+| **IHE** (Índice de Hipossuficiência Econômica)                  | ⬜      | Min–Max com pesos 50/50; precisa definir a base (a confirmar com a ONG) |
+| **Vaquinha** com desconto por faixa de 20%                      | ⬜      | 100/80/60/20/0%                                                         |
+| **Flag "boleto da vaquinha gerado"**                            | ⬜      | Congela o valor de quem já teve o boleto                                |
+| **Vale-transporte** proporcional ao IHE                         | ⬜      | Total informado em parâmetro                                            |
+| **Tela de parâmetros gerais** (totais de vaquinha e transporte) | ⬜      | Acesso da Administração                                                 |
+| **Geração do boleto** da vaquinha                               | ⬜      |                                                                         |
+| Regra de **renovação** pela participação                        | ⬜      | Depende de presença                                                     |
+| **Período de cadastro** (set–nov)                               | ⬜      |                                                                         |
 
 ## Presença e materiais
 
-| Funcionalidade                                  | Status | Observação                                                      |
-|-------------------------------------------------|--------|-----------------------------------------------------------------|
-| **Lista de presença digital** por aula          | ⬜ | Hoje: papel + Excel                                             |
-| **Alertas de faltas** recorrentes               | ⬜ |                                                                 |
-| **Cadastro de materiais** (título, tipo, valor, quantidade) | ⬜ |                                                         |
-| **Estoque**, **lista por série**, **orçamentos**, **editoras** | ⬜ |                                                          |
-| **Entrega** de materiais e vale-transporte por aluno | ⬜ | Com registro de assinatura/retirada                        |
+| Funcionalidade                                                 | Status | Observação                          |
+|----------------------------------------------------------------|--------|-------------------------------------|
+| **Lista de presença digital** por aula                         | ⬜      | Hoje: papel + Excel                 |
+| **Alertas de faltas** recorrentes                              | ⬜      |                                     |
+| **Cadastro de materiais** (título, tipo, valor, quantidade)    | ⬜      |                                     |
+| **Estoque**, **lista por série**, **orçamentos**, **editoras** | ⬜      |                                     |
+| **Entrega** de materiais e vale-transporte por aluno           | ⬜      | Com registro de assinatura/retirada |
 
 ## Acesso, comunicação e relatórios
 
-| Funcionalidade                                           | Status | Observação                                                |
-|----------------------------------------------------------|--------|-----------------------------------------------------------|
-| **Login** seguro, recuperação de senha                   | ✅ | Com confirmação de e-mail para pessoas                    |
-| **Perfis**: Administração, Secretaria, Professores       | 🟡 | Só existe Administração, e sem restrições                 |
-| **Avisos por e-mail** às famílias                        | ⬜ | Hoje só e-mails automáticos (senha, confirmação)          |
-| **Feedback** dos responsáveis ligado ao aluno            | ⬜ | Hoje no Google Forms                                      |
-| **Painel de pendências**                                 | ⬜ |                                                           |
-| **Indicadores** (operacionais, financeiros, impacto)     | ⬜ | [Lista completa](indicadores-e-relatorios.md)             |
-| **Exportação** PDF/Excel                                 | ⬜ |                                                           |
-| **Previsões** (materiais, evasão, voluntários)           | ⬜ | Fase posterior — precisa de histórico                     |
-| Integração com **Google Drive**                          | ⬜ | Para documentos                                           |
-| Integração com **DoeFácil** (doações)                    | ⬜ | Hoje é feita por API em outro sistema                     |
-| **Migração** dos dados do Access e do EVN                | ⬜ | Fonte oficial e exportações a combinar com a ONG          |
-
-## Sugestão de ordem
-
-Pela dependência entre as peças e pelo benefício para a secretaria:
-
-```mermaid
-flowchart LR
-    A["<b>1</b> · Migrar dados<br/>do Access/EVN"] --> B["<b>2</b> · Perfis de acesso<br/>(secretaria, tutor)"]
-    B --> C["<b>3</b> · Presença digital<br/>+ alertas"]
-    C --> D["<b>4</b> · IHE, vaquinha<br/>e vale-transporte"]
-    D --> E["<b>5</b> · Materiais e estoque<br/>+ entregas"]
-    E --> F["<b>6</b> · Indicadores<br/>e exportação"]
-    F --> G["<b>7</b> · Previsões"]
-```
-
-| Passo | Por quê nessa posição                                                                                      |
-|-------|------------------------------------------------------------------------------------------------------------|
-| 1     | Sem os alunos e famílias reais dentro, a ONG não consegue **usar** o sistema no lugar do Access.            |
-| 2     | A secretaria e os voluntários precisam entrar **sem poder mexer em tudo**. Também protege os dados.        |
-| 3     | É a dor mais visível (papel → Excel) e **alimenta** índices e renovação.                                   |
-| 4     | Substitui o cálculo do Access. As fórmulas já estão definidas ([detalhes](beneficios-e-calculos.md)); faltam decisões sobre a base do cálculo, centavos e boleto.                |
-| 5     | Depende do IHE (quem paga a vaquinha e recebe materiais) e das séries dos alunos.                                              |
-| 6     | Só faz sentido com presença, materiais e benefícios já registrados.                                         |
-| 7     | Exige dados de pelo menos um ciclo.                                                                         |
-
-> Esta ordem é uma **sugestão técnica**. A decisão de prioridade é da ONG.
+| Funcionalidade                                       | Status | Observação                                                                                                                                                                                             |
+|------------------------------------------------------|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Login** seguro, recuperação de senha               | ✅      | Com confirmação de e-mail para pessoas                                                                                                                                                                 |
+| **Perfis**: Administração, Secretaria, Professores   | 🟡     | Só existe Administração, e sem restrições                                                                                                                                                              |
+| **Avisos por e-mail** às famílias                    | ⬜      | Hoje só e-mails automáticos (senha, confirmação)                                                                                                                                                       |
+| **Feedback** dos responsáveis ligado ao aluno        | ⬜      | Hoje no Google Forms                                                                                                                                                                                   |
+| **Painel de pendências**                             | ⬜      |                                                                                                                                                                                                        |
+| **Indicadores** (operacionais, financeiros, impacto) | ⬜      | [Lista completa](indicadores-e-relatorios.md)                                                                                                                                                          |
+| **Exportação** PDF/Excel                             | ⬜      |                                                                                                                                                                                                        |
+| **Previsões** (materiais, evasão, voluntários)       | ⬜      | Fase posterior — precisa de histórico                                                                                                                                                                  |
+| **Drive interno** do Projeto Resgate                 | ⬜      | Armazenar documentos (do aluno, termos, documentação do projeto) e outros arquivos; [detalhes](cadastros.md#drive-interno). Substitui a integração com o Google Drive prevista na Proposta de Melhoria |
+| Integração com **DoeFácil** (doações)                | ⬜      | Hoje é feita por API em outro sistema                                                                                                                                                                  |
+| **Migração** dos dados do Access e do EVN            | ⬜      | Fonte oficial e exportações a combinar com a ONG                                                                                                                                                       |

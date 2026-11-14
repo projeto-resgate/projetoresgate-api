@@ -52,7 +52,7 @@ Fluxos: [`autenticacao.md`](autenticacao.md).
 | DELETE | `/natural-person/{id}`                  | Exclui (soft)                                |
 | GET    | `/natural-person`                       | Lista com filtros                            |
 | GET    | `/natural-person/{id}`                  | Detalhe                                      |
-| GET    | `/natural-person/autocomplete`          | Busca rápida                                 |
+| GET    | `/natural-person/autocomplete`          | Busca rápida por nome, apelido, CPF ou RG (parcial) |
 | POST   | `/natural-person/request-email-confirmation` 🔓 | Reenvia confirmação                  |
 | POST   | `/natural-person/confirm-email/{token}` 🔓      | Confirma e-mail                      |
 

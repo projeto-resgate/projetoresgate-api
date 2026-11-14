@@ -27,9 +27,9 @@ Status: ✅ funciona hoje · 🟡 parcial · ⬜ pedido, ainda não feito · ❓
 | RN-FAM-02 | Cada grupo familiar tem **nome único** e um **número amigável** (FAM-1, FAM-2…).                              | ✅ |
 | RN-FAM-03 | Renda, rendas per capita e despesas **não podem ser negativas**; moradores **≥ 1**.                           | ✅ |
 | RN-FAM-04 | Uma pessoa pode ser vinculada a uma família **existente** ou criada já dentro dela.                           | ✅ |
-| RN-FAM-05 | Para vincular alguém a uma família existente, basta informar o **CPF de qualquer membro**.                    | ⬜ |
 | RN-FAM-06 | A **renda líquida per capita** é calculada automaticamente: `(renda − educação − habitação − saúde) ÷ moradores`, despesa vazia = 0. | ⬜ (hoje é digitada) |
 | RN-FAM-07 | O grupo familiar **não tem endereço**; o endereço do aluno vem da pessoa física.                              | ❓ (hoje é o contrário) |
+| RN-FAM-09 | Para colocar uma pessoa já cadastrada numa família, **pesquisa-se por CPF, RG, nome ou apelido**, seleciona-se a pessoa e adiciona-se à família. | ✅ |
 | RN-FAM-08 | Na ficha da pessoa e na do aluno, aparecem os dados do **grupo familiar**.                                    | 🟡 |
 
 ## Alunos e responsáveis
@@ -45,7 +45,7 @@ Status: ✅ funciona hoje · 🟡 parcial · ⬜ pedido, ainda não feito · ❓
 | RN-ALU-07 | O aluno informa **escola, série, matrícula escolar, ano letivo** e **condição de bolsa**.                     | ✅ |
 | RN-ALU-08 | Deve ser possível **diferenciar aluno bolsista de APE**.                                                      | ❓ |
 | RN-ALU-09 | O ano letivo precisa ser um ano válido (entre 1900 e 2100).                                                   | ✅ |
-| RN-ALU-10 | O aluno guarda **documentos e termos assinados** (compromisso e autorização de imagem).                       | ⬜ |
+| RN-ALU-10 | O aluno guarda **documentos e termos assinados** (compromisso e autorização de imagem) no **drive interno**.   | ⬜ |
 | RN-ALU-11 | Registrar **escolaridade e renda (e sua origem)** de cada responsável.                                        | 🟡 (escolaridade sim; renda por responsável não) |
 
 ## Desligamento e retorno

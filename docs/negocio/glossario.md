@@ -39,6 +39,7 @@ dois estão indicados.
 | **Desistência / Desligamento**| Aluno que sai do projeto, **com motivo**                                                             | Desistência |
 | **Reativação / Retorno**      | Aluno que volta depois de desistir                                                                   | Reativação |
 | **Renovação**                 | Direito de receber materiais de novo no ano seguinte; exige participação nas formações               | ⬜ |
+| **Drive interno**             | Espaço do próprio sistema para guardar documentos do aluno, termos e a documentação do projeto          | ⬜ |
 | **Termo de compromisso**      | Documento assinado pelo aluno/família ao entrar                                                      | ⬜ |
 | **Autorização de imagem**     | Termo para uso de imagem do aluno                                                                    | ⬜ |
 | **EVN (Escola Via Net)**      | Sistema externo usado hoje para registrar alunos e turmas                                            | Sistema a migrar |

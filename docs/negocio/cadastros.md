@@ -1,8 +1,6 @@
 # Cadastros
 
-O que a ONG cadastra, quais dados guarda e como os cadastros se relacionam. Baseado no resumo da reunião de
-29/10, no resumo de reunião das telas de pessoa e família, nas telas do Access atual e nas anotações da equipe
-pedagógica.
+O que a ONG cadastra, quais dados guarda e como os cadastros se relacionam.
 
 ## Como os cadastros se relacionam
 
@@ -32,7 +30,7 @@ que também faz uma formação como aluno).
 ## Pessoa física
 
 Tela única de **cadastro e listagem** de pessoas físicas: responsáveis, alunos, fornecedores etc.
-(decisão da reunião).
+
 
 | Dado                              | Observação                                                       |
 |-----------------------------------|------------------------------------------------------------------|
@@ -61,10 +59,11 @@ Tela única de **cadastro e listagem** de pessoas físicas: responsáveis, aluno
 | **Despesas** com educação, saúde e moradia/habitação |                                                       |
 | Endereço                                | **Ver aviso abaixo**                                               |
 
-**Como associar uma pessoa a uma família que já existe:** informa-se o **CPF de qualquer membro** já cadastrado;
-o sistema localiza o grupo familiar e preenche os dados. *(decisão da reunião)*
+**Como colocar uma pessoa numa família que já existe:** pesquisa-se a pessoa por **CPF, RG, nome ou apelido**,
+seleciona-se o resultado e adiciona-se à família. Se a pessoa ainda não estiver cadastrada, ela pode ser criada
+na hora, já dentro da família.
 
-> ❓ **Endereço — divergência a resolver.** A reunião decidiu que o grupo familiar **não terá endereço** e que o
+> ❓ **Endereço — divergência a resolver.** A definição é que o grupo familiar **não terá endereço** e que o
 > endereço do aluno será **puxado do cadastro da pessoa física**. O sistema hoje faz o contrário: o endereço fica
 > na família e a pessoa física não tem endereço.
 
@@ -105,7 +104,24 @@ O Access atual comporta até **4 responsáveis** por aluno. Um aluno **não pode
   (incluindo **autorização de uso de imagem**).
 - A ideia da equipe: ao cadastrar o grupo, **criar uma pasta do grupo**, digitalizar os documentos e guardá-los
   numa **categoria "documentos"**; o **termo de compromisso** e a **autorização de imagem** ficam à parte.
-- A proposta prevê integração com o **Google Drive** para o envio desses documentos.
+- Os arquivos ficam no [**drive interno**](#drive-interno) do Projeto Resgate (não no Google Drive).
+
+### Drive interno
+
+Funcionalidade combinada com a ONG: um **drive interno do Projeto Resgate**, dentro do próprio sistema, para
+**armazenar documentações e outros arquivos** num lugar só, em vez de espalhados em pastas e e-mails.
+
+| O que se sabe                                                                                              |
+|------------------------------------------------------------------------------------------------------------|
+| Guarda **documentos e termos** do aluno (documentos pessoais, **termo de compromisso**, **autorização de imagem**) |
+| Guarda a **documentação do projeto**, "dentre outras coisas" (escopo completo ainda a detalhar)            |
+| A equipe pedagógica descreveu a organização desejada: uma **pasta por grupo (família)**, com os documentos digitalizados numa **categoria "documentos"** e o **termo de compromisso** e a **autorização de imagem** à parte |
+| Substitui a integração com o Google Drive que constava na Proposta de Melhoria                              |
+
+**A detalhar com a ONG antes de construir:** quais outros tipos de conteúdo entram; como as pastas se organizam
+(por família, por aluno, por formação, do projeto); **quem pode ver e enviar** cada tipo de arquivo (depende dos
+[perfis de acesso](o-projeto.md#níveis-de-acesso-propostos-para-o-sistema)); formatos e tamanho máximo; por quanto
+tempo guardar (são dados de crianças: LGPD).
 
 ### Histórico do aluno
 
@@ -122,7 +138,7 @@ flowchart TD
     D --> E["<b>5.</b> Alocar o aluno na formação<br/>e em uma equipe"]
 ```
 
-- Sugestão da reunião: fazer o cadastro de aluno **em etapas (steps)**, para não ser um formulário gigante.
+- Sugestão: fazer o cadastro de aluno **em etapas (steps)**, para não ser um formulário gigante.
 - **Pais e responsáveis também podem virar alunos**, pois há formações direcionadas a eles.
 - Uma formação pode ter **várias equipes**; o aluno entra em uma delas. ❓ (a confirmar com a ONG)
 

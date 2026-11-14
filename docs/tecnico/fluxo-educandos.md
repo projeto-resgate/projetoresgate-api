@@ -19,9 +19,21 @@ flowchart LR
 |-------|--------------------------------------------------------------------|----------------------------------------------------------------------------|
 | 1     | `POST /family-group`                                               | Gera o ID amigável `FAM-<n>`. Nome da família é único.                     |
 | 2a    | `POST /family-group/{id}/natural-person`                           | **Cria** uma pessoa física nova e já a vincula à família (dispara e-mail de confirmação). |
-| 2b    | `POST /family-group/{id}/natural-person/{naturalPersonId}`         | Vincula uma pessoa **já existente**. Se já estiver vinculada → 409.        |
+| 2b    | `POST /family-group/{id}/natural-person/{naturalPersonId}`         | Vincula uma pessoa **já existente**. Se já estiver vinculada → 409. Para achar a pessoa, o front usa `GET /natural-person/autocomplete?searchTerm=` (ver abaixo).        |
 | 3     | `POST /learner`                                                    | Exige `familyGroupId`, `naturalPersonId` e lista de responsáveis.          |
 | 4     | `POST /class-group/{classGroupId}/learner`                         | Ver [`fluxo-turmas.md`](fluxo-turmas.md).                                              |
+
+**Buscar a pessoa a vincular:** `GET /natural-person/autocomplete?searchTerm=<texto>&limit=<n>` (padrão 10
+resultados, ordenados por nome). O termo é comparado, com busca **parcial** (contém), contra:
+
+| Campo     | Como compara                                                        |
+|-----------|---------------------------------------------------------------------|
+| Nome      | Sem diferenciar maiúsculas/minúsculas                               |
+| Apelido   | Sem diferenciar maiúsculas/minúsculas                               |
+| CPF       | Só os **dígitos** do termo (pontuação é ignorada)                   |
+| RG        | Só **letras e números** do termo, sem diferenciar maiúsculas        |
+
+Os critérios são combinados com **OU**: basta um bater. Sem termo, devolve as primeiras pessoas por nome.
 
 Para montar a lista de responsáveis na tela, `GET /learner/eligible-responsibles?familyGroupId=...&excludeNaturalPersonId=...`
 devolve as pessoas da família que **podem** ser responsáveis (a própria criança é excluída).
