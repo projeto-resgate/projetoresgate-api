@@ -12,11 +12,11 @@ Legenda: ✅ pronto · 🟡 parcial · ⬜ não começou · ❓ depende de decis
 pie showData title Funcionalidades pedidas pela ONG
     "Prontas" : 12
     "Parciais" : 4
-    "Não começadas" : 24
+    "Não começadas" : 27
     "Dependem de decisão" : 2
 ```
 
-> Contagem das 42 linhas das tabelas abaixo. **O núcleo de cadastros está pronto** (pessoas, famílias, alunos,
+> Contagem das 45 linhas das tabelas abaixo. **O núcleo de cadastros está pronto** (pessoas, famílias, alunos,
 > formações, voluntários); **o que falta é o que gera valor operacional**: presença, materiais, cálculos de
 > benefício, perfis de acesso e indicadores.
 
@@ -41,18 +41,23 @@ pie showData title Funcionalidades pedidas pela ONG
 | **Pai e mãe** do aluno (independente de responsável)                  | 🟡 | Só o nome da mãe                                                |
 | **Renda de cada responsável** e sua origem (salário, pensão, autônomo)| ⬜ | Hoje só há a renda da família                                   |
 | **Documentos e termos** do aluno (upload)                             | ⬜ | Termo de compromisso e autorização de imagem                    |
-| **Equipes** dentro da formação                                        | ❓ | Ver [dúvidas](perguntas-em-aberto.md)                           |
+| **Equipes** dentro da formação                                        | ❓ | A confirmar com a ONG                                           |
 | **Disponibilidade** do aluno e do voluntário                          | ⬜ | Base da alocação nas formações                                  |
 | **Capacitação** de voluntários                                        | ⬜ |                                                                 |
 
 ## Cálculos e benefícios
 
+Fórmulas **definidas** pela ONG ([detalhes](beneficios-e-calculos.md)); falta implementar.
+
 | Funcionalidade                                  | Status | Observação                                                      |
 |-------------------------------------------------|--------|-----------------------------------------------------------------|
-| **Renda per capita** automática                 | ⬜ | Hoje é digitada                                                 |
-| **Índice de carência**                          | ❓ | Falta a fórmula ([detalhes](beneficios-e-calculos.md))          |
-| **Vale-transporte** (quem recebe e quanto)      | ⬜ | Depende do índice                                               |
-| **Vaquinha** (valor e desconto)                 | ⬜ |                                                                 |
+| **Renda líquida per capita** automática         | ⬜ | `(renda − educação − habitação − saúde) ÷ moradores`; hoje é digitada |
+| **IHE** (Índice de Hipossuficiência Econômica)  | ⬜ | Min–Max com pesos 50/50; precisa definir a base (a confirmar com a ONG) |
+| **Vaquinha** com desconto por faixa de 20%      | ⬜ | 100/80/60/20/0%                                                 |
+| **Flag "boleto da vaquinha gerado"**            | ⬜ | Congela o valor de quem já teve o boleto                        |
+| **Vale-transporte** proporcional ao IHE         | ⬜ | Total informado em parâmetro                                    |
+| **Tela de parâmetros gerais** (totais de vaquinha e transporte) | ⬜ | Acesso da Administração                          |
+| **Geração do boleto** da vaquinha               | ❓ | Gerado pelo sistema ou fora?  |
 | Regra de **renovação** pela participação        | ⬜ | Depende de presença                                             |
 | **Período de cadastro** (set–nov)               | ⬜ |                                                                 |
 
@@ -80,7 +85,7 @@ pie showData title Funcionalidades pedidas pela ONG
 | **Previsões** (materiais, evasão, voluntários)           | ⬜ | Fase posterior — precisa de histórico                     |
 | Integração com **Google Drive**                          | ⬜ | Para documentos                                           |
 | Integração com **DoeFácil** (doações)                    | ⬜ | Hoje é feita por API em outro sistema                     |
-| **Migração** dos dados do Access e do EVN                | ⬜ | Ver [perguntas em aberto](perguntas-em-aberto.md)         |
+| **Migração** dos dados do Access e do EVN                | ⬜ | Fonte oficial e exportações a combinar com a ONG          |
 
 ## Sugestão de ordem
 
@@ -90,7 +95,7 @@ Pela dependência entre as peças e pelo benefício para a secretaria:
 flowchart LR
     A["<b>1</b> · Migrar dados<br/>do Access/EVN"] --> B["<b>2</b> · Perfis de acesso<br/>(secretaria, tutor)"]
     B --> C["<b>3</b> · Presença digital<br/>+ alertas"]
-    C --> D["<b>4</b> · Índice de carência,<br/>vale-transporte, vaquinha"]
+    C --> D["<b>4</b> · IHE, vaquinha<br/>e vale-transporte"]
     D --> E["<b>5</b> · Materiais e estoque<br/>+ entregas"]
     E --> F["<b>6</b> · Indicadores<br/>e exportação"]
     F --> G["<b>7</b> · Previsões"]
@@ -101,8 +106,8 @@ flowchart LR
 | 1     | Sem os alunos e famílias reais dentro, a ONG não consegue **usar** o sistema no lugar do Access.            |
 | 2     | A secretaria e os voluntários precisam entrar **sem poder mexer em tudo**. Também protege os dados.        |
 | 3     | É a dor mais visível (papel → Excel) e **alimenta** índices e renovação.                                   |
-| 4     | Substitui o cálculo do Access. Precisa das fórmulas ([pendente](beneficios-e-calculos.md)).                |
-| 5     | Depende do índice (quem recebe o quê) e das séries dos alunos.                                              |
+| 4     | Substitui o cálculo do Access. As fórmulas já estão definidas ([detalhes](beneficios-e-calculos.md)); faltam decisões sobre a base do cálculo, centavos e boleto.                |
+| 5     | Depende do IHE (quem paga a vaquinha e recebe materiais) e das séries dos alunos.                                              |
 | 6     | Só faz sentido com presença, materiais e benefícios já registrados.                                         |
 | 7     | Exige dados de pelo menos um ciclo.                                                                         |
 

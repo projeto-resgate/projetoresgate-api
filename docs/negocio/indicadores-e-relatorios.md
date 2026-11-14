@@ -37,7 +37,7 @@ O que a ONG quer **extrair** do sistema. Vem da Proposta de Melhoria e das anota
 
 | Indicador                                                              |
 |------------------------------------------------------------------------|
-| **Evolução do índice de carência** das famílias ao longo dos anos      |
+| **Evolução do IHE** (índice de hipossuficiência) das famílias ao longo dos anos      |
 | **Engajamento** dos alunos (presença, participação, feedbacks)         |
 | **Retenção** de alunos entre ciclos (ano a ano)                        |
 | **Satisfação** dos pais/responsáveis (via formulários integrados)      |
@@ -76,12 +76,12 @@ Com algoritmos simples (regressão linear, séries temporais) sobre o histórico
 flowchart LR
     P["Registrar presença"] --> I1["Presença média,<br/>comparecimento,<br/>alerta de faltas"]
     M["Controle de materiais"] --> I2["Materiais entregues,<br/>orçamento × entregue,<br/>demanda do próximo ano"]
-    C["Índice de carência<br/>e vale-transporte"] --> I3["Custo por aluno,<br/>investimento em VT,<br/>evolução do índice"]
+    C["IHE, vaquinha<br/>e vale-transporte"] --> I3["Custo por aluno,<br/>investimento em VT,<br/>evolução do índice"]
     D["Desistências (já existe)"] --> I4["Retenção,<br/>risco de evasão"]
     I1 --> PR["Previsões"]
     I2 --> PR
     I4 --> PR
 ```
 
-A tabela mostra por que **presença**, **materiais** e **índice de carência** vêm antes dos painéis: sem esses
+A tabela mostra por que **presença**, **materiais** e **IHE/benefícios** vêm antes dos painéis: sem esses
 dados, os indicadores não têm de onde sair. Só o indicador de **retenção/desistência** já tem dados hoje.

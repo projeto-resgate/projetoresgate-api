@@ -66,7 +66,7 @@ parceiras**.
 - Em cada aula, o **tutor** passa uma **lista de presença** para os alunos assinarem.
 - A lista é entregue à secretaria, que **digita as presenças numa planilha** e **arquiva o papel**.
 - A lista traz: atividade, dia/horário, voluntários, mês, nome do aluno, **colégio** e **série**, e um campo
-  de **comentário/justificativa** por data (ver o formato nas fontes).
+  de **comentário/justificativa** por data.
 
 ### 7. Feedback
 

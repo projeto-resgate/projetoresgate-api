@@ -57,16 +57,16 @@ Tela única de **cadastro e listagem** de pessoas físicas: responsáveis, aluno
 | **Quem mora aqui**                      | Lista de membros — pessoas físicas já cadastradas                  |
 | Quantidade de moradores                 |                                                                    |
 | **Renda familiar**                      |                                                                    |
-| **Renda líquida per capita**            | Renda ÷ moradores (ex.: R$ 3.000 com 2 moradores → R$ 1.500)       |
+| **Renda líquida per capita**            | (Renda − despesas de educação, habitação e saúde) ÷ moradores. Ex.: R$ 3.000, sem despesas, 2 moradores → R$ 1.500 ([fórmula](beneficios-e-calculos.md#1-renda-líquida-per-capita-rlpc)) |
 | **Despesas** com educação, saúde e moradia/habitação |                                                       |
-| Endereço                                | **Ver dúvida abaixo**                                              |
+| Endereço                                | **Ver aviso abaixo**                                               |
 
 **Como associar uma pessoa a uma família que já existe:** informa-se o **CPF de qualquer membro** já cadastrado;
 o sistema localiza o grupo familiar e preenche os dados. *(decisão da reunião)*
 
 > ❓ **Endereço — divergência a resolver.** A reunião decidiu que o grupo familiar **não terá endereço** e que o
 > endereço do aluno será **puxado do cadastro da pessoa física**. O sistema hoje faz o contrário: o endereço fica
-> na família e a pessoa física não tem endereço. Ver [perguntas em aberto](perguntas-em-aberto.md).
+> na família e a pessoa física não tem endereço.
 
 Tela de listagem: haverá uma **listagem de grupos familiares**.
 
@@ -80,7 +80,7 @@ Pré-requisito: o aluno **precisa estar cadastrado como pessoa física** e **per
 | **Escola** (colégio) e **série**           | Escola é uma empresa/instituição cadastrada                         |
 | **Matrícula na escola**                    |                                                                     |
 | **Ano letivo**                             |                                                                     |
-| **Condição de bolsa**                      | Diferenciar **bolsista de APE** ❓ (ver dúvidas)                    |
+| **Condição de bolsa**                      | Diferenciar **bolsista de APE** ❓ (a confirmar com a ONG)                    |
 | Interesse em artes                         | Marcação simples                                                    |
 | **Nome da mãe e do pai**                   | Pedidos **independente** de serem responsáveis ou não               |
 | **Responsáveis**                           | Ver abaixo                                                          |
@@ -124,7 +124,7 @@ flowchart TD
 
 - Sugestão da reunião: fazer o cadastro de aluno **em etapas (steps)**, para não ser um formulário gigante.
 - **Pais e responsáveis também podem virar alunos**, pois há formações direcionadas a eles.
-- Uma formação pode ter **várias equipes**; o aluno entra em uma delas. ❓ (ver dúvidas)
+- Uma formação pode ter **várias equipes**; o aluno entra em uma delas. ❓ (a confirmar com a ONG)
 
 ## Formação (turma)
 

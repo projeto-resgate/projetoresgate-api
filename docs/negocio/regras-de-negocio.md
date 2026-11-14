@@ -28,7 +28,7 @@ Status: ✅ funciona hoje · 🟡 parcial · ⬜ pedido, ainda não feito · ❓
 | RN-FAM-03 | Renda, rendas per capita e despesas **não podem ser negativas**; moradores **≥ 1**.                           | ✅ |
 | RN-FAM-04 | Uma pessoa pode ser vinculada a uma família **existente** ou criada já dentro dela.                           | ✅ |
 | RN-FAM-05 | Para vincular alguém a uma família existente, basta informar o **CPF de qualquer membro**.                    | ⬜ |
-| RN-FAM-06 | A **renda líquida per capita** é calculada automaticamente (renda ÷ moradores).                               | ⬜ (hoje é digitada) |
+| RN-FAM-06 | A **renda líquida per capita** é calculada automaticamente: `(renda − educação − habitação − saúde) ÷ moradores`, despesa vazia = 0. | ⬜ (hoje é digitada) |
 | RN-FAM-07 | O grupo familiar **não tem endereço**; o endereço do aluno vem da pessoa física.                              | ❓ (hoje é o contrário) |
 | RN-FAM-08 | Na ficha da pessoa e na do aluno, aparecem os dados do **grupo familiar**.                                    | 🟡 |
 
@@ -90,10 +90,26 @@ Status: ✅ funciona hoje · 🟡 parcial · ⬜ pedido, ainda não feito · ❓
 | RN-MAT-01 | A **lista de materiais** de cada aluno depende da **série** dele.                                            | ⬜ |
 | RN-MAT-02 | Antes de comprar, confere-se o **estoque**; o que falta é **orçado** e pedido às editoras parceiras.         | ⬜ |
 | RN-MAT-03 | **Livros** são retirados pelo aluno na unidade; **apostilas** são entregues na **escola**.                   | ⬜ |
-| RN-MAT-04 | Aluno que **contribui com a vaquinha** recebe todos os materiais; quem **não contribui** recebe só os que o projeto **já tem**. | ⬜ |
-| RN-MAT-05 | **Vale-transporte** só para **baixa renda**, definido pelo índice de carência; a retirada exige **assinatura**.| ⬜ |
-| RN-MAT-06 | O nível de ajuda de cada aluno vem do **índice de carência** (renda, moradores, gastos).                      | ⬜ |
+| RN-MAT-04 | Aluno que **contribui com a vaquinha** recebe todos os materiais; quem **não contribui** recebe só os que o projeto **já tem**. | ⬜ (falta definir como o sistema sabe do pagamento) |
+| RN-MAT-05 | A retirada do **vale-transporte** exige **assinatura**, com **lista por turma**.                              | ⬜ |
 | RN-MAT-07 | Aluno que **não participa das formações perde o direito à renovação** dos materiais no ano seguinte, **mesmo recadastrando**. | ⬜ |
+
+## Benefícios: IHE, vaquinha e vale-transporte
+
+Detalhes e exemplos em [`beneficios-e-calculos.md`](beneficios-e-calculos.md).
+
+| Código   | Regra                                                                                                          | Status |
+|----------|----------------------------------------------------------------------------------------------------------------|--------|
+| RN-BEN-01 | O **IHE** de cada família é `1 − (0,5 × RLT_normalizada + 0,5 × RLPC_normalizada)`, com normalização **Min–Max** sobre a base. | ⬜ |
+| RN-BEN-02 | IHE vai de **0** (menos vulnerável) a **1** (mais vulnerável).                                                 | ⬜ |
+| RN-BEN-03 | O **valor total da vaquinha** é um **parâmetro geral** informado pela Administração.                           | ⬜ |
+| RN-BEN-04 | O **desconto da vaquinha** depende da faixa de 20% do ranking de carência: **100%, 80%, 60%, 20% e 0%** (do mais ao menos carente). | ⬜ |
+| RN-BEN-05 | Valor da vaquinha da pessoa = valor total × (1 − desconto da faixa).                                           | ⬜ |
+| RN-BEN-06 | Mudar o valor da vaquinha vale **só para novas matrículas e para quem ainda não teve o boleto gerado**.       | ⬜ |
+| RN-BEN-07 | Cada pessoa tem a marcação **"boleto da vaquinha gerado"** (sim/não).                                          | ⬜ |
+| RN-BEN-08 | O **valor total do transporte** é um **parâmetro geral**.                                                      | ⬜ |
+| RN-BEN-09 | O vale-transporte de cada pessoa = **total × (IHE da pessoa ÷ soma dos IHE)**; a soma é exatamente o total.   | ⬜ |
+| RN-BEN-10 | Quem tem **IHE 0 recebe 0**; se todos tiverem o mesmo IHE, **todos recebem igual**.                            | ⬜ |
 
 ## Acesso
 

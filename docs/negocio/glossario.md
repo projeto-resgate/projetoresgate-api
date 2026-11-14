@@ -21,10 +21,15 @@ dois estão indicados.
 | **Série / Fase escolar**      | Série do aluno (ex.: 7º ano); cada formação tem uma fase sugerida                                    | Série escolar |
 | **Ano letivo**                | Ano de referência do cadastro/recadastro                                                             | Ano letivo |
 | **Recadastro**                | Atualização anual dos dados do aluno e da família                                                    | — |
-| **Índice de carência**        | Cálculo da vulnerabilidade da família (renda, moradores, gastos) — a ONG usa **outro nome**          | ⬜ ainda não existe |
-| **Renda líquida per capita**  | Renda da família dividida pelos moradores                                                            | Renda per capita |
-| **Vale-transporte (VT)**      | Auxílio para famílias de baixa renda, com assinatura na retirada                                     | ⬜ |
-| **Vaquinha**                  | Contribuição **opcional** da família para ajudar a comprar os materiais                               | ⬜ |
+| **IHE** (Índice de Hipossuficiência Econômica) | Nota de **0 a 1** da vulnerabilidade econômica da família, comparada às demais (1 = mais vulnerável). Antes chamado de "índice de carência" | ⬜ ainda não existe |
+| **Renda líquida per capita (RLPC)** | (Renda − despesas com educação, habitação e saúde) ÷ moradores                                  | Renda per capita |
+| **RLT**                       | Renda familiar total                                                                                 | Renda familiar |
+| **Min–Max (normalização)**    | Transforma um valor em nota de 0 a 1 comparando com o menor e o maior da base                        | — |
+| **Faixa de 20%**              | Cada quinto do ranking de carência; define o desconto da vaquinha (100%, 80%, 60%, 20%, 0%)          | ⬜ |
+| **Parâmetros gerais**         | Valores definidos pela Administração: total da vaquinha e total para transporte                      | ⬜ |
+| **Vale-transporte (VT)**      | Auxílio de transporte, **distribuído em proporção ao IHE**, com assinatura na retirada               | ⬜ |
+| **Vaquinha**                  | Contribuição da família para ajudar a comprar os materiais, **com desconto por faixa de carência**   | ⬜ |
+| **Boleto da vaquinha**        | Cobrança da vaquinha; o sistema marca se **já foi gerado** (isso congela o valor da pessoa)          | ⬜ |
 | **Livros**                    | Material retirado pelo aluno **na unidade**                                                          | ⬜ |
 | **Apostilas**                 | Material entregue **na escola** do aluno                                                             | ⬜ |
 | **Editoras parceiras**        | Fornecem os materiais que faltam no estoque                                                          | Empresa/fornecedor |

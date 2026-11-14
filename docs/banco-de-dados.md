@@ -116,8 +116,11 @@ ver [`testes.md`](testes.md).
 docker compose up -d
 ```
 
-O `docker-compose.yml` sobe três serviços em cadeia:
+O `docker-compose.yml` sobe quatro serviços (três em cadeia, mais o Mailpit):
 
+0. `mailpit` — SMTP de desenvolvimento. Captura **todos** os e-mails (reset de senha, confirmação) sem enviar nada
+   de verdade. SMTP em `localhost:1025`, **caixa de entrada em http://localhost:8025**. O perfil `dev` já aponta
+   para ele; não precisa de credenciais.
 1. `db` — PostgreSQL 15 em `localhost:5432`, banco `projetoresgatedb`, usuário `admin/admin`.
 2. `migrations` — container do Flyway que aplica as migrations e **sai com sucesso**.
 3. `seeder` — roda `docker/database/init.sql` só depois que as migrations concluem.
@@ -153,7 +156,9 @@ bloco `DO`, qualquer erro faz rollback de tudo — ou o seed inteiro entra, ou n
 
 ## Variáveis de ambiente
 
-A aplicação não roda sem elas. Vêm do seu shell ou do run configuration:
+Valem para o perfil de **produção** (padrão). Com `--spring.profiles.active=dev` a aplicação usa o
+`application-dev.properties` e **não precisa de nenhuma** (banco local e Mailpit). Vêm do seu shell ou do run
+configuration:
 
 ```properties
 DB_URL=jdbc:postgresql://localhost:5432/projetoresgatedb

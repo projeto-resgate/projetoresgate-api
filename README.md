@@ -34,6 +34,9 @@ Comece pelo índice: **[`docs/README.md`](docs/README.md)**.
 | [`docs/convencoes.md`](docs/convencoes.md)         | Padrões práticos com código real para copiar          |
 | [`docs/testes.md`](docs/testes.md)                 | Como os testes são organizados e executados           |
 | [`docs/banco-de-dados.md`](docs/banco-de-dados.md) | Migrations, nomenclatura SQL e ambiente local         |
+| [`docs/negocio/`](docs/negocio/README.md)          | **Negócio**: processo da ONG, cadastros, regras, o que falta |
+| [`docs/tecnico/`](docs/tecnico/mapa-de-modulos.md) | Como o sistema funciona: ER, fluxos, endpoints        |
+| [`docs/operacao/`](docs/operacao/pipeline-ci-cd.md)| Pipeline, deploy na VM, runbook e riscos              |
 | [`docs/adr/`](docs/adr/README.md)                  | Decisões arquiteturais e o porquê de cada uma         |
 | [`docs/rfc/`](docs/rfc/README.md)                  | Propostas em discussão                                |
 
@@ -169,12 +172,11 @@ Para garantir que todos na equipe rodem o projeto com as mesmas configurações,
 3. **Name:** `Start`
 4. **Main class:** `ProjetoResgateApiApplication`
 5. **Program arguments:** `--spring.profiles.active=dev`
-6. **Environment variables:**
-    * `SPRING_MAIL_USERNAME=seu_email`
-    * `SPRING_MAIL_PASSWORD=sua_senha_app` (Para gerar, entre em [APP PASS](https://myaccount.google.com/apppasswords)
-      digite ProjetoResgateApi e clique em criar)
+6. **Environment variables:** nenhuma. O perfil `dev` usa o banco local e o **Mailpit** para e-mails.
 7. Clique em **Apply** e **OK**.
-8. Execute a configuração `Start`.
+8. Suba a infraestrutura (`docker compose up -d`) e execute a configuração `Start`.
+9. Os e-mails enviados pela aplicação (reset de senha, confirmação) **não saem para a internet**: abra a caixa
+   de entrada do Mailpit em <http://localhost:8025>.
 
 </details>
 
