@@ -140,7 +140,7 @@ no serviço `watchtower`. Se for pública, não precisa de nada.
 | `DB_USERNAME` / `DB_PASSWORD`  | sim         | Credenciais do Postgres (usadas pelo `db` **e** pela API)                 |
 | `API_SECURITY_TOKEN_SECRET`    | sim         | Segredo do JWT. Longo e aleatório: `openssl rand -base64 48`              |
 | `FRONTEND_URL`                 | sim         | URL base do front, usada nos links dos e-mails de reset de senha e confirmação (ex.: `https://app.exemplo.org`) |
-| `CORS-ALLOWED-ORIGINS`         | sim         | Origem(ns) do front. **O nome tem hífen** (como está no `application.properties`) |
+| `CORS-ALLOWED-ORIGINS`         | sim         | Origem(ns) do front. **O nome tem hífen** (como está no `application.yaml`) |
 | `MAIL_USERNAME` / `MAIL_PASSWORD` | sim      | Conta SMTP do Gmail (use **senha de app**, não a senha da conta)          |
 | `API_USER_REGISTRATION_PUBLIC` | não         | `false` por padrão. **Nunca** coloque `true` em produção: liberaria criar administradores sem login |
 | `API_COOKIE_SECURE`            | não         | `true` por padrão. Sem HTTPS, o navegador **descarta** o cookie de refresh |
@@ -149,9 +149,11 @@ no serviço `watchtower`. Se for pública, não precisa de nada.
 
 `DB_URL` é definido no próprio compose (`jdbc:postgresql://db:5432/projetoresgatedb`).
 
-> ⚠️ **Verifique no primeiro deploy** que a variável `CORS-ALLOWED-ORIGINS` (com hífen) chega ao container:
-> `docker exec projetoresgate_api env | grep CORS`. Se o `env_file` do Compose não a aceitar, a API não
-> sobe (placeholder sem valor). A correção é renomear no `application.properties` para `CORS_ALLOWED_ORIGINS`.
+> **Variável com hífen.** O `application.yaml` lê `CORS-ALLOWED-ORIGINS` (com hífen). Foi testado subindo o jar
+> com a variável definida via `env 'CORS-ALLOWED-ORIGINS=...'`: a API sobe e aplica o CORS corretamente.
+> O que **ainda não foi testado** é o `env_file` do Docker Compose. No primeiro deploy, confirme com
+> `docker exec projetoresgate_api env | grep CORS`. Se a variável não chegar, a API não sobe (placeholder sem
+> valor); a correção é renomear no `application.yaml` para `CORS_ALLOWED_ORIGINS`.
 
 ## Backup
 

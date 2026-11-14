@@ -6,13 +6,13 @@ Entidades do pacote `domain` de cada módulo. Para o desenho das **tabelas**, ve
 
 ## Como ler
 
-| Notação                       | Significado                                                                                  |
-|-------------------------------|----------------------------------------------------------------------------------------------|
-| Linha **sólida** (`-->`, `*--`) | **Associação JPA** de verdade (`@OneToMany`, `@ManyToOne`, `@ManyToMany`, `@OneToOne`)      |
-| Linha **tracejada** (`..>`)   | **Referência por `UUID`**: a classe guarda só o id, sem `@ManyToOne`. A integridade vem da FK do banco e das validações nas services |
-| `+tipo atributo`              | Atributo (privado na classe; getters omitidos)                                               |
-| `+metodo()`                   | Regra de negócio no domínio. `create`, `validate()` e `update()` existem em todas e foram omitidos, salvo quando carregam regra |
-| `<<enumeration>>`             | Enum                                                                                         |
+| Notação                         | Significado                                                                                                                          |
+|---------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| Linha **sólida** (`-->`, `*--`) | **Associação JPA** de verdade (`@OneToMany`, `@ManyToOne`, `@ManyToMany`, `@OneToOne`)                                               |
+| Linha **tracejada** (`..>`)     | **Referência por `UUID`**: a classe guarda só o id, sem `@ManyToOne`. A integridade vem da FK do banco e das validações nas services |
+| `+tipo atributo`                | Atributo (privado na classe; getters omitidos)                                                                                       |
+| `+metodo()`                     | Regra de negócio no domínio. `create`, `validate()` e `update()` existem em todas e foram omitidos, salvo quando carregam regra      |
+| `<<enumeration>>`               | Enum                                                                                                                                 |
 
 Todas as entidades (exceto os tokens) estendem `AuditableEntity` e usam **soft delete**
 (`@SQLDelete` + `@SQLRestriction("deleted_at IS NULL")`):
@@ -468,15 +468,3 @@ Regras que moram aqui:
 - `Collaborator`: `isVoluntary` e `legalPersonId` (empresa) são opcionais; a pessoa física é obrigatória.
 - A categoria de um `ClassCollaborator` precisa pertencer ao **programa da turma**; essa checagem está na
   service (`findByIdAndProgramIdOrThrow`), não na entidade.
-
-## Relações que **não** existem no código
-
-Para evitar suposições erradas:
-
-| Pode parecer que existe…              | Na verdade                                                                              |
-|---------------------------------------|-----------------------------------------------------------------------------------------|
-| `User` ↔ `NaturalPerson`              | Sem vínculo. São cadastros independentes.                                               |
-| `NaturalPerson` → `Address`           | A pessoa física **não tem endereço**; só `LegalPerson` e `FamilyGroup`.                 |
-| `Learner` → `FamilyGroup`             | **Não há** ligação direta. A família é informada na criação do educando só para **validar** que ele e seus responsáveis são membros dela; depois não fica registrada no educando. |
-| `ClassGroup` → `Learner` (JPA)        | `ClassLearner` guarda apenas `learnerId`; é preciso consultar o educando à parte.       |
-| Equipes dentro da turma               | Não existem.                                                                            |

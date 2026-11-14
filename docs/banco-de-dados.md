@@ -8,7 +8,7 @@ testes (ver [ADR 007](adr/007-testcontainers-postgres.md)).
 
 ## Flyway é o dono do schema
 
-`ddl-auto=validate` em `application.properties`: o Hibernate **confere** o schema, nunca altera.
+`ddl-auto: validate` em `application.yaml`: o Hibernate **confere** o schema, nunca altera.
 Alterar estrutura é responsabilidade exclusiva do Flyway.
 
 ```properties
@@ -157,7 +157,7 @@ bloco `DO`, qualquer erro faz rollback de tudo — ou o seed inteiro entra, ou n
 ## Variáveis de ambiente
 
 Valem para o perfil de **produção** (padrão). Com `--spring.profiles.active=dev` a aplicação usa o
-`application-dev.properties` e **não precisa de nenhuma** (banco local e Mailpit). Vêm do seu shell ou do run
+`application-dev.yaml` e **não precisa de nenhuma** (banco local e Mailpit). Vêm do seu shell ou do run
 configuration:
 
 ```properties
