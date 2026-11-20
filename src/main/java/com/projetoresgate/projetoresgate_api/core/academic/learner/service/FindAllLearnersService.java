@@ -1,7 +1,11 @@
 package com.projetoresgate.projetoresgate_api.core.academic.learner.service;
 
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.ClassLearner;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassLearnerRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerSummaryResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Learner;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.LearnerParticipationStatus;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.LearnerStatus;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.repository.LearnerRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.FindAllLearnersUseCase;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.FindAllLearnersQuery;
@@ -17,12 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
@@ -33,13 +33,16 @@ public class FindAllLearnersService implements FindAllLearnersUseCase {
     private final LearnerRepository repository;
     private final NaturalPersonRepository naturalPersonRepository;
     private final FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase;
+    private final ClassLearnerRepository classLearnerRepository;
 
     public FindAllLearnersService(LearnerRepository repository,
                                   NaturalPersonRepository naturalPersonRepository,
-                                  FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase) {
+                                  FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase,
+                                  ClassLearnerRepository classLearnerRepository) {
         this.repository = repository;
         this.naturalPersonRepository = naturalPersonRepository;
         this.findLegalPersonSummariesUseCase = findLegalPersonSummariesUseCase;
+        this.classLearnerRepository = classLearnerRepository;
     }
 
     @Override
@@ -47,14 +50,16 @@ public class FindAllLearnersService implements FindAllLearnersUseCase {
     public Page<LearnerSummaryResponse> handle(FindAllLearnersQuery query) {
 
         Specification<Learner> genericFilters = new SpecificationBuilder<Learner>()
-                .with("status", ":", query.status())
                 .with("institutionId", ":", query.institutionId())
                 .with("schoolGradeId", ":", query.schoolGradeId())
                 .with("academicYear", ":", query.academicYear())
                 .build();
 
+        LocalDateTime now = LocalDateTime.now();
+
         Specification<Learner> finalSpec = Specification
                 .where(hasSearchTerm(query.searchTerm()))
+                .and(hasParticipationStatus(query.status(), now))
                 .and(genericFilters);
 
         Page<Learner> page = repository.findAll(finalSpec, query.pageable());
@@ -62,10 +67,50 @@ public class FindAllLearnersService implements FindAllLearnersUseCase {
         Map<UUID, String> personNames = resolvePersonNames(page.getContent());
         Map<UUID, String> institutionNames = resolveInstitutionNames(page.getContent());
 
+        Set<UUID> inProgress = resolveLearnersInProgress(page.getContent(), now);
+
         return page.map(learner -> LearnerSummaryResponse.fromEntity(
                 learner,
                 isNull(learner.getNaturalPersonId()) ? null : personNames.get(learner.getNaturalPersonId()),
-                isNull(learner.getInstitutionId()) ? null : institutionNames.get(learner.getInstitutionId())));
+                isNull(learner.getInstitutionId()) ? null : institutionNames.get(learner.getInstitutionId()),
+                inProgress.contains(learner.getId())));
+    }
+
+    private Set<UUID> resolveLearnersInProgress(List<Learner> learners, LocalDateTime now) {
+        List<UUID> ids = learners.stream().map(Learner::getId).toList();
+
+        if (ids.isEmpty()) {
+            return Set.of();
+        }
+
+        return new HashSet<>(classLearnerRepository.findLearnerIdsInProgress(ids, now));
+    }
+
+    private Specification<Learner> hasParticipationStatus(LearnerParticipationStatus status, LocalDateTime now) {
+        if (isNull(status)) {
+            return null;
+        }
+
+        return (root, criteriaQuery, cb) -> {
+            if (status == LearnerParticipationStatus.DROPPED_OUT) {
+                return cb.equal(root.get("status"), LearnerStatus.DROPPED_OUT);
+            }
+
+            Subquery<UUID> inProgress = criteriaQuery.subquery(UUID.class);
+            var link = inProgress.from(ClassLearner.class);
+            var classGroup = link.join("classGroup");
+            inProgress.select(link.get("learnerId"))
+                    .where(cb.equal(link.get("learnerId"), root.get("id")),
+                            cb.isTrue(link.get("active")),
+                            cb.isTrue(classGroup.get("active")),
+                            cb.lessThanOrEqualTo(classGroup.<LocalDateTime>get("startDate"), now),
+                            cb.greaterThanOrEqualTo(classGroup.<LocalDateTime>get("endDate"), now));
+
+            var notDroppedOut = cb.equal(root.get("status"), LearnerStatus.ACTIVE);
+            return status == LearnerParticipationStatus.ACTIVE
+                    ? cb.and(notDroppedOut, cb.exists(inProgress))
+                    : cb.and(notDroppedOut, cb.not(cb.exists(inProgress)));
+        };
     }
 
     private Specification<Learner> hasSearchTerm(String searchTerm) {

@@ -435,7 +435,7 @@ class FamilyGroupControllerTest {
                 "Maria Silva", "maria@email.com", null, "11144477735", null, null, null, null, null);
 
         CreateNaturalPersonCommand createCommand = new CreateNaturalPersonCommand(
-                "Maria Silva", "maria@email.com", null, null, "11144477735", null, null, null, null);
+                "Maria Silva", "maria@email.com", null, null, "11144477735", null, null, null, null, null);
 
         when(addNewNaturalPersonUseCase.handle(any())).thenReturn(person);
 
@@ -461,7 +461,7 @@ class FamilyGroupControllerTest {
     @DisplayName("POST /family-group/{id}/natural-person - Deve retornar 400 quando o corpo for invalido")
     void addNewNaturalPerson_ShouldReturn400WhenBodyInvalid() throws Exception {
         CreateNaturalPersonCommand invalid = new CreateNaturalPersonCommand(
-                "", "email-invalido", null, null, "cpf-invalido", null, null, null, null);
+                "", "email-invalido", null, null, "cpf-invalido", null, null, null, null, null);
 
         mockMvc.perform(post("/family-group/{id}/natural-person", UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)

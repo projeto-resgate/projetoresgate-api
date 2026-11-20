@@ -1,10 +1,12 @@
 package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service;
 
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.UpdateNaturalPersonCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
+import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,6 +28,9 @@ class UpdateNaturalPersonServiceTest {
     @Mock
     private NaturalPersonRepository repository;
 
+    @Mock
+    private LegalPersonRepository legalPersonRepository;
+
     @InjectMocks
     private UpdateNaturalPersonService service;
 
@@ -43,7 +48,7 @@ class UpdateNaturalPersonServiceTest {
     void handle_ShouldUpdateAllFieldsSuccessfully() {
         LocalDate birthDate = LocalDate.of(1990, 1, 1);
         UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
-                personId, "New Name", "new@test.com", "newnick", "1234567", "30274973081", birthDate, "1122223333", "11999998888", Gender.MALE);
+                personId, "New Name", "new@test.com", "newnick", "1234567", "30274973081", birthDate, "1122223333", "11999998888", Gender.MALE, null);
 
         when(repository.findByIdOrThrow(personId)).thenReturn(person);
         when(repository.existsByCpfAndIdNot(anyString(), eq(personId))).thenReturn(false);
@@ -68,7 +73,7 @@ class UpdateNaturalPersonServiceTest {
     void handle_ShouldFailWhenCpfExists() {
         String existingCpfValue = "12345678909";
         UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
-                personId, "Old Name", "email@test.com", "nick", null, existingCpfValue, null, null, null, null);
+                personId, "Old Name", "email@test.com", "nick", null, existingCpfValue, null, null, null, null, null);
 
         when(repository.findByIdOrThrow(personId)).thenReturn(person);
         when(repository.existsByCpfAndIdNot(anyString(), eq(personId))).thenReturn(true);
@@ -83,7 +88,7 @@ class UpdateNaturalPersonServiceTest {
     @DisplayName("Deve permitir atualizar quando o CPF informado é o mesmo já cadastrado para a pessoa")
     void handle_ShouldAllowUpdateWhenCpfIsSame() {
         UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
-                personId, "Old Name", "email@test.com", "nick", null, "51086174968", null, null, null, null);
+                personId, "Old Name", "email@test.com", "nick", null, "51086174968", null, null, null, null, null);
 
         when(repository.findByIdOrThrow(personId)).thenReturn(person);
         when(repository.existsByCpfAndIdNot(anyString(), eq(personId))).thenReturn(false);
@@ -100,7 +105,7 @@ class UpdateNaturalPersonServiceTest {
     @DisplayName("Deve lançar exceção na validação de domínio se o nome for apagado no comando")
     void handle_ShouldThrowExceptionWhenNameIsBlanked() {
         UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
-                personId, "", "email@test.com", "nick", null, "51086174968", null, null, null, null);
+                personId, "", "email@test.com", "nick", null, "51086174968", null, null, null, null, null);
 
         when(repository.findByIdOrThrow(personId)).thenReturn(person);
 
@@ -114,7 +119,7 @@ class UpdateNaturalPersonServiceTest {
     @DisplayName("Deve atualizar campos não obrigatórios (como CPF, RG e Nickname) para null com sucesso")
     void handle_ShouldUpdateNonMandatoryFieldsToNull() {
         UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
-                personId, "Old Name", "email@test.com", null, null, null, null, null, null, null);
+                personId, "Old Name", "email@test.com", null, null, null, null, null, null, null, null);
 
         when(repository.findByIdOrThrow(personId)).thenReturn(person);
         when(repository.save(any())).thenReturn(person);
@@ -125,5 +130,70 @@ class UpdateNaturalPersonServiceTest {
         assertNull(person.getCpf());
         assertNull(person.getRg());
         verify(repository).save(person);
+    }
+
+    @Test
+    @DisplayName("Deve alterar o local de trabalho validando a nova pessoa jurídica")
+    void handle_ShouldChangeWorkplace() {
+        UUID workplaceId = UUID.randomUUID();
+        UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
+                personId, "Old Name", "email@test.com", null, null, null, null, null, null, null, workplaceId);
+
+        when(repository.findByIdOrThrow(personId)).thenReturn(person);
+        when(legalPersonRepository.findByIdOrThrow(workplaceId)).thenReturn(null);
+        when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        NaturalPerson result = service.handle(command);
+
+        assertEquals(workplaceId, result.getWorkplaceId());
+        verify(legalPersonRepository).findByIdOrThrow(workplaceId);
+    }
+
+    @Test
+    @DisplayName("Deve remover o local de trabalho quando vier nulo")
+    void handle_ShouldClearWorkplace() {
+        UUID workplaceId = UUID.randomUUID();
+        person.update().workplaceId(workplaceId).apply();
+        UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
+                personId, "Old Name", "email@test.com", null, null, null, null, null, null, null, null);
+
+        when(repository.findByIdOrThrow(personId)).thenReturn(person);
+        when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        assertNull(service.handle(command).getWorkplaceId());
+        verifyNoInteractions(legalPersonRepository);
+    }
+
+    @Test
+    @DisplayName("Não deve revalidar o local de trabalho que não mudou")
+    void handle_ShouldNotRevalidateUnchangedWorkplace() {
+        UUID workplaceId = UUID.randomUUID();
+        person.update().workplaceId(workplaceId).apply();
+        UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
+                personId, "Old Name", "email@test.com", null, null, null, null, null, null, null, workplaceId);
+
+        when(repository.findByIdOrThrow(personId)).thenReturn(person);
+        when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        service.handle(command);
+
+        verifyNoInteractions(legalPersonRepository);
+    }
+
+    @Test
+    @DisplayName("Não deve salvar quando o novo local de trabalho não existe")
+    void handle_ShouldFailWhenWorkplaceNotFound() {
+        UUID workplaceId = UUID.randomUUID();
+        UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
+                personId, "Old Name", "email@test.com", null, null, null, null, null, null, null, workplaceId);
+
+        when(repository.findByIdOrThrow(personId)).thenReturn(person);
+        when(legalPersonRepository.findByIdOrThrow(workplaceId))
+                .thenThrow(new ResourceNotFoundException("não encontrada"));
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.handle(command));
+
+        verify(repository, never()).save(any());
     }
 }

@@ -1,5 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service;
 
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.UpdateNaturalPersonUseCase;
@@ -14,9 +15,12 @@ import static java.util.Objects.nonNull;
 public class UpdateNaturalPersonService implements UpdateNaturalPersonUseCase {
 
     private final NaturalPersonRepository repository;
+    private final LegalPersonRepository legalPersonRepository;
 
-    public UpdateNaturalPersonService(NaturalPersonRepository repository) {
+    public UpdateNaturalPersonService(NaturalPersonRepository repository,
+                                      LegalPersonRepository legalPersonRepository) {
         this.repository = repository;
+        this.legalPersonRepository = legalPersonRepository;
     }
 
     @Override
@@ -27,6 +31,10 @@ public class UpdateNaturalPersonService implements UpdateNaturalPersonUseCase {
         String cpf = command.cpf();
         if (nonNull(cpf) && !cpf.isBlank() && repository.existsByCpfAndIdNot(cpf, person.getId())) {
             throw new InternalException("Já existe uma pessoa cadastrada com este CPF.");
+        }
+
+        if (nonNull(command.workplaceId()) && !command.workplaceId().equals(person.getWorkplaceId())) {
+            legalPersonRepository.findByIdOrThrow(command.workplaceId());
         }
 
         return repository.save(
@@ -40,6 +48,7 @@ public class UpdateNaturalPersonService implements UpdateNaturalPersonUseCase {
                         .gender(command.gender())
                         .phone(command.phone())
                         .cellphone(command.cellphone())
+                        .workplaceId(command.workplaceId())
                         .apply()
         );
     }

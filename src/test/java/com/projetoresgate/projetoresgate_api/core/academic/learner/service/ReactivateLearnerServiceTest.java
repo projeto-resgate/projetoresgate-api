@@ -1,5 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.academic.learner.service;
 
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.ActivateClassLearnerLinkUseCase;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.ActivateClassLearnerLinkCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Learner;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.LearnerStatus;
@@ -26,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -40,6 +43,9 @@ class ReactivateLearnerServiceTest {
 
     @Mock
     private FindLearnerByIdUseCase findLearnerByIdUseCase;
+
+    @Mock
+    private ActivateClassLearnerLinkUseCase activateClassLearnerLinkUseCase;
 
     @InjectMocks
     private ReactivateLearnerService service;
@@ -64,7 +70,7 @@ class ReactivateLearnerServiceTest {
         when(repository.save(any(Learner.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(findLearnerByIdUseCase.handle(any(FindLearnerByIdQuery.class))).thenReturn(response());
 
-        service.handle(new ReactivateLearnerCommand(learner.getId(), "Retornou no próximo ano letivo"));
+        service.handle(new ReactivateLearnerCommand(learner.getId(), "Retornou no próximo ano letivo", null));
 
         ArgumentCaptor<Learner> captor = ArgumentCaptor.forClass(Learner.class);
         verify(repository).save(captor.capture());
@@ -87,7 +93,7 @@ class ReactivateLearnerServiceTest {
         when(repository.save(any(Learner.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(findLearnerByIdUseCase.handle(any(FindLearnerByIdQuery.class))).thenReturn(expected);
 
-        LearnerResponse result = service.handle(new ReactivateLearnerCommand(learner.getId(), null));
+        LearnerResponse result = service.handle(new ReactivateLearnerCommand(learner.getId(), null, null));
 
         assertSame(expected, result);
 
@@ -104,7 +110,7 @@ class ReactivateLearnerServiceTest {
         when(repository.findByIdOrThrow(learner.getId())).thenReturn(learner);
 
         assertThrows(IllegalStateException.class,
-                () -> service.handle(new ReactivateLearnerCommand(learner.getId(), null)));
+                () -> service.handle(new ReactivateLearnerCommand(learner.getId(), null, null)));
 
         verify(repository, never()).save(any(Learner.class));
     }
@@ -117,8 +123,58 @@ class ReactivateLearnerServiceTest {
                 .thenThrow(new ResourceNotFoundException("Educando não encontrado com ID: " + id));
 
         assertThrows(ResourceNotFoundException.class,
-                () -> service.handle(new ReactivateLearnerCommand(id, null)));
+                () -> service.handle(new ReactivateLearnerCommand(id, null, null)));
 
         verify(repository, never()).save(any(Learner.class));
+    }
+
+    @Test
+    @DisplayName("Deve reativar o educando desistente e ativá-lo na turma informada")
+    void handle_ShouldReactivateAndActivateClassLink() {
+        Learner learner = givenDroppedLearner();
+        UUID classGroupId = UUID.randomUUID();
+
+        when(repository.findByIdOrThrow(learner.getId())).thenReturn(learner);
+        when(repository.save(any(Learner.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(findLearnerByIdUseCase.handle(any(FindLearnerByIdQuery.class))).thenReturn(response());
+
+        service.handle(new ReactivateLearnerCommand(learner.getId(), null, classGroupId));
+
+        assertEquals(LearnerStatus.ACTIVE, learner.getStatus());
+        assertEquals(2, learner.getStatusHistory().size());
+        verify(activateClassLearnerLinkUseCase)
+                .handle(new ActivateClassLearnerLinkCommand(classGroupId, learner.getId()));
+    }
+
+    @Test
+    @DisplayName("Educando já ativo com turma informada: só ativa o vínculo, sem erro e sem novo histórico")
+    void handle_ShouldOnlyActivateClassLinkWhenAlreadyActive() {
+        Learner learner = Learner.create(NATURAL_PERSON_ID, null, null, false, null, 2026, null, null);
+        UUID classGroupId = UUID.randomUUID();
+
+        when(repository.findByIdOrThrow(learner.getId())).thenReturn(learner);
+        when(repository.save(any(Learner.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(findLearnerByIdUseCase.handle(any(FindLearnerByIdQuery.class))).thenReturn(response());
+
+        service.handle(new ReactivateLearnerCommand(learner.getId(), null, classGroupId));
+
+        assertEquals(LearnerStatus.ACTIVE, learner.getStatus());
+        assertEquals(0, learner.getStatusHistory().size());
+        verify(activateClassLearnerLinkUseCase)
+                .handle(new ActivateClassLearnerLinkCommand(classGroupId, learner.getId()));
+    }
+
+    @Test
+    @DisplayName("Educando já ativo sem turma informada continua falhando")
+    void handle_ShouldNotTouchClassLinksWithoutClassGroup() {
+        Learner learner = givenDroppedLearner();
+
+        when(repository.findByIdOrThrow(learner.getId())).thenReturn(learner);
+        when(repository.save(any(Learner.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(findLearnerByIdUseCase.handle(any(FindLearnerByIdQuery.class))).thenReturn(response());
+
+        service.handle(new ReactivateLearnerCommand(learner.getId(), null, null));
+
+        verifyNoInteractions(activateClassLearnerLinkUseCase);
     }
 }

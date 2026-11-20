@@ -1,5 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.service;
 
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.CreateNaturalPersonUseCase;
@@ -16,10 +17,13 @@ public class CreateNaturalPersonService implements CreateNaturalPersonUseCase {
 
     private final NaturalPersonRepository repository;
     private final RequestEmailConfirmationUseCase requestEmailConfirmationUseCase;
+    private final LegalPersonRepository legalPersonRepository;
 
     public CreateNaturalPersonService(NaturalPersonRepository repository,
-                                      RequestEmailConfirmationUseCase requestEmailConfirmationUseCase) {
+                                      RequestEmailConfirmationUseCase requestEmailConfirmationUseCase,
+                                      LegalPersonRepository legalPersonRepository) {
         this.repository = repository;
+        this.legalPersonRepository = legalPersonRepository;
         this.requestEmailConfirmationUseCase = requestEmailConfirmationUseCase;
     }
 
@@ -32,6 +36,10 @@ public class CreateNaturalPersonService implements CreateNaturalPersonUseCase {
             throw new InternalException("Já existe uma pessoa cadastrada com este CPF.");
         }
 
+        if (nonNull(command.workplaceId())) {
+            legalPersonRepository.findByIdOrThrow(command.workplaceId());
+        }
+
         NaturalPerson person = NaturalPerson.create(
                 command.name(),
                 command.email(),
@@ -41,7 +49,8 @@ public class CreateNaturalPersonService implements CreateNaturalPersonUseCase {
                 command.birthDate(),
                 command.gender(),
                 command.phone(),
-                command.cellphone()
+                command.cellphone(),
+                command.workplaceId()
         );
 
         NaturalPerson saved = repository.save(person);

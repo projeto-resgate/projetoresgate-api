@@ -47,7 +47,7 @@ Fluxos: [`autenticacao.md`](autenticacao.md).
 
 | Método | Rota                                    | Descrição                                    |
 |--------|-----------------------------------------|----------------------------------------------|
-| POST   | `/natural-person` 🔓                    | Cadastra e dispara e-mail de confirmação     |
+| POST   | `/natural-person` 🔓                    | Cadastra e dispara e-mail de confirmação (aceita `workplaceId`, local de trabalho = pessoa jurídica) |
 | PUT    | `/natural-person/{id}`                  | Edita                                        |
 | DELETE | `/natural-person/{id}`                  | Exclui (soft)                                |
 | GET    | `/natural-person`                       | Lista com filtros                            |
@@ -88,10 +88,10 @@ Fluxos: [`autenticacao.md`](autenticacao.md).
 | POST   | `/learner`                          | Cria educando com responsáveis                                 |
 | PUT    | `/learner/{id}`                     | Edita; **substitui** a lista de responsáveis                   |
 | POST   | `/learner/{id}/dropout`             | Registra desistência (motivo obrigatório)                      |
-| POST   | `/learner/{id}/reactivate`          | Reativa                                                        |
-| DELETE | `/learner/{id}`                     | Exclui (soft) + responsáveis                                   |
-| GET    | `/learner`                          | Lista com filtros                                              |
-| GET    | `/learner/{id}`                     | Detalhe (inclui responsáveis; **não** inclui o histórico de status) |
+| POST   | `/learner/{id}/reactivate`          | Reativa; `classGroupId` opcional (re)vincula e ativa na turma, sem erro se já estiver ativo |
+| GET    | `/learner/{id}/status-history`      | Histórico de desistências e retomadas (tipo, motivo, `eventDate`, `registeredAt`), mais recente primeiro |
+| GET    | `/learner`                          | Lista com filtros; cada item traz `status`: `ACTIVE` (cursando turma em andamento), `NO_CLASS` (ativo sem turma em andamento) ou `DROPPED_OUT`; filtro `status` aceita os mesmos valores |
+| GET    | `/learner/{id}`                     | Detalhe (inclui responsáveis; **não** inclui o histórico de status (use `/status-history`)) |
 | GET    | `/learner/autocomplete`             | Busca rápida                                                   |
 | GET    | `/learner/eligible-responsibles`    | Pessoas da família elegíveis a responsável (`familyGroupId`, `excludeNaturalPersonId`) |
 

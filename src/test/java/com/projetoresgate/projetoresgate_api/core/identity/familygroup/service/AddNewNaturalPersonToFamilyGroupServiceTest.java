@@ -35,7 +35,7 @@ class AddNewNaturalPersonToFamilyGroupServiceTest {
 
     private CreateNaturalPersonCommand givenCreateCommand() {
         return new CreateNaturalPersonCommand("Maria Silva", "maria@email.com", null, null,
-                null, null, null, null, null);
+                null, null, null, null, null, null);
     }
 
     @Test

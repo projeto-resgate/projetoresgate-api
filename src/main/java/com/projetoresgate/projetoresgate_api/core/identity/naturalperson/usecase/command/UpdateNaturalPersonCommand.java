@@ -25,7 +25,8 @@ public record UpdateNaturalPersonCommand(
         String phone,
         @Cellphone
         String cellphone,
-        Gender gender
+        Gender gender,
+        UUID workplaceId
 ) {
     public UpdateNaturalPersonCommand withId(UUID id) {
         return new UpdateNaturalPersonCommand(
@@ -38,7 +39,8 @@ public record UpdateNaturalPersonCommand(
                 this.birthDate,
                 this.phone,
                 this.cellphone,
-                this.gender
+                this.gender,
+                this.workplaceId
         );
     }
 }

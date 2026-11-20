@@ -41,12 +41,14 @@ public class NaturalPerson extends AuditableEntity {
 
     private String cellphone;
 
+    private UUID workplaceId;
+
     private boolean isEmailVerified = false;
 
     protected NaturalPerson() {
     }
 
-    private NaturalPerson(UUID id, String name, String email, String nickname, String cpf, String rg, LocalDate birthDate, Gender gender, String phone, String cellphone) {
+    private NaturalPerson(UUID id, String name, String email, String nickname, String cpf, String rg, LocalDate birthDate, Gender gender, String phone, String cellphone, UUID workplaceId) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -57,12 +59,17 @@ public class NaturalPerson extends AuditableEntity {
         this.gender = gender;
         this.phone = phone;
         this.cellphone = cellphone;
+        this.workplaceId = workplaceId;
         this.isEmailVerified = false;
         validate();
     }
 
     public static NaturalPerson create(String name, String email, String nickname, String cpf, String rg, LocalDate birthDate, Gender gender, String phone, String cellphone) {
-        return new NaturalPerson(UUID.randomUUID(), name, email, nickname, cpf, rg, birthDate, gender, phone, cellphone);
+        return create(name, email, nickname, cpf, rg, birthDate, gender, phone, cellphone, null);
+    }
+
+    public static NaturalPerson create(String name, String email, String nickname, String cpf, String rg, LocalDate birthDate, Gender gender, String phone, String cellphone, UUID workplaceId) {
+        return new NaturalPerson(UUID.randomUUID(), name, email, nickname, cpf, rg, birthDate, gender, phone, cellphone, workplaceId);
     }
 
     public void confirmEmail() {
@@ -144,6 +151,11 @@ public class NaturalPerson extends AuditableEntity {
             return this;
         }
 
+        public Updater workplaceId(UUID workplaceId) {
+            NaturalPerson.this.workplaceId = workplaceId;
+            return this;
+        }
+
         public NaturalPerson apply() {
             NaturalPerson.this.validate();
             return NaturalPerson.this;
@@ -188,6 +200,10 @@ public class NaturalPerson extends AuditableEntity {
 
     public String getCellphone() {
         return cellphone;
+    }
+
+    public UUID getWorkplaceId() {
+        return workplaceId;
     }
 
     public boolean isEmailVerified() {

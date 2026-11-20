@@ -1,6 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.academic.learner.service;
 
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.DeactivateClassLearnerLinksUseCase;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.DeactivateClassLearnerLinksCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.DropoutLearnerResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Learner;
@@ -118,7 +119,7 @@ class DropoutLearnerServiceTest {
         assertEquals(3, result.deactivatedClassLinks());
 
         ArgumentCaptor<com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.DeactivateClassLearnerLinksCommand> captor =
-                ArgumentCaptor.forClass(com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.DeactivateClassLearnerLinksCommand.class);
+                ArgumentCaptor.forClass(DeactivateClassLearnerLinksCommand.class);
         verify(deactivateClassLearnerLinksUseCase).handle(captor.capture());
         assertEquals(learner.getId(), captor.getValue().learnerId());
     }

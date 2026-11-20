@@ -2,6 +2,8 @@ package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projetoresgate.projetoresgate_api.config.security.WithMockCustomUser;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.api.dto.LegalPersonSummaryResponse;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.FindLegalPersonSummariesUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.api.dto.NaturalPersonSummaryResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
@@ -17,6 +19,7 @@ import com.projetoresgate.projetoresgate_api.infrastructure.security.SecurityCon
 import com.projetoresgate.projetoresgate_api.infrastructure.services.ITokenService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -31,6 +34,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -74,6 +78,9 @@ class NaturalPersonControllerTest {
     private ConfirmEmailUseCase confirmEmailUseCase;
 
     @MockitoBean
+    private FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase;
+
+    @MockitoBean
     private UserDetailsService userDetailsService;
 
     @MockitoBean
@@ -88,7 +95,7 @@ class NaturalPersonControllerTest {
         CreateNaturalPersonCommand command = new CreateNaturalPersonCommand(
                 "John Doe", "john@test.com", "johny", "1234567", "51086174968",
                 LocalDate.of(1990, 1, 1), "1133334444", "11988888888", Gender.MALE
-        );
+        , null);
 
         NaturalPerson person = createMockPerson();
         when(createUseCase.handle(any())).thenReturn(person);
@@ -108,7 +115,7 @@ class NaturalPersonControllerTest {
     void update_ShouldReturn200() throws Exception {
         UUID id = UUID.randomUUID();
         UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
-                null, "Updated Name", "updated@test.com", "newnick", null, "51086174968", null, null, null, null);
+                null, "Updated Name", "updated@test.com", "newnick", null, "51086174968", null, null, null, null, null);
 
         NaturalPerson person = createMockPerson();
         when(updateUseCase.handle(any())).thenReturn(person);
@@ -161,6 +168,78 @@ class NaturalPersonControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].cpf").value("51086174968"))
                 .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("GET /natural-person/{id} - Deve retornar o local de trabalho com o nome da pessoa jurídica")
+    void findById_ShouldReturnWorkplace() throws Exception {
+        UUID workplaceId = UUID.randomUUID();
+        NaturalPerson person = NaturalPerson.create("Test Name", "test@test.com", "tester", "51086174968",
+                "1234567", LocalDate.of(1990, 1, 1), Gender.MALE, "11999999999", "11888888888", workplaceId);
+
+        when(findByIdUseCase.handle(any())).thenReturn(person);
+        when(findLegalPersonSummariesUseCase.handle(any()))
+                .thenReturn(List.of(new LegalPersonSummaryResponse(workplaceId, "Empresa X", "12345678000195")));
+
+        mockMvc.perform(get("/natural-person/{id}", UUID.randomUUID()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.workplaceId").value(workplaceId.toString()))
+                .andExpect(jsonPath("$.workplaceName").value("Empresa X"));
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("GET /natural-person/{id} - Sem local de trabalho não consulta pessoas jurídicas")
+    void findById_ShouldReturnNullWorkplaceWhenNotSet() throws Exception {
+        when(findByIdUseCase.handle(any())).thenReturn(createMockPerson());
+
+        mockMvc.perform(get("/natural-person/{id}", UUID.randomUUID()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.workplaceId").doesNotExist())
+                .andExpect(jsonPath("$.workplaceName").doesNotExist());
+
+        verify(findLegalPersonSummariesUseCase, never()).handle(any());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("GET /natural-person - Deve retornar o local de trabalho de cada pessoa da página")
+    void search_ShouldReturnWorkplaceNames() throws Exception {
+        UUID workplaceId = UUID.randomUUID();
+        NaturalPerson withWorkplace = NaturalPerson.create("Com Trabalho", "a@test.com", null, "51086174968",
+                null, null, null, null, null, workplaceId);
+        NaturalPerson without = createMockPerson();
+
+        when(findAllUseCase.handle(any())).thenReturn(new PageImpl<>(List.of(withWorkplace, without)));
+        when(findLegalPersonSummariesUseCase.handle(any()))
+                .thenReturn(List.of(new LegalPersonSummaryResponse(workplaceId, "Empresa X", "12345678000195")));
+
+        mockMvc.perform(get("/natural-person"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].workplaceName").value("Empresa X"))
+                .andExpect(jsonPath("$.content[1].workplaceId").doesNotExist());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("POST /natural-person - Deve repassar o local de trabalho ao caso de uso")
+    void create_ShouldPassWorkplaceId() throws Exception {
+        UUID workplaceId = UUID.randomUUID();
+        CreateNaturalPersonCommand command = new CreateNaturalPersonCommand(
+                "John Doe", "john@test.com", null, null, null, null, null, null, null, workplaceId);
+
+        when(createUseCase.handle(any())).thenReturn(createMockPerson());
+
+        mockMvc.perform(post("/natural-person")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(command)))
+                .andExpect(status().isCreated());
+
+        ArgumentCaptor<CreateNaturalPersonCommand> captor = ArgumentCaptor.forClass(CreateNaturalPersonCommand.class);
+        verify(createUseCase).handle(captor.capture());
+        assertEquals(workplaceId, captor.getValue().workplaceId());
     }
 
     @Test

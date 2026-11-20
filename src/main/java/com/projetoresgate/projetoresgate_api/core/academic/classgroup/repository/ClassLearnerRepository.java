@@ -11,6 +11,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,6 +28,8 @@ public interface ClassLearnerRepository extends JpaRepository<ClassLearner, UUID
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Educando não encontrado com ID: " + id + " na turma: " + classGroupId));
     }
+
+    Optional<ClassLearner> findByClassGroupIdAndLearnerId(UUID classGroupId, UUID learnerId);
 
     boolean existsByClassGroupIdAndLearnerId(UUID classGroupId, UUID learnerId);
 
@@ -53,6 +58,17 @@ public interface ClassLearnerRepository extends JpaRepository<ClassLearner, UUID
                                              @Param("active") Boolean active,
                                              @Param("searchTerm") String searchTerm,
                                              Pageable pageable);
+
+    @Query("""
+            select distinct cl.learnerId from ClassLearner cl
+            where cl.learnerId in :learnerIds
+              and cl.active = true
+              and cl.classGroup.active = true
+              and cl.classGroup.startDate <= :now
+              and cl.classGroup.endDate >= :now
+            """)
+    List<UUID> findLearnerIdsInProgress(@Param("learnerIds") Collection<UUID> learnerIds,
+                                        @Param("now") LocalDateTime now);
 
     @Modifying
     @Query("""

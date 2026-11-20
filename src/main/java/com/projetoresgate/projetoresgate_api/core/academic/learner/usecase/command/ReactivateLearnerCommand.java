@@ -7,9 +7,10 @@ import java.util.UUID;
 public record ReactivateLearnerCommand(
         @JsonIgnore
         UUID id,
-        String note
+        String note,
+        UUID classGroupId
 ) {
     public ReactivateLearnerCommand withId(UUID id) {
-        return new ReactivateLearnerCommand(id, this.note);
+        return new ReactivateLearnerCommand(id, this.note, this.classGroupId);
     }
 }

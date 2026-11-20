@@ -1,6 +1,8 @@
 package com.projetoresgate.projetoresgate_api.core.academic.learner.service;
 
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassLearnerRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerSummaryResponse;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.LearnerParticipationStatus;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Learner;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.repository.LearnerRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.FindAllLearnersQuery;
@@ -47,6 +49,9 @@ class FindAllLearnersServiceTest {
     @Mock
     private FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase;
 
+    @Mock
+    private ClassLearnerRepository classLearnerRepository;
+
     @InjectMocks
     private FindAllLearnersService service;
 
@@ -74,12 +79,12 @@ class FindAllLearnersServiceTest {
         assertEquals("Maria Silva", response.name());
         assertEquals("Escola X", response.institutionName());
         assertEquals(2026, response.academicYear());
-        assertTrue(response.active());
+        assertEquals(LearnerParticipationStatus.NO_CLASS, response.status());
     }
 
     @Test
-    @DisplayName("Deve marcar como inativo o educando desistente")
-    void handle_ShouldMarkDroppedOutLearnerAsInactive() {
+    @DisplayName("Deve marcar como DROPPED_OUT o educando desistente")
+    void handle_ShouldMarkDroppedOutLearner() {
         NaturalPerson person = NaturalPerson.create(
                 "Maria Silva", "maria@email.com", null, "52998224725", null, null, null, null, null);
         Learner learner = Learner.create(person.getId(), null, null, false, null, 2026, null, null);
@@ -93,7 +98,7 @@ class FindAllLearnersServiceTest {
         Page<LearnerSummaryResponse> result = service.handle(
                 new FindAllLearnersQuery(null, null, null, null, null, pageable));
 
-        assertFalse(result.getContent().get(0).active());
+        assertEquals(LearnerParticipationStatus.DROPPED_OUT, result.getContent().get(0).status());
     }
 
     @Test
@@ -129,5 +134,60 @@ class FindAllLearnersServiceTest {
         assertTrue(result.getContent().isEmpty());
         verify(naturalPersonRepository, never()).findAllById(any());
         verify(findLegalPersonSummariesUseCase, never()).handle(any());
+    }
+
+    @Test
+    @DisplayName("Deve marcar como ACTIVE o educando que cursa turma em andamento")
+    void handle_ShouldReturnActiveWhenInProgressClass() {
+        NaturalPerson person = NaturalPerson.create(
+                "Maria Silva", "maria@email.com", null, "52998224725", null, null, null, null, null);
+        Learner learner = Learner.create(person.getId(), null, null, false, null, 2026, null, null);
+        Pageable pageable = PageRequest.of(0, 10);
+
+        when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(new PageImpl<>(List.of(learner)));
+        when(naturalPersonRepository.findAllById(any())).thenReturn(List.of(person));
+        when(classLearnerRepository.findLearnerIdsInProgress(any(), any())).thenReturn(List.of(learner.getId()));
+
+        Page<LearnerSummaryResponse> result = service.handle(
+                new FindAllLearnersQuery(null, null, null, null, null, pageable));
+
+        assertEquals(LearnerParticipationStatus.ACTIVE, result.getContent().get(0).status());
+    }
+
+    @Test
+    @DisplayName("Deve marcar como NO_CLASS o educando ativo sem turma em andamento")
+    void handle_ShouldReturnNoClassWhenNoInProgressClass() {
+        NaturalPerson person = NaturalPerson.create(
+                "Maria Silva", "maria@email.com", null, "52998224725", null, null, null, null, null);
+        Learner learner = Learner.create(person.getId(), null, null, false, null, 2026, null, null);
+        Pageable pageable = PageRequest.of(0, 10);
+
+        when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(new PageImpl<>(List.of(learner)));
+        when(naturalPersonRepository.findAllById(any())).thenReturn(List.of(person));
+        when(classLearnerRepository.findLearnerIdsInProgress(any(), any())).thenReturn(List.of());
+
+        Page<LearnerSummaryResponse> result = service.handle(
+                new FindAllLearnersQuery(null, null, null, null, null, pageable));
+
+        assertEquals(LearnerParticipationStatus.NO_CLASS, result.getContent().get(0).status());
+    }
+
+    @Test
+    @DisplayName("Deve marcar como DROPPED_OUT o desistente, mesmo com vínculo em turma em andamento")
+    void handle_ShouldReturnDroppedOutEvenWithClassLink() {
+        NaturalPerson person = NaturalPerson.create(
+                "Maria Silva", "maria@email.com", null, "52998224725", null, null, null, null, null);
+        Learner learner = Learner.create(person.getId(), null, null, false, null, 2026, null, null);
+        learner.dropOut("Mudou de cidade", LocalDate.now());
+        Pageable pageable = PageRequest.of(0, 10);
+
+        when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(new PageImpl<>(List.of(learner)));
+        when(naturalPersonRepository.findAllById(any())).thenReturn(List.of(person));
+        when(classLearnerRepository.findLearnerIdsInProgress(any(), any())).thenReturn(List.of(learner.getId()));
+
+        Page<LearnerSummaryResponse> result = service.handle(
+                new FindAllLearnersQuery(null, null, null, null, null, pageable));
+
+        assertEquals(LearnerParticipationStatus.DROPPED_OUT, result.getContent().get(0).status());
     }
 }

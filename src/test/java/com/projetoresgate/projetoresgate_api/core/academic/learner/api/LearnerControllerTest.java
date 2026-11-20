@@ -7,9 +7,12 @@ import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.Dropo
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.EligibleResponsibleResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerAutocompleteResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerResponse;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerStatusHistoryResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerSummaryResponse;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.LearnerStatusEventType;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.ResponsibleResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.Kinship;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.LearnerParticipationStatus;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.LearnerStatus;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.ResponsibleType;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.ScholarshipCondition;
@@ -17,9 +20,9 @@ import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.*;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.command.CreateLearnerCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.command.DropoutLearnerCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.command.ReactivateLearnerCommand;
-import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.command.SoftDeleteLearnerCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.command.UpdateLearnerCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.FindAllLearnersQuery;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.FindLearnerStatusHistoryQuery;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.FindEligibleResponsiblesQuery;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.FindLearnerByIdQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
@@ -43,6 +46,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -81,7 +85,7 @@ class LearnerControllerTest {
     private UpdateLearnerUseCase updateUseCase;
 
     @MockitoBean
-    private SoftDeleteLearnerUseCase softDeleteUseCase;
+    private FindLearnerStatusHistoryUseCase findStatusHistoryUseCase;
 
     @MockitoBean
     private FindLearnerByIdUseCase findByIdUseCase;
@@ -634,30 +638,6 @@ class LearnerControllerTest {
 
     @Test
     @WithMockCustomUser
-    @DisplayName("DELETE /learner/{id} - Deve retornar 204 ao excluir o educando")
-    void delete_ShouldReturn204() throws Exception {
-        mockMvc.perform(delete("/learner/{id}", LEARNER_ID).with(csrf()))
-                .andExpect(status().isNoContent());
-
-        ArgumentCaptor<SoftDeleteLearnerCommand> captor = ArgumentCaptor.forClass(SoftDeleteLearnerCommand.class);
-        verify(softDeleteUseCase).handle(captor.capture());
-
-        assertEquals(LEARNER_ID, captor.getValue().id());
-    }
-
-    @Test
-    @WithMockCustomUser
-    @DisplayName("DELETE /learner/{id} - Deve retornar 404 quando o educando não existir")
-    void delete_ShouldReturn404WhenNotFound() throws Exception {
-        doThrow(new ResourceNotFoundException("Educando não encontrado com ID: " + LEARNER_ID))
-                .when(softDeleteUseCase).handle(any());
-
-        mockMvc.perform(delete("/learner/{id}", LEARNER_ID).with(csrf()))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    @WithMockCustomUser
     @DisplayName("POST /learner/{id}/dropout - Deve retornar 200 com o educando desistente")
     void dropOut_ShouldReturn200() throws Exception {
         LearnerResponse dropped = new LearnerResponse(LEARNER_ID, NATURAL_PERSON_ID, INSTITUTION_ID,
@@ -803,6 +783,75 @@ class LearnerControllerTest {
 
     @Test
     @WithMockCustomUser
+    @DisplayName("POST /learner/{id}/reactivate - Deve repassar a turma opcional")
+    void reactivate_ShouldPassClassGroupId() throws Exception {
+        UUID classGroupId = UUID.randomUUID();
+        when(reactivateUseCase.handle(any(ReactivateLearnerCommand.class))).thenReturn(givenResponse());
+
+        mockMvc.perform(post("/learner/{id}/reactivate", LEARNER_ID)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"classGroupId\":\"" + classGroupId + "\"}"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<ReactivateLearnerCommand> captor = ArgumentCaptor.forClass(ReactivateLearnerCommand.class);
+        verify(reactivateUseCase).handle(captor.capture());
+
+        assertEquals(LEARNER_ID, captor.getValue().id());
+        assertEquals(classGroupId, captor.getValue().classGroupId());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("GET /learner/{id}/status-history - Deve retornar 200 com o histórico de desistências e retomadas")
+    void findStatusHistory_ShouldReturn200() throws Exception {
+        UUID eventId = UUID.randomUUID();
+        when(findStatusHistoryUseCase.handle(any())).thenReturn(List.of(
+                new LearnerStatusHistoryResponse(eventId, LearnerStatusEventType.REACTIVATION, "Voltou",
+                        LocalDate.of(2026, 8, 1), LocalDateTime.of(2026, 8, 1, 9, 30))));
+
+        mockMvc.perform(get("/learner/{id}/status-history", LEARNER_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(eventId.toString()))
+                .andExpect(jsonPath("$[0].type").value("REACTIVATION"))
+                .andExpect(jsonPath("$[0].reason").value("Voltou"))
+                .andExpect(jsonPath("$[0].eventDate").value("2026-08-01"))
+                .andExpect(jsonPath("$[0].registeredAt").value("2026-08-01T09:30:00"));
+
+        ArgumentCaptor<FindLearnerStatusHistoryQuery> captor = ArgumentCaptor.forClass(FindLearnerStatusHistoryQuery.class);
+        verify(findStatusHistoryUseCase).handle(captor.capture());
+        assertEquals(LEARNER_ID, captor.getValue().learnerId());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("GET /learner/{id}/status-history - Deve retornar 404 quando o educando não existir")
+    void findStatusHistory_ShouldReturn404() throws Exception {
+        when(findStatusHistoryUseCase.handle(any()))
+                .thenThrow(new ResourceNotFoundException("Educando não encontrado com ID: " + LEARNER_ID));
+
+        mockMvc.perform(get("/learner/{id}/status-history", LEARNER_ID))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("GET /learner/{id}/status-history - Deve retornar 401 sem autenticação")
+    void findStatusHistory_ShouldReturn401() throws Exception {
+        mockMvc.perform(get("/learner/{id}/status-history", LEARNER_ID))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("DELETE /learner/{id} - Não deve mais existir exclusão de educando")
+    void delete_ShouldNotBeAllowed() throws Exception {
+        mockMvc.perform(delete("/learner/{id}", LEARNER_ID).with(csrf()))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    @WithMockCustomUser
     @DisplayName("POST /learner/{id}/reactivate - Deve aceitar corpo vazio")
     void reactivate_ShouldAcceptEmptyBody() throws Exception {
         when(reactivateUseCase.handle(any(ReactivateLearnerCommand.class))).thenReturn(givenResponse());
@@ -848,7 +897,7 @@ class LearnerControllerTest {
     @DisplayName("GET /learner - Deve retornar 200 com a lista de educandos")
     void findAll_ShouldReturn200() throws Exception {
         LearnerSummaryResponse summary = new LearnerSummaryResponse(
-                LEARNER_ID, "Maria da Silva", "Escola Projeto Resgate", 2026, true);
+                LEARNER_ID, "Maria da Silva", "Escola Projeto Resgate", 2026, LearnerParticipationStatus.NO_CLASS);
 
         when(findAllUseCase.handle(any(FindAllLearnersQuery.class)))
                 .thenReturn(new PageImpl<>(List.of(summary), PAGEABLE, 1));
@@ -860,7 +909,7 @@ class LearnerControllerTest {
                 .andExpect(jsonPath("$.content[0].name").value("Maria da Silva"))
                 .andExpect(jsonPath("$.content[0].institutionName").value("Escola Projeto Resgate"))
                 .andExpect(jsonPath("$.content[0].academicYear").value(2026))
-                .andExpect(jsonPath("$.content[0].active").value(true));
+                .andExpect(jsonPath("$.content[0].status").value("NO_CLASS"));
     }
 
     @Test
@@ -885,7 +934,7 @@ class LearnerControllerTest {
 
         FindAllLearnersQuery query = captor.getValue();
         assertEquals("Maria", query.searchTerm());
-        assertEquals(LearnerStatus.DROPPED_OUT, query.status());
+        assertEquals(LearnerParticipationStatus.DROPPED_OUT, query.status());
         assertEquals(INSTITUTION_ID, query.institutionId());
         assertEquals(SCHOOL_GRADE_ID, query.schoolGradeId());
         assertEquals(2025, query.academicYear());

@@ -105,7 +105,6 @@ Enviar lista vazia/nula remove **todos** os responsáveis.
 |-------------------------------------|-----------------------------------------------------------------------------------------------------|
 | Criar/atualizar educando            | Garante `LEARNER` para a criança e `RESPONSIBLE` para cada responsável (idempotente)                |
 | Remover responsável no update       | Revoga `RESPONSIBLE` **só se** a pessoa não responde mais por nenhum educando                       |
-| Excluir educando                    | Exclui os responsáveis dele, revoga `LEARNER` da criança e `RESPONSIBLE` de quem ficou sem vínculos |
 
 Os papéis são **derivados**: nunca são editados diretamente pela API. Se ficarem inconsistentes, o
 conserto é regravar o educando ou ajustar no banco.
@@ -148,7 +147,6 @@ Tudo numa só transação: se qualquer etapa falhar, nada é gravado.
 
 | Operação                       | Efeito                                                                                          |
 |--------------------------------|-------------------------------------------------------------------------------------------------|
-| `DELETE /learner/{id}`         | Soft delete do educando + dos responsáveis + revoga papéis. **Não** remove vínculos com turmas.  |
 | `DELETE /family-group/{id}`    | Soft delete só do grupo. Pessoas e educandos **não** são afetados.                               |
 | `DELETE .../natural-person/{id}` (da família) | Só **desvincula** a pessoa da família (409 se não estava vinculada). Não exclui a pessoa. |
 

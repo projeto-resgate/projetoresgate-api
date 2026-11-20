@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import org.hibernate.validator.constraints.br.CPF;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 public record CreateNaturalPersonCommand(
         @NotBlank(message = "O nome é obrigatório")
@@ -22,6 +23,7 @@ public record CreateNaturalPersonCommand(
         @Phone(message = "Telefone inválido!")
         String phone,
         String cellphone,
-        Gender gender
+        Gender gender,
+        UUID workplaceId
 ) {
 }

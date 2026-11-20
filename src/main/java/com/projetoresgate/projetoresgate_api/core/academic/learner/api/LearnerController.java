@@ -4,18 +4,19 @@ import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.Dropo
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.EligibleResponsibleResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerAutocompleteResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerResponse;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerStatusHistoryResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerSummaryResponse;
-import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.LearnerStatus;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.LearnerParticipationStatus;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.*;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.command.CreateLearnerCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.command.DropoutLearnerCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.command.ReactivateLearnerCommand;
-import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.command.SoftDeleteLearnerCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.command.UpdateLearnerCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.AutocompleteLearnerQuery;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.FindAllLearnersQuery;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.FindEligibleResponsiblesQuery;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.FindLearnerByIdQuery;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.FindLearnerStatusHistoryQuery;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -44,32 +45,32 @@ public class LearnerController {
 
     private final CreateLearnerUseCase createUseCase;
     private final UpdateLearnerUseCase updateUseCase;
-    private final SoftDeleteLearnerUseCase softDeleteUseCase;
     private final FindLearnerByIdUseCase findByIdUseCase;
     private final FindAllLearnersUseCase findAllUseCase;
     private final FindEligibleResponsiblesUseCase findEligibleResponsiblesUseCase;
     private final DropoutLearnerUseCase dropoutUseCase;
     private final ReactivateLearnerUseCase reactivateUseCase;
     private final AutocompleteLearnerUseCase autocompleteUseCase;
+    private final FindLearnerStatusHistoryUseCase findStatusHistoryUseCase;
 
     public LearnerController(CreateLearnerUseCase createUseCase,
                              UpdateLearnerUseCase updateUseCase,
-                             SoftDeleteLearnerUseCase softDeleteUseCase,
                              FindLearnerByIdUseCase findByIdUseCase,
                              FindAllLearnersUseCase findAllUseCase,
                              FindEligibleResponsiblesUseCase findEligibleResponsiblesUseCase,
                              DropoutLearnerUseCase dropoutUseCase,
                              ReactivateLearnerUseCase reactivateUseCase,
-                             AutocompleteLearnerUseCase autocompleteUseCase) {
+                             AutocompleteLearnerUseCase autocompleteUseCase,
+                             FindLearnerStatusHistoryUseCase findStatusHistoryUseCase) {
         this.createUseCase = createUseCase;
         this.updateUseCase = updateUseCase;
-        this.softDeleteUseCase = softDeleteUseCase;
         this.findByIdUseCase = findByIdUseCase;
         this.findAllUseCase = findAllUseCase;
         this.findEligibleResponsiblesUseCase = findEligibleResponsiblesUseCase;
         this.dropoutUseCase = dropoutUseCase;
         this.reactivateUseCase = reactivateUseCase;
         this.autocompleteUseCase = autocompleteUseCase;
+        this.findStatusHistoryUseCase = findStatusHistoryUseCase;
     }
 
     @PostMapping
@@ -131,12 +132,14 @@ public class LearnerController {
     @PostMapping("/{id}/reactivate")
     @Operation(summary = "Reativar Educando",
             description = "Devolve o educando desistente para o status ativo, preservando o histórico da desistência. "
-                    + "Aceita uma observação opcional da reativação.")
+                    + "Aceita uma observação opcional e, opcionalmente, o id de uma turma (classGroupId): nesse caso o educando "
+                    + "também é (re)vinculado e ativado nessa turma. Se o educando já estiver ativo e a turma for informada, "
+                    + "apenas o vínculo com a turma é ativado, sem erro.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Educando reativado com sucesso",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = LearnerResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Educando não encontrado", content = @Content),
-            @ApiResponse(responseCode = "409", description = "Educando não está desistente", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Educando ou turma não encontrado", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Educando não está desistente e nenhuma turma foi informada", content = @Content)
     })
     public ResponseEntity<LearnerResponse> reactivate(@PathVariable UUID id,
                                                       @RequestBody @Valid ReactivateLearnerCommand command) {
@@ -146,14 +149,14 @@ public class LearnerController {
     @GetMapping
     @Operation(summary = "Listar Educandos",
             description = "Lista os educandos com paginação e filtros opcionais, retornando o nome da pessoa física, o nome da instituição de "
-                    + "ensino quando houver, o ano letivo e se o educando está ativo.")
+                    + "ensino quando houver, o ano letivo e a situação (status): ACTIVE, NO_CLASS ou DROPPED_OUT.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class)))
     })
     public ResponseEntity<Page<LearnerSummaryResponse>> findAll(
             @Parameter(description = "Termo de pesquisa (Nome ou apelido do educando)") @RequestParam(required = false) String searchTerm,
-            @Parameter(description = "Status do educando") @RequestParam(required = false) LearnerStatus status,
+            @Parameter(description = "Situação do educando: ACTIVE (cursando turma em andamento), NO_CLASS (ativo, sem turma em andamento) ou DROPPED_OUT (desistente)") @RequestParam(required = false) LearnerParticipationStatus status,
             @Parameter(description = "Id da instituição") @RequestParam(required = false) UUID institutionId,
             @Parameter(description = "Id da série escolar") @RequestParam(required = false) UUID schoolGradeId,
             @Parameter(description = "Ano letivo") @RequestParam(required = false) Integer academicYear,
@@ -216,15 +219,17 @@ public class LearnerController {
         return ResponseEntity.ok(findEligibleResponsiblesUseCase.handle(query));
     }
 
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Excluir Educando",
-            description = "Realiza a exclusão lógica (soft delete) do educando e dos seus responsáveis. Os registros não são removidos fisicamente do banco.")
+    @GetMapping("/{id}/status-history")
+    @Operation(summary = "Histórico de Desistências e Retomadas",
+            description = "Lista os eventos de desistência e de retomada do educando, do mais recente para o mais antigo, "
+                    + "com o tipo do evento (DROPOUT ou REACTIVATION), o motivo/observação, a data do evento e o "
+                    + "momento em que o registro foi feito.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Educando excluído com sucesso", content = @Content),
+            @ApiResponse(responseCode = "200", description = "Histórico retornado com sucesso (lista vazia se nunca houve evento)",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = LearnerStatusHistoryResponse.class))),
             @ApiResponse(responseCode = "404", description = "Educando não encontrado", content = @Content)
     })
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        softDeleteUseCase.handle(new SoftDeleteLearnerCommand(id));
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<List<LearnerStatusHistoryResponse>> findStatusHistory(@PathVariable UUID id) {
+        return ResponseEntity.ok(findStatusHistoryUseCase.handle(new FindLearnerStatusHistoryQuery(id)));
     }
 }

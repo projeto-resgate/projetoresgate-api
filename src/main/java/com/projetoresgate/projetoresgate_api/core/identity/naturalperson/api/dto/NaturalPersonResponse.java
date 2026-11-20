@@ -18,9 +18,15 @@ public record NaturalPersonResponse(
         String phone,
         String cellphone,
         Gender gender,
+        UUID workplaceId,
+        String workplaceName,
         LocalDateTime dateCreated
 ) {
     public static NaturalPersonResponse fromEntity(NaturalPerson entity) {
+        return fromEntity(entity, null);
+    }
+
+    public static NaturalPersonResponse fromEntity(NaturalPerson entity, String workplaceName) {
         return new NaturalPersonResponse(
                 entity.getId(),
                 entity.getName(),
@@ -32,6 +38,8 @@ public record NaturalPersonResponse(
                 entity.getPhone(),
                 entity.getCellphone(),
                 entity.getGender(),
+                entity.getWorkplaceId(),
+                workplaceName,
                 entity.getDateCreated()
         );
     }

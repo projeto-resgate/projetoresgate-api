@@ -1,5 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.api;
 
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.api.dto.LegalPersonSummaryResponse;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.FindLegalPersonSummariesUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.api.dto.NaturalPersonResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.api.dto.NaturalPersonSummaryResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
@@ -25,8 +27,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/natural-person")
@@ -41,6 +48,7 @@ public class NaturalPersonController {
     private final AutocompleteNaturalPersonUseCase autocompleteUseCase;
     private final RequestEmailConfirmationUseCase requestEmailConfirmationUseCase;
     private final ConfirmEmailUseCase confirmEmailUseCase;
+    private final FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase;
 
     public NaturalPersonController(CreateNaturalPersonUseCase createUseCase,
                                    UpdateNaturalPersonUseCase updateUseCase,
@@ -49,7 +57,8 @@ public class NaturalPersonController {
                                    FindAllNaturalPersonsUseCase findAllUseCase,
                                    AutocompleteNaturalPersonUseCase autocompleteUseCase,
                                    RequestEmailConfirmationUseCase requestEmailConfirmationUseCase,
-                                   ConfirmEmailUseCase confirmEmailUseCase) {
+                                   ConfirmEmailUseCase confirmEmailUseCase,
+                                   FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase) {
         this.createUseCase = createUseCase;
         this.updateUseCase = updateUseCase;
         this.softDeleteUseCase = softDeleteUseCase;
@@ -58,6 +67,7 @@ public class NaturalPersonController {
         this.autocompleteUseCase = autocompleteUseCase;
         this.requestEmailConfirmationUseCase = requestEmailConfirmationUseCase;
         this.confirmEmailUseCase = confirmEmailUseCase;
+        this.findLegalPersonSummariesUseCase = findLegalPersonSummariesUseCase;
     }
 
     @PostMapping
@@ -69,7 +79,7 @@ public class NaturalPersonController {
     })
     public ResponseEntity<NaturalPersonResponse> create(@RequestBody @Valid CreateNaturalPersonCommand command) {
         NaturalPerson person = createUseCase.handle(command);
-        return ResponseEntity.status(HttpStatus.CREATED).body(NaturalPersonResponse.fromEntity(person));
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(person));
     }
 
     @PutMapping("/{id}")
@@ -82,7 +92,7 @@ public class NaturalPersonController {
     })
     public ResponseEntity<NaturalPersonResponse> update(@PathVariable UUID id, @RequestBody @Valid UpdateNaturalPersonCommand command) {
         NaturalPerson person = updateUseCase.handle(command.withId(id));
-        return ResponseEntity.ok(NaturalPersonResponse.fromEntity(person));
+        return ResponseEntity.ok(toResponse(person));
     }
 
     @DeleteMapping("/{id}")
@@ -115,7 +125,9 @@ public class NaturalPersonController {
         Pageable pageable = PageRequest.of(page, size);
         FindAllNaturalPersonsQuery query = new FindAllNaturalPersonsQuery(searchTerm, rg, cpf, cellphone, gender, pageable);
         Page<NaturalPerson> pageResult = findAllUseCase.handle(query);
-        return ResponseEntity.ok(pageResult.map(NaturalPersonResponse::fromEntity));
+        Map<UUID, String> workplaceNames = resolveWorkplaceNames(pageResult.getContent());
+        return ResponseEntity.ok(pageResult.map(person -> NaturalPersonResponse.fromEntity(
+                person, workplaceName(person, workplaceNames))));
     }
 
     @GetMapping("/{id}")
@@ -128,7 +140,7 @@ public class NaturalPersonController {
     public ResponseEntity<NaturalPersonResponse> findById(@PathVariable UUID id) {
         FindNaturalPersonByIdQuery query = new FindNaturalPersonByIdQuery(id);
         NaturalPerson person = findByIdUseCase.handle(query);
-        return ResponseEntity.ok(NaturalPersonResponse.fromEntity(person));
+        return ResponseEntity.ok(toResponse(person));
     }
 
     @GetMapping("/autocomplete")
@@ -163,5 +175,27 @@ public class NaturalPersonController {
     public ResponseEntity<Void> confirmEmail(@PathVariable String token) {
         confirmEmailUseCase.handle(new ConfirmEmailCommand(token));
         return ResponseEntity.ok().build();
+    }
+
+    private NaturalPersonResponse toResponse(NaturalPerson person) {
+        return NaturalPersonResponse.fromEntity(person, workplaceName(person, resolveWorkplaceNames(List.of(person))));
+    }
+
+    private static String workplaceName(NaturalPerson person, Map<UUID, String> workplaceNames) {
+        return person.getWorkplaceId() == null ? null : workplaceNames.get(person.getWorkplaceId());
+    }
+
+    private Map<UUID, String> resolveWorkplaceNames(Collection<NaturalPerson> people) {
+        Set<UUID> ids = people.stream()
+                .map(NaturalPerson::getWorkplaceId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+
+        return findLegalPersonSummariesUseCase.handle(ids).stream()
+                .collect(Collectors.toMap(LegalPersonSummaryResponse::id, LegalPersonSummaryResponse::displayName));
     }
 }
