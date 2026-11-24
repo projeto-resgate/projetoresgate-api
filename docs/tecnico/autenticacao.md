@@ -12,11 +12,11 @@ Como alguém entra, permanece logado e sai do sistema. Decisão de arquitetura e
 | Refresh token           | Valor aleatório, guardado como **hash** no banco, entregue em **cookie `refreshToken`**, **7 dias**|
 | Cookie                  | `HttpOnly`, `Secure` e `SameSite=Strict` em produção (`api.cookie.*`)                             |
 | Senha                   | BCrypt                                                                                            |
-| Rate limit              | `/user/login` e `/user/refresh`: **5 req / 60 s por IP** em produção (20 em dev)                  |
+| Rate limit              | Por IP, em 3 camadas (login/senha: **5/min**; rotas públicas de escrita: **20/min**; geral: **300/min**) e por e-mail (**3/hora**). Ver [Limite de requisições](#limite-de-requisições) |
 | Autorização por perfil  | **Não existe.** Só há o papel `ADMIN` e nada o consulta (ver [RFC 0001](../rfc/0001-autorizacao-por-role.md)) |
 
 Os tempos são configuráveis por variável de ambiente: `API_SECURITY_ACCESS_TOKEN_DURATION`,
-`API_SECURITY_REFRESH_TOKEN_DURATION`, `API_RATE_LIMIT_MAX_REQUESTS`, `API_RATE_LIMIT_WINDOW_SECONDS`.
+`API_SECURITY_REFRESH_TOKEN_DURATION`. As variáveis do limite de requisições estão [mais abaixo](#variáveis-do-limite).
 
 ## Rotas públicas
 
@@ -51,7 +51,7 @@ sequenceDiagram
     participant DB as PostgreSQL
 
     F->>RL: POST /user/login {email, password}
-    RL->>RL: conta requisições do IP (janela 60 s)
+    RL->>RL: gasta uma ficha do IP (camada AUTH)
     alt acima do limite
         RL-->>F: 429 Too Many Requests
     else dentro do limite
@@ -193,6 +193,104 @@ sequenceDiagram
 - O token vale **24 horas**.
 - O link do e-mail é `<FRONTEND_URL>/confirm-email/<token>` (mesma propriedade `app.frontend-url` do reset de senha).
 - O e-mail verificado é só informativo hoje: nada no sistema bloqueia quem não confirmou.
+
+## Limite de requisições
+
+Protege contra força bruta, spam e varredura. Implementado em `RateLimitingFilter` (por IP) e
+`EmailRateLimiter` (por destinatário), sobre o mesmo algoritmo, `TokenBucketRateLimiter`.
+
+### Camadas por IP
+
+Cada requisição cai na camada **mais específica** que a descreve e gasta uma ficha só dela:
+
+| Camada      | Rotas                                                                                              | Padrão       |
+|-------------|----------------------------------------------------------------------------------------------------|--------------|
+| **AUTH**    | `POST /user/login`, `/user/refresh`, `/user/forgot-password`, `/user/reset-password`               | **5 / min**  |
+| **PUBLIC**  | `POST /user`, `POST /natural-person`, `/natural-person/request-email-confirmation`, `/natural-person/confirm-email/**` | **20 / min** |
+| **GENERAL** | Todo o resto                                                                                       | **300 / min** |
+
+Em dev os padrões são mais folgados (AUTH 20, PUBLIC 100, GENERAL 1000).
+
+```mermaid
+flowchart TD
+    A[Requisição] --> B{OPTIONS<br/>preflight CORS?}
+    B -- sim --> OK[Segue, sem gastar ficha]
+    B -- não --> C{Limite desligado?}
+    C -- sim --> OK
+    C -- não --> D[Descobre o IP do cliente]
+    D --> E{Qual camada?}
+    E -- "login, refresh,<br/>forgot/reset" --> F[AUTH]
+    E -- "criar usuário/pessoa,<br/>confirmar e-mail" --> G[PUBLIC]
+    E -- "demais rotas" --> H[GENERAL]
+    F --> I{Tem ficha<br/>no balde do IP?}
+    G --> I
+    H --> I
+    I -- sim --> J[Gasta 1 ficha e segue<br/>para a autenticação]
+    I -- não --> K["429 + Retry-After + JSON"]
+```
+
+### Como funciona (token bucket)
+
+- Cada IP tem um **balde** por camada, com capacidade igual ao limite (ex.: 5). Cada requisição gasta 1 ficha.
+- As fichas voltam **continuamente**: `limite ÷ janela` por segundo (5 por minuto = 1 ficha a cada 12 s). Dá para
+  fazer uma pequena rajada e, depois, só no ritmo permitido, sem o "estouro" de 2x que janelas fixas permitem
+  na virada do minuto.
+- O filtro fica **dentro** da cadeia do Spring Security, logo **depois do CORS** e **antes da autenticação**.
+  Por isso: o 429 sai com cabeçalhos CORS (o front consegue ler a resposta) e requisições sem token também contam.
+- **Preflight (`OPTIONS`) não gasta ficha**: o navegador o envia antes de cada chamada.
+
+### Resposta ao estourar
+
+```http
+HTTP/1.1 429
+Retry-After: 9
+Content-Type: application/json
+
+{"code":"Too Many Requests","message":"Muitas requisições. Tente novamente em 9 segundos."}
+```
+
+`Retry-After` é o tempo, em segundos, até voltar uma ficha. O front deve exibi-lo ou esperar esse tempo.
+
+### Limite por e-mail
+
+Além do IP, um mesmo **destinatário** recebe no máximo **3 e-mails por hora** (reset de senha e confirmação de
+e-mail). Impede que alguém com vários IPs encha a caixa de uma pessoa e esgote a cota do Gmail.
+
+Quando o limite é atingido, o pedido é **ignorado em silêncio**: a resposta é igual à de sempre (200), sem enviar
+nada. Assim ninguém descobre que o limite existe nem se o e-mail está cadastrado.
+
+### Qual é o IP do cliente
+
+| Situação                              | IP usado                                                                              |
+|---------------------------------------|---------------------------------------------------------------------------------------|
+| `trusted-proxies = 0` (**padrão**)    | O IP da conexão (`remoteAddr`). `X-Forwarded-For` é **ignorado**                      |
+| `trusted-proxies = N` (N > 0)         | A **N-ésima entrada de `X-Forwarded-For`, contada da direita** (a que o proxy mais externo acrescentou). Se o cabeçalho for mais curto que N, cai para o `remoteAddr` |
+
+`X-Forwarded-For` pode ser **forjado por qualquer cliente**: confiar nele sem um proxy na frente deixaria qualquer
+um burlar o limite trocando o cabeçalho. Hoje a API é exposta direto (sem proxy), então o padrão é 0. **Quando
+colocar um proxy reverso (Caddy/Nginx) na frente, defina `API_RATE_LIMIT_TRUSTED_PROXIES=1`**; sem isso, todos os
+usuários passariam a compartilhar o IP do proxy e o limite valeria para o conjunto.
+
+### Variáveis do limite
+
+| Variável                                             | Padrão  | Descrição                                                  |
+|------------------------------------------------------|---------|------------------------------------------------------------|
+| `API_RATE_LIMIT_ENABLED`                             | `true`  | `false` desliga o limite (por IP e por e-mail)             |
+| `API_RATE_LIMIT_MAX_REQUESTS` / `_WINDOW_SECONDS`    | 5 / 60  | Camada AUTH                                                |
+| `API_RATE_LIMIT_PUBLIC_MAX_REQUESTS` / `_WINDOW_SECONDS` | 20 / 60 | Camada PUBLIC                                          |
+| `API_RATE_LIMIT_GENERAL_MAX_REQUESTS` / `_WINDOW_SECONDS` | 300 / 60 | Camada GENERAL                                        |
+| `API_RATE_LIMIT_EMAIL_MAX_REQUESTS` / `_WINDOW_SECONDS` | 3 / 3600 | E-mails por destinatário                                |
+| `API_RATE_LIMIT_TRUSTED_PROXIES`                     | `0`     | Quantos proxies confiáveis existem na frente da API        |
+
+### Limitações conhecidas
+
+- **Em memória, por instância:** reiniciar a API zera os baldes, e várias réplicas teriam limites independentes.
+  Para uma única VM basta; com réplicas seria preciso um armazenamento compartilhado (ex.: Redis).
+- **Atrás de NAT** (vários usuários num mesmo IP, como um escritório) todos dividem o mesmo balde. Se isso incomodar,
+  aumente os limites PUBLIC e GENERAL.
+- **Memória limitada:** baldes ociosos são removidos e há um teto de 100 mil chaves; acima dele, IPs novos passam
+  sem controle (prefere-se disponibilidade a derrubar a aplicação).
+- O limite **não substitui** autenticação nem captcha: reduz o ritmo de um ataque, não o impede.
 
 ## Limpeza de tokens expirados
 
