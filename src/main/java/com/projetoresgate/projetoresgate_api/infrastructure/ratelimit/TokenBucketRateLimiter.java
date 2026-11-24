@@ -19,7 +19,7 @@ public final class TokenBucketRateLimiter {
     }
 
     public record Decision(boolean allowed, long retryAfterSeconds) {
-        static final Decision ALLOWED = new Decision(true, 0);
+        static final Decision PERMITTED = new Decision(true, 0);
     }
 
     static final int MAX_KEYS = 100_000;
@@ -47,7 +47,7 @@ public final class TokenBucketRateLimiter {
         Bucket bucket = buckets.get(key);
         if (bucket == null) {
             if (buckets.size() >= MAX_KEYS) {
-                return Decision.ALLOWED;
+                return Decision.PERMITTED;
             }
             bucket = buckets.computeIfAbsent(key, k -> new Bucket(policy, now));
         }
@@ -81,7 +81,7 @@ public final class TokenBucketRateLimiter {
             refill(nowNanos);
             if (tokens >= 1d) {
                 tokens -= 1d;
-                return Decision.ALLOWED;
+                return Decision.PERMITTED;
             }
             double nanosUntilNextToken = (1d - tokens) / refillPerNano;
             long retryAfter = Math.max(1L, (long) Math.ceil(nanosUntilNextToken / NANOS_PER_SECOND - 1e-9));
