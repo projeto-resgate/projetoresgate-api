@@ -21,7 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -65,7 +65,7 @@ class SchoolGradeServiceIntegrationTest extends PostgresIntegrationTest {
                 classGroupRepository, classScheduleRepository, programRepository);
         createService = new CreateSchoolGradeService(repository);
         updateService = new UpdateSchoolGradeService(repository, refreshService);
-        softDeleteService = new SoftDeleteSchoolGradeService(repository, refreshService);
+        softDeleteService = new SoftDeleteSchoolGradeService(repository);
         findAllService = new FindAllSchoolGradesService(repository);
         findNamesService = new FindSchoolGradeNamesService(repository);
     }

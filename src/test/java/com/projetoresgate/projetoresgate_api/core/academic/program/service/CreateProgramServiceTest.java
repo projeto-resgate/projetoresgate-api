@@ -9,6 +9,9 @@ import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.comma
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.api.dto.LegalPersonSummaryResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.FindLegalPersonSummariesUseCase;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
+import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +37,9 @@ class CreateProgramServiceTest {
 
     @Mock
     private FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase;
+
+    @Mock
+    private LegalPersonRepository legalPersonRepository;
 
     @InjectMocks
     private CreateProgramService service;
@@ -71,6 +77,7 @@ class CreateProgramServiceTest {
         LegalPersonSummaryResponse institution = new LegalPersonSummaryResponse(institutionId, "Escola X", "12345678000195");
 
         when(repository.existsByName("Programa A")).thenReturn(false);
+        when(legalPersonRepository.findByIdOrThrow(institutionId)).thenReturn(mock(LegalPerson.class));
         when(repository.save(any(Program.class))).thenAnswer(i -> i.getArgument(0));
         when(findLegalPersonSummariesUseCase.handle(Set.of(institutionId))).thenReturn(List.of(institution));
 
@@ -114,6 +121,22 @@ class CreateProgramServiceTest {
 
         InternalException exception = assertThrows(InternalException.class, () -> service.handle(command));
         assertEquals("O status é obrigatório.", exception.getMessage());
+
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Não deve criar programa para uma instituição excluída (ou inexistente)")
+    void handle_ShouldRejectDeletedInstitution() {
+        UUID deletedInstitutionId = UUID.randomUUID();
+        CreateProgramCommand command = new CreateProgramCommand(
+                "Programa A", null, ProgramStatus.ACTIVE, deletedInstitutionId, null);
+
+        when(repository.existsByName("Programa A")).thenReturn(false);
+        when(legalPersonRepository.findByIdOrThrow(deletedInstitutionId))
+                .thenThrow(new ResourceNotFoundException("Pessoa jurídica não encontrada"));
+
+        assertThrows(ResourceNotFoundException.class, () -> service.handle(command));
 
         verify(repository, never()).save(any());
     }

@@ -6,6 +6,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.F
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.FindAllLegalPersonsQuery;
 import com.projetoresgate.projetoresgate_api.infrastructure.utils.CnpjUtils;
 import com.projetoresgate.projetoresgate_api.shared.specification.SpecificationBuilder;
+import com.projetoresgate.projetoresgate_api.shared.specification.Specs;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
@@ -34,9 +35,7 @@ public class FindAllLegalPersonsService implements FindAllLegalPersonsUseCase {
                 .with("companyStatus", ":", query.companyStatus())
                 .build();
 
-        Specification<LegalPerson> finalSpec = Specification
-                .where(hasSearchTerm(query.searchTerm()))
-                .and(genericFilters);
+        Specification<LegalPerson> finalSpec = Specs.allOf(hasSearchTerm(query.searchTerm()), genericFilters);
 
         return repository.findAll(finalSpec, query.pageable());
     }

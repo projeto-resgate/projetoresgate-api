@@ -1,7 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain;
 
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.enums.WeekDay;
-import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.domain.SchoolGrade;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.shared.entity.AuditableEntity;
 import jakarta.persistence.*;
@@ -58,14 +57,14 @@ public class ClassGroup extends AuditableEntity {
     @JoinTable(name = "class_school_grade",
             joinColumns = @JoinColumn(name = "class_group_id"),
             inverseJoinColumns = @JoinColumn(name = "school_grade_id"))
-    private List<SchoolGrade> schoolGradeList = new ArrayList<>();
+    private List<SchoolGradeRef> schoolGradeList = new ArrayList<>();
 
     protected ClassGroup() {
     }
 
     private ClassGroup(UUID id, UUID programId, UUID institutionId, Integer studentProjections,
                        LocalDateTime startDate, Integer durationInMonths, String note, String title,
-                       List<SchoolGrade> schoolGradeList) {
+                       List<SchoolGradeRef> schoolGradeList) {
         this.id = id;
         this.programId = programId;
         this.institutionId = institutionId;
@@ -81,7 +80,7 @@ public class ClassGroup extends AuditableEntity {
 
     public static ClassGroup create(UUID programId, UUID institutionId, Integer studentProjections,
                                     LocalDateTime startDate, Integer durationInMonths, String note,
-                                    String programName, List<SchoolGrade> schoolGradeList) {
+                                    String programName, List<SchoolGradeRef> schoolGradeList) {
         return new ClassGroup(UUID.randomUUID(), programId, institutionId, studentProjections, startDate,
                 durationInMonths, note, composeTitle(programName, schoolGradeList, List.of()), schoolGradeList);
     }
@@ -131,7 +130,7 @@ public class ClassGroup extends AuditableEntity {
         this.title = title;
     }
 
-    private static String composeTitle(String programName, List<SchoolGrade> schoolGrades, List<WeekDay> weekDays) {
+    private static String composeTitle(String programName, List<SchoolGradeRef> schoolGrades, List<WeekDay> weekDays) {
         List<String> parts = new ArrayList<>(3);
 
         if (StringUtils.hasText(programName)) {
@@ -151,18 +150,18 @@ public class ClassGroup extends AuditableEntity {
         return String.join(" - ", parts);
     }
 
-    private static String joinSchoolGrades(List<SchoolGrade> schoolGrades) {
+    private static String joinSchoolGrades(List<SchoolGradeRef> schoolGrades) {
         if (schoolGrades == null || schoolGrades.isEmpty()) {
             return null;
         }
         return schoolGrades.stream()
-                .sorted(Comparator.comparing(SchoolGrade::getGradeOrder))
+                .sorted(Comparator.comparing(SchoolGradeRef::getGradeOrder))
                 .map(ClassGroup::abbreviatedGrade)
                 .distinct()
                 .collect(Collectors.joining(", "));
     }
 
-    private static String abbreviatedGrade(SchoolGrade schoolGrade) {
+    private static String abbreviatedGrade(SchoolGradeRef schoolGrade) {
         return StringUtils.hasText(schoolGrade.getAbbreviation())
                 ? schoolGrade.getAbbreviation().trim()
                 : schoolGrade.getName().trim();
@@ -239,7 +238,7 @@ public class ClassGroup extends AuditableEntity {
             return this;
         }
 
-        public Updater schoolGradeList(List<SchoolGrade> schoolGradeList) {
+        public Updater schoolGradeList(List<SchoolGradeRef> schoolGradeList) {
             ClassGroup.this.schoolGradeList = nonNull(schoolGradeList) ? new ArrayList<>(schoolGradeList)
                     : new ArrayList<>();
             return this;
@@ -293,7 +292,7 @@ public class ClassGroup extends AuditableEntity {
         return active;
     }
 
-    public List<SchoolGrade> getSchoolGradeList() {
+    public List<SchoolGradeRef> getSchoolGradeList() {
         return schoolGradeList;
     }
 }

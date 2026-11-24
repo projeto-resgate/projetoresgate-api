@@ -69,7 +69,7 @@ class FindLearnerByIdServiceTest {
                 Responsible.create(learner, mother.getId(), ResponsibleType.FINANCIAL, Kinship.MOTHER, null),
                 Responsible.create(learner, father.getId(), ResponsibleType.COMMUNICATION, Kinship.FATHER, null)));
         when(repository.findByIdOrThrow(learner.getId())).thenReturn(learner);
-        when(naturalPersonRepository.findAllById(any())).thenReturn(List.of(mother, father));
+        when(naturalPersonRepository.findAllByIdIncludingDeleted(any())).thenReturn(List.of(mother, father));
 
         LearnerResponse response = service.handle(new FindLearnerByIdQuery(learner.getId()));
 
@@ -90,7 +90,7 @@ class FindLearnerByIdServiceTest {
         learner.syncResponsibleList(List.of(Responsible.create(
                 learner, mother.getId(), ResponsibleType.FINANCIAL, Kinship.MOTHER, schoolGradeId)));
         when(repository.findByIdOrThrow(learner.getId())).thenReturn(learner);
-        when(naturalPersonRepository.findAllById(any())).thenReturn(List.of(mother));
+        when(naturalPersonRepository.findAllByIdIncludingDeleted(any())).thenReturn(List.of(mother));
 
         LearnerResponse response = service.handle(new FindLearnerByIdQuery(learner.getId()));
 
@@ -111,11 +111,11 @@ class FindLearnerByIdServiceTest {
                 Responsible.create(learner, mother.getId(), ResponsibleType.FINANCIAL, Kinship.MOTHER, null),
                 Responsible.create(learner, father.getId(), ResponsibleType.COMMUNICATION, Kinship.FATHER, null)));
         when(repository.findByIdOrThrow(learner.getId())).thenReturn(learner);
-        when(naturalPersonRepository.findAllById(any())).thenReturn(List.of(mother, father));
+        when(naturalPersonRepository.findAllByIdIncludingDeleted(any())).thenReturn(List.of(mother, father));
 
         service.handle(new FindLearnerByIdQuery(learner.getId()));
 
-        verify(naturalPersonRepository, times(1)).findAllById(any());
+        verify(naturalPersonRepository, times(1)).findAllByIdIncludingDeleted(any());
     }
 
     @Test

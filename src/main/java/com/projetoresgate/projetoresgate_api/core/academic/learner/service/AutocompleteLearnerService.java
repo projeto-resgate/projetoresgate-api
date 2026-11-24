@@ -17,12 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,12 +49,10 @@ public class AutocompleteLearnerService implements AutocompleteLearnerUseCase {
                 .collect(Collectors.toMap(NaturalPerson::getId, person -> person));
 
         return learners.stream()
+                .filter(learner -> persons.containsKey(learner.getNaturalPersonId()))
                 .map(learner -> {
                     NaturalPerson person = persons.get(learner.getNaturalPersonId());
-                    return LearnerAutocompleteResponse.fromEntity(
-                            learner,
-                            person == null ? null : person.getName(),
-                            person == null ? null : person.getCpf());
+                    return LearnerAutocompleteResponse.fromEntity(learner, person.getName(), person.getCpf());
                 })
                 .toList();
     }

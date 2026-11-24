@@ -82,7 +82,7 @@ public class FindAllClassLearnersService implements FindAllClassLearnersUseCase 
             return Map.of();
         }
 
-        return learnerRepository.findAllById(ids).stream()
+        return learnerRepository.findAllByIdIncludingDeleted(ids).stream()
                 .collect(Collectors.toMap(Learner::getId, learner -> learner));
     }
 
@@ -96,7 +96,7 @@ public class FindAllClassLearnersService implements FindAllClassLearnersUseCase 
             return Map.of();
         }
 
-        return naturalPersonRepository.findAllById(ids).stream()
+        return naturalPersonRepository.findAllByIdIncludingDeleted(ids).stream()
                 .collect(Collectors.toMap(NaturalPerson::getId, person -> person));
     }
 }

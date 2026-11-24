@@ -64,8 +64,8 @@ class FindAllClassLearnersServiceTest {
         when(classGroupRepository.findByIdOrThrow(classGroup.getId())).thenReturn(classGroup);
         when(repository.findAllByClassGroupId(eq(classGroup.getId()), isNull(), isNull(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(link), pageable, 1));
-        when(learnerRepository.findAllById(any())).thenReturn(List.of(learner));
-        when(naturalPersonRepository.findAllById(any())).thenReturn(List.of(person));
+        when(learnerRepository.findAllByIdIncludingDeleted(any())).thenReturn(List.of(learner));
+        when(naturalPersonRepository.findAllByIdIncludingDeleted(any())).thenReturn(List.of(person));
 
         Page<ClassLearnerResponse> result = service.handle(
                 new FindAllClassLearnersQuery(classGroup.getId(), null, null, pageable));

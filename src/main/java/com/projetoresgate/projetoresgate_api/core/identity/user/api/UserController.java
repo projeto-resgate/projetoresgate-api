@@ -193,14 +193,18 @@ public class UserController {
     }
 
     @PutMapping
-    @Operation(summary = "Atualizar usuário", description = "Atualiza os dados do usuário autenticado.")
+    @Operation(summary = "Atualizar usuário", description = "Atualiza os dados do usuário autenticado. Se a senha for alterada, todas as sessões são encerradas (inclusive a atual) e o usuário deve entrar novamente.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos")
     })
     public ResponseEntity<Void> update(@RequestBody UpdateUserCommand cmd,
-                                       @AuthenticationPrincipal UserDetailsImpl userDetails) {
+                                       @AuthenticationPrincipal UserDetailsImpl userDetails,
+                                       HttpServletResponse httpResponse) {
         updateUserUseCase.handle(cmd.withId(userDetails.getUser().getId()));
+        if (nonNull(cmd.password()) && !cmd.password().isBlank()) {
+            cookieService.removeRefreshTokenCookie(httpResponse);
+        }
         return ResponseEntity.ok().build();
     }
 

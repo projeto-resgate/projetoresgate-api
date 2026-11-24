@@ -62,6 +62,7 @@ public class AutocompleteCollaboratorService implements AutocompleteCollaborator
                 .collect(Collectors.toMap(LegalPerson::getId, legalPerson -> legalPerson));
 
         return collaborators.stream()
+                .filter(collaborator -> naturalPersons.containsKey(collaborator.getNaturalPersonId()))
                 .map(collaborator -> CollaboratorAutocompleteResponse.fromEntity(
                         collaborator,
                         naturalPersons.get(collaborator.getNaturalPersonId()),

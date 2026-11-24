@@ -5,6 +5,10 @@ import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.Cla
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassGroupRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassLearnerRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.ActivateClassLearnerLinkCommand;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Learner;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.repository.LearnerRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,8 +41,22 @@ class ActivateClassLearnerLinkServiceTest {
     @Mock
     private ClassLearnerRepository repository;
 
+    @Mock
+    private LearnerRepository learnerRepository;
+
+    @Mock
+    private NaturalPersonRepository naturalPersonRepository;
+
     @InjectMocks
     private ActivateClassLearnerLinkService service;
+
+    private void givenLearnerWithPerson(UUID learnerId) {
+        Learner learner = Learner.create(UUID.randomUUID(), null, null, false, null, 2026, null, null);
+        when(learnerRepository.findByIdOrThrow(learnerId)).thenReturn(learner);
+        when(naturalPersonRepository.findByIdOrThrow(learner.getNaturalPersonId()))
+                .thenReturn(NaturalPerson.create("Ana Souza", "ana@example.com", null, "52998224725",
+                        null, null, null, null, null));
+    }
 
     private static ClassGroup givenClassGroup() {
         return ClassGroup.create(UUID.randomUUID(), UUID.randomUUID(), 20,
@@ -51,6 +69,7 @@ class ActivateClassLearnerLinkServiceTest {
         ClassGroup classGroup = givenClassGroup();
         UUID learnerId = UUID.randomUUID();
 
+        givenLearnerWithPerson(learnerId);
         when(classGroupRepository.findByIdOrThrow(classGroup.getId())).thenReturn(classGroup);
         when(repository.findByClassGroupIdAndLearnerId(classGroup.getId(), learnerId)).thenReturn(Optional.empty());
 
@@ -70,6 +89,7 @@ class ActivateClassLearnerLinkServiceTest {
         ClassLearner link = ClassLearner.create(classGroup, learnerId);
         link.deactivate();
 
+        givenLearnerWithPerson(learnerId);
         when(classGroupRepository.findByIdOrThrow(classGroup.getId())).thenReturn(classGroup);
         when(repository.findByClassGroupIdAndLearnerId(classGroup.getId(), learnerId)).thenReturn(Optional.of(link));
 
@@ -86,6 +106,7 @@ class ActivateClassLearnerLinkServiceTest {
         UUID learnerId = UUID.randomUUID();
         ClassLearner link = ClassLearner.create(classGroup, learnerId);
 
+        givenLearnerWithPerson(learnerId);
         when(classGroupRepository.findByIdOrThrow(classGroup.getId())).thenReturn(classGroup);
         when(repository.findByClassGroupIdAndLearnerId(classGroup.getId(), learnerId)).thenReturn(Optional.of(link));
 
@@ -104,6 +125,24 @@ class ActivateClassLearnerLinkServiceTest {
 
         assertThrows(ResourceNotFoundException.class,
                 () -> service.handle(new ActivateClassLearnerLinkCommand(classGroupId, UUID.randomUUID())));
+
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Não deve ativar vínculo de educando cuja pessoa física foi excluída")
+    void handle_ShouldFailWhenPersonDeleted() {
+        ClassGroup classGroup = givenClassGroup();
+        UUID learnerId = UUID.randomUUID();
+        Learner learner = Learner.create(UUID.randomUUID(), null, null, false, null, 2026, null, null);
+
+        when(classGroupRepository.findByIdOrThrow(classGroup.getId())).thenReturn(classGroup);
+        when(learnerRepository.findByIdOrThrow(learnerId)).thenReturn(learner);
+        when(naturalPersonRepository.findByIdOrThrow(learner.getNaturalPersonId()))
+                .thenThrow(new ResourceNotFoundException("Pessoa física não encontrada"));
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.handle(new ActivateClassLearnerLinkCommand(classGroup.getId(), learnerId)));
 
         verify(repository, never()).save(any());
     }

@@ -42,15 +42,11 @@ public class CreateClassLearnerService implements CreateClassLearnerUseCase {
             throw new IllegalStateException("Este educando já está vinculado à turma.");
         }
 
+        NaturalPerson person = naturalPersonRepository.findByIdOrThrow(learner.getNaturalPersonId());
+
         ClassLearner classLearner = ClassLearner.create(classGroup, command.learnerId());
         ClassLearner saved = repository.save(classLearner);
 
-        NaturalPerson person = naturalPersonRepository.findById(learner.getNaturalPersonId()).orElse(null);
-
-        return ClassLearnerResponse.fromEntity(
-                saved,
-                person == null ? null : person.getName(),
-                person == null ? null : person.getCpf(),
-                learner.getStatus());
+        return ClassLearnerResponse.fromEntity(saved, person.getName(), person.getCpf(), learner.getStatus());
     }
 }

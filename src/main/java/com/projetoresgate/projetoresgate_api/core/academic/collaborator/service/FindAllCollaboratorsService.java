@@ -67,7 +67,7 @@ public class FindAllCollaboratorsService implements FindAllCollaboratorsUseCase 
             return Map.of();
         }
 
-        return naturalPersonRepository.findAllById(ids).stream()
+        return naturalPersonRepository.findAllByIdIncludingDeleted(ids).stream()
                 .collect(Collectors.toMap(NaturalPerson::getId, person -> person));
     }
 
@@ -81,7 +81,7 @@ public class FindAllCollaboratorsService implements FindAllCollaboratorsUseCase 
             return Map.of();
         }
 
-        return legalPersonRepository.findAllById(ids).stream()
+        return legalPersonRepository.findAllByIdIncludingDeleted(ids).stream()
                 .collect(Collectors.toMap(LegalPerson::getId, legalPerson -> legalPerson));
     }
 

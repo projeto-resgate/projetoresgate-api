@@ -2,12 +2,13 @@ package com.projetoresgate.projetoresgate_api.core.academic.classgroup.service;
 
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.api.dto.ClassGroupResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.ClassGroup;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.SchoolGradeRef;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.SchoolGradeRefRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassGroupRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.CreateClassGroupUseCase;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.CreateClassGroupCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.Program;
 import com.projetoresgate.projetoresgate_api.core.academic.program.repository.ProgramRepository;
-import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.domain.SchoolGrade;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.repository.SchoolGradeRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
@@ -28,15 +29,18 @@ public class CreateClassGroupService implements CreateClassGroupUseCase {
     private final ProgramRepository programRepository;
     private final LegalPersonRepository legalPersonRepository;
     private final SchoolGradeRepository schoolGradeRepository;
+    private final SchoolGradeRefRepository schoolGradeRefRepository;
 
     public CreateClassGroupService(ClassGroupRepository repository,
                                    ProgramRepository programRepository,
                                    LegalPersonRepository legalPersonRepository,
-                                   SchoolGradeRepository schoolGradeRepository) {
+                                   SchoolGradeRepository schoolGradeRepository,
+                                   SchoolGradeRefRepository schoolGradeRefRepository) {
         this.repository = repository;
         this.programRepository = programRepository;
         this.legalPersonRepository = legalPersonRepository;
         this.schoolGradeRepository = schoolGradeRepository;
+        this.schoolGradeRefRepository = schoolGradeRefRepository;
     }
 
     @Override
@@ -45,7 +49,7 @@ public class CreateClassGroupService implements CreateClassGroupUseCase {
         Program program = programRepository.findByIdOrThrow(command.programId());
         LegalPerson institution = legalPersonRepository.findByIdOrThrow(command.institutionId());
 
-        List<SchoolGrade> schoolGrades = loadSchoolGrades(command.schoolGradeIds());
+        List<SchoolGradeRef> schoolGrades = loadSchoolGrades(command.schoolGradeIds());
 
         ClassGroup classGroup = ClassGroup.create(
                 command.programId(),
@@ -63,18 +67,17 @@ public class CreateClassGroupService implements CreateClassGroupUseCase {
         return ClassGroupResponse.fromEntity(saved, program.getName(), institution.getDisplayName());
     }
 
-    private List<SchoolGrade> loadSchoolGrades(List<UUID> ids) {
+    private List<SchoolGradeRef> loadSchoolGrades(List<UUID> ids) {
         if (ids == null || ids.isEmpty()) {
             return new ArrayList<>();
         }
 
         Set<UUID> distinctIds = new LinkedHashSet<>(ids);
-        List<SchoolGrade> schoolGrades = schoolGradeRepository.findAllById(distinctIds);
 
-        if (schoolGrades.size() != distinctIds.size()) {
+        if (schoolGradeRepository.findAllById(distinctIds).size() != distinctIds.size()) {
             throw new InternalException("Alguma série escolar informada não foi encontrada.");
         }
 
-        return new ArrayList<>(schoolGrades);
+        return new ArrayList<>(schoolGradeRefRepository.findAllById(distinctIds));
     }
 }

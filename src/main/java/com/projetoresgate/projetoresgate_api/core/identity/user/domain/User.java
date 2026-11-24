@@ -61,6 +61,7 @@ public class User extends AuditableEntity {
         }
         this.password = newEncodedPassword;
         validate();
+        invalidateTokens();
     }
 
     public void invalidateTokens() {

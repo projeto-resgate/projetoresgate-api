@@ -14,6 +14,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.F
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.shared.specification.SpecificationBuilder;
+import com.projetoresgate.projetoresgate_api.shared.specification.Specs;
 import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
@@ -57,10 +58,10 @@ public class FindAllLearnersService implements FindAllLearnersUseCase {
 
         LocalDateTime now = LocalDateTime.now();
 
-        Specification<Learner> finalSpec = Specification
-                .where(hasSearchTerm(query.searchTerm()))
-                .and(hasParticipationStatus(query.status(), now))
-                .and(genericFilters);
+        Specification<Learner> finalSpec = Specs.allOf(
+                hasSearchTerm(query.searchTerm()),
+                hasParticipationStatus(query.status(), now),
+                genericFilters);
 
         Page<Learner> page = repository.findAll(finalSpec, query.pageable());
 
@@ -142,7 +143,7 @@ public class FindAllLearnersService implements FindAllLearnersUseCase {
             return Map.of();
         }
 
-        return naturalPersonRepository.findAllById(ids).stream()
+        return naturalPersonRepository.findAllByIdIncludingDeleted(ids).stream()
                 .collect(Collectors.toMap(NaturalPerson::getId, NaturalPerson::getName));
     }
 

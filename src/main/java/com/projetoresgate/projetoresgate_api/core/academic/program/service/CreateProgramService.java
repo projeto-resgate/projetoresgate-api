@@ -7,6 +7,7 @@ import com.projetoresgate.projetoresgate_api.core.academic.program.repository.Pr
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.CreateProgramUseCase;
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.command.CreateProgramCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.api.dto.LegalPersonSummaryResponse;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.FindLegalPersonSummariesUseCase;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import org.springframework.stereotype.Service;
@@ -24,10 +25,14 @@ public class CreateProgramService implements CreateProgramUseCase {
 
     private final ProgramRepository repository;
     private final FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase;
+    private final LegalPersonRepository legalPersonRepository;
 
-    public CreateProgramService(ProgramRepository repository, FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase) {
+    public CreateProgramService(ProgramRepository repository,
+                                FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase,
+                                LegalPersonRepository legalPersonRepository) {
         this.repository = repository;
         this.findLegalPersonSummariesUseCase = findLegalPersonSummariesUseCase;
+        this.legalPersonRepository = legalPersonRepository;
     }
 
     @Override
@@ -35,6 +40,9 @@ public class CreateProgramService implements CreateProgramUseCase {
     public ProgramResponse handle(CreateProgramCommand command) {
         if (repository.existsByName(command.name())) {
             throw new InternalException("Já existe um programa cadastrado com este nome.");
+        }
+        if (nonNull(command.institutionId())) {
+            legalPersonRepository.findByIdOrThrow(command.institutionId());
         }
 
         Program program = Program.create(

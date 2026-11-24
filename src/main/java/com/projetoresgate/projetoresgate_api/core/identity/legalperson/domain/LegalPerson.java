@@ -6,6 +6,8 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.en
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.shared.entity.AuditableEntity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.springframework.util.StringUtils;
@@ -40,6 +42,7 @@ public class LegalPerson extends AuditableEntity {
     private CompanyStatus companyStatus;
 
     @OneToOne(cascade = CascadeType.ALL)
+    @NotFound(action = NotFoundAction.IGNORE)
     @JoinColumn(name = "address_id")
     private Address address;
 

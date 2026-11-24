@@ -45,7 +45,7 @@ public class CreateClassScheduleService implements CreateClassScheduleUseCase {
     }
 
     private void refreshTitle(ClassGroup classGroup) {
-        Program program = programRepository.findByIdOrThrow(classGroup.getProgramId());
+        Program program = programRepository.findByIdIncludingDeletedOrThrow(classGroup.getProgramId());
         List<WeekDay> weekDays = scheduleRepository.findActiveWeekDaysByClassGroupId(classGroup.getId());
         classGroup.refreshTitle(program.getName(), weekDays);
     }

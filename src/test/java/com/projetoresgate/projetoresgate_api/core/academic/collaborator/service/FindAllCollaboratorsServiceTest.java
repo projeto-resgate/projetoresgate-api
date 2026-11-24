@@ -71,9 +71,9 @@ class FindAllCollaboratorsServiceTest {
 
         when(repository.search(isNull(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(first, second), PAGEABLE, 2));
-        when(naturalPersonRepository.findAllById(any()))
+        when(naturalPersonRepository.findAllByIdIncludingDeleted(any()))
                 .thenReturn(List.of(firstNaturalPerson, secondNaturalPerson));
-        when(legalPersonRepository.findAllById(any())).thenReturn(List.of(legalPerson));
+        when(legalPersonRepository.findAllByIdIncludingDeleted(any())).thenReturn(List.of(legalPerson));
 
         Page<CollaboratorSummaryResponse> page = service.handle(new FindAllCollaboratorsQuery(null, PAGEABLE));
 

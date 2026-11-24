@@ -57,7 +57,7 @@ class FindAllClassGroupsServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
         when(repository.findAll(nullable(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(classGroup), pageable, 1));
-        when(programRepository.findAllById(any())).thenReturn(List.of(program));
+        when(programRepository.findAllByIdIncludingDeleted(any())).thenReturn(List.of(program));
         when(findLegalPersonSummariesUseCase.handle(any()))
                 .thenReturn(List.of(new LegalPersonSummaryResponse(institutionId, "Escola X", "12345678000199")));
 

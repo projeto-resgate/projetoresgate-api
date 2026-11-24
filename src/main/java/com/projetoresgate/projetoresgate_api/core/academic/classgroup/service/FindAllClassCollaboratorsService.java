@@ -81,7 +81,7 @@ public class FindAllClassCollaboratorsService implements FindAllClassCollaborato
             return Map.of();
         }
 
-        Map<UUID, Collaborator> collaborators = collaboratorRepository.findAllById(ids).stream()
+        Map<UUID, Collaborator> collaborators = collaboratorRepository.findAllByIdIncludingDeleted(ids).stream()
                 .collect(Collectors.toMap(Collaborator::getId, collaborator -> collaborator));
 
         Set<UUID> naturalPersonIds = collaborators.values().stream()
@@ -90,7 +90,7 @@ public class FindAllClassCollaboratorsService implements FindAllClassCollaborato
                 .collect(Collectors.toSet());
 
         Map<UUID, NaturalPerson> persons = naturalPersonIds.isEmpty() ? Map.of()
-                : naturalPersonRepository.findAllById(naturalPersonIds).stream()
+                : naturalPersonRepository.findAllByIdIncludingDeleted(naturalPersonIds).stream()
                 .collect(Collectors.toMap(NaturalPerson::getId, person -> person));
 
         return collaborators.values().stream()
@@ -110,7 +110,7 @@ public class FindAllClassCollaboratorsService implements FindAllClassCollaborato
             return Map.of();
         }
 
-        return educatorCategoryItemRepository.findAllById(ids).stream()
+        return educatorCategoryItemRepository.findAllByIdIncludingDeleted(ids).stream()
                 .collect(Collectors.toMap(EducatorCategoryItem::getId, EducatorCategoryItem::getName));
     }
 }

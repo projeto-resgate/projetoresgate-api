@@ -6,7 +6,9 @@ import com.projetoresgate.projetoresgate_api.core.identity.user.repository.Passw
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.RequestPasswordResetUseCase;
 import com.projetoresgate.projetoresgate_api.infrastructure.email.JavaMailEmailService;
+import com.projetoresgate.projetoresgate_api.infrastructure.security.EmailRateLimiter;
 import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,17 +22,27 @@ public class RequestPasswordResetService implements RequestPasswordResetUseCase 
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final JavaMailEmailService javaMailEmailService;
 
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
+
+    private final EmailRateLimiter emailRateLimiter;
+
     public RequestPasswordResetService(UserRepository userRepository,
                                        PasswordResetTokenRepository passwordResetTokenRepository,
-                                       JavaMailEmailService javaMailEmailService) {
+                                       JavaMailEmailService javaMailEmailService,
+                                       EmailRateLimiter emailRateLimiter) {
         this.userRepository = userRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.javaMailEmailService = javaMailEmailService;
+        this.emailRateLimiter = emailRateLimiter;
     }
 
     @Override
     @Transactional
     public void handle(String email) {
+        if (!emailRateLimiter.tryAcquire(email)) {
+            return;
+        }
         Optional<User> userOptional = userRepository.findByEmail(email);
         if (userOptional.isEmpty()) {
             return;
@@ -45,11 +57,12 @@ public class RequestPasswordResetService implements RequestPasswordResetUseCase 
         PasswordResetToken myToken = new PasswordResetToken(tokenHash, user, LocalDateTime.now().plusMinutes(10));
         passwordResetTokenRepository.save(myToken);
 
-        String htmlContent = getResetPasswordHtml(plainTextToken);
+        String resetUrl = frontendUrl.replaceAll("/+$", "") + "/reset-password?token=" + plainTextToken;
+        String htmlContent = getResetPasswordHtml(resetUrl);
         javaMailEmailService.sendHtml(user.getEmail(), "Redefinição de Senha - Projeto Resgate", htmlContent);
     }
 
-    private String getResetPasswordHtml(String token) {
+    private String getResetPasswordHtml(String resetUrl) {
         return """
                 <html>
                   <head>
@@ -104,7 +117,7 @@ public class RequestPasswordResetService implements RequestPasswordResetUseCase 
                         <p>Clique no botão abaixo para continuar:</p>
                 
                         <div class="btn-container">
-                          <a href="http://localhost:5173/reset-password?token=%s"
+                          <a href="%s"
                              style="background-color: #16A34A; color: #FFFFFF; text-decoration: none; padding: 14px 28px; border-radius: 6px; font-size: 16px; font-weight: bold; display: inline-block;">
                             Redefinir Senha
                           </a>
@@ -119,6 +132,6 @@ public class RequestPasswordResetService implements RequestPasswordResetUseCase 
                     </div>
                   </body>
                 </html>
-                """.formatted(token);
+                """.formatted(resetUrl);
     }
 }

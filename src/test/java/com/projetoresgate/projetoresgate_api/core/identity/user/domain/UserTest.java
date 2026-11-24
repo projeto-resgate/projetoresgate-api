@@ -82,6 +82,28 @@ class UserTest {
     }
 
     @Test
+    @DisplayName("Trocar a senha deve invalidar os access tokens já emitidos (incrementa tokenVersion)")
+    void changePassword_ShouldInvalidateTokens() {
+        User user = User.create("test@example.com", "password123", "Test User", "tester");
+        long versionBefore = user.getTokenVersion();
+
+        user.changePassword("newEncodedPassword");
+
+        assertEquals(versionBefore + 1, user.getTokenVersion());
+    }
+
+    @Test
+    @DisplayName("Falha ao trocar a senha não deve invalidar os tokens")
+    void changePassword_ShouldNotInvalidateTokens_whenFails() {
+        User user = User.create("test@example.com", "password123", "Test User", "tester");
+        long versionBefore = user.getTokenVersion();
+
+        assertThrows(InternalException.class, () -> user.changePassword(""));
+
+        assertEquals(versionBefore, user.getTokenVersion());
+    }
+
+    @Test
     @DisplayName("Deve lançar exceção ao alterar senha para valor vazio")
     void changePassword_ShouldFailIfEmpty() {
         User user = User.create("test@example.com", "password123", "Test User", "tester");

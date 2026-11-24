@@ -5,6 +5,8 @@ import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.CreateClassGroupCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.Program;
 import com.projetoresgate.projetoresgate_api.core.academic.program.repository.ProgramRepository;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.SchoolGradeRef;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.SchoolGradeRefRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.domain.SchoolGrade;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.repository.SchoolGradeRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
@@ -29,6 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,6 +54,9 @@ class CreateClassGroupServiceTest {
     @Mock
     private SchoolGradeRepository schoolGradeRepository;
 
+    @Mock
+    private SchoolGradeRefRepository schoolGradeRefRepository;
+
     @InjectMocks
     private CreateClassGroupService service;
 
@@ -63,6 +69,9 @@ class CreateClassGroupServiceTest {
         when(legalPersonRepository.findByIdOrThrow(INSTITUTION_ID)).thenReturn(mock(LegalPerson.class));
         when(schoolGradeRepository.findAllById(any())).thenReturn(
                 List.of(SchoolGrade.create("2ª Série", null, 2), SchoolGrade.create("1ª Série", null, 1)));
+        when(schoolGradeRefRepository.findAllById(any())).thenReturn(List.of(
+                SchoolGradeRef.of(UUID.randomUUID(), "2ª Série", null, 2),
+                SchoolGradeRef.of(UUID.randomUUID(), "1ª Série", null, 1)));
         when(repository.save(any(ClassGroup.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         CreateClassGroupCommand command = new CreateClassGroupCommand(
@@ -95,5 +104,22 @@ class CreateClassGroupServiceTest {
         assertThrows(InternalException.class, () -> service.handle(command));
 
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Não deve vincular uma série excluída a uma turma nova")
+    void handle_ShouldRejectDeletedSchoolGrade() {
+        when(programRepository.findByIdOrThrow(PROGRAM_ID)).thenReturn(mock(Program.class));
+        when(legalPersonRepository.findByIdOrThrow(INSTITUTION_ID)).thenReturn(mock(LegalPerson.class));
+        when(schoolGradeRepository.findAllById(any())).thenReturn(List.of(SchoolGrade.create("1ª Série", null, 1)));
+
+        CreateClassGroupCommand command = new CreateClassGroupCommand(
+                PROGRAM_ID, INSTITUTION_ID, List.of(UUID.randomUUID(), UUID.randomUUID()),
+                30, START_DATE, 6, null);
+
+        assertThrows(InternalException.class, () -> service.handle(command));
+
+        verify(repository, never()).save(any());
+        verifyNoInteractions(schoolGradeRefRepository);
     }
 }

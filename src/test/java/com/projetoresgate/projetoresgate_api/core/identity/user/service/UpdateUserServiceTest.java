@@ -5,6 +5,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.user.domain.enums.Use
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.command.UpdateUserCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
+import com.projetoresgate.projetoresgate_api.infrastructure.services.IRefreshTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,9 @@ class UpdateUserServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private IRefreshTokenService refreshTokenService;
 
     @InjectMocks
     private UpdateUserService service;
@@ -61,6 +65,7 @@ class UpdateUserServiceTest {
         assertEquals(Set.of(UserRole.ADMIN), user.getRoles());
         assertEquals(0L, user.getTokenVersion());
         verify(repository).save(user);
+        verifyNoInteractions(refreshTokenService);
     }
 
     @Test
@@ -78,6 +83,8 @@ class UpdateUserServiceTest {
         assertEquals("encoded-new-password", user.getPassword());
         verify(passwordEncoder).encode("new-password");
         verify(repository).save(user);
+        verify(refreshTokenService).revokeAllUserTokens(user);
+        assertEquals(1L, user.getTokenVersion(), "trocar a senha invalida os access tokens");
     }
 
     @Test

@@ -5,6 +5,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.EmailConfirmationTokenRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.email.JavaMailEmailService;
+import com.projetoresgate.projetoresgate_api.infrastructure.security.EmailRateLimiter;
 import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
@@ -34,6 +36,9 @@ class RequestEmailConfirmationServiceTest {
     @Mock
     private JavaMailEmailService javaMailEmailService;
 
+    @Mock
+    private EmailRateLimiter emailRateLimiter;
+
     @InjectMocks
     private RequestEmailConfirmationService requestEmailConfirmationService;
 
@@ -44,6 +49,8 @@ class RequestEmailConfirmationServiceTest {
     void setUp() {
         personEmail = "test@example.com";
         existingPerson = NaturalPerson.create("Test Person", personEmail, "tester", "51086174968", null, null, null, null, null);
+        lenient().when(emailRateLimiter.tryAcquire(anyString())).thenReturn(true);
+        ReflectionTestUtils.setField(requestEmailConfirmationService, "frontendUrl", "https://app.exemplo.org/");
     }
 
     @Test
@@ -93,7 +100,17 @@ class RequestEmailConfirmationServiceTest {
 
             assertEquals(expectedTokenHash, savedToken.getTokenHash());
             assertEquals(existingPerson, savedToken.getNaturalPerson());
-            assertTrue(emailHtml.contains("/confirm-email/" + plainTextToken));
+            assertTrue(emailHtml.contains("href=\"https://app.exemplo.org/confirm-email/" + plainTextToken + "\""));
         }
+    }
+
+    @Test
+    @DisplayName("Deve ignorar em silêncio quando o destinatário atingiu o limite de e-mails")
+    void handle_shouldDoNothing_whenEmailRateLimitExceeded() {
+        when(emailRateLimiter.tryAcquire(personEmail)).thenReturn(false);
+
+        requestEmailConfirmationService.handle(personEmail);
+
+        verifyNoInteractions(naturalPersonRepository, emailConfirmationTokenRepository, javaMailEmailService);
     }
 }

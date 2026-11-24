@@ -7,7 +7,7 @@ import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.RefreshClassGroupTitlesCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.Program;
 import com.projetoresgate.projetoresgate_api.core.academic.program.repository.ProgramRepository;
-import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.domain.SchoolGrade;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.SchoolGradeRef;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,10 +56,10 @@ class RefreshClassGroupTitlesServiceTest {
 
         ClassGroup classGroup = ClassGroup.create(programId, UUID.randomUUID(), 20,
                 LocalDateTime.of(2026, 2, 1, 8, 0), 6, null, "Programa A",
-                List.of(SchoolGrade.create("1ª Série", "1ª", 1)));
+                List.of(SchoolGradeRef.of(UUID.randomUUID(), "1ª Série", "1ª", 1)));
         Program program = program(programId, "Programa B");
         when(classGroupRepository.findByProgramId(programId)).thenReturn(List.of(classGroup));
-        when(programRepository.findAllById(Set.of(programId))).thenReturn(List.of(program));
+        when(programRepository.findAllByIdIncludingDeleted(Set.of(programId))).thenReturn(List.of(program));
         when(scheduleRepository.findActiveWeekDaysByClassGroupIds(List.of(classGroup.getId())))
                 .thenReturn(List.<Object[]>of(new Object[]{classGroup.getId(), WeekDay.MONDAY}));
 
@@ -77,10 +77,10 @@ class RefreshClassGroupTitlesServiceTest {
 
         ClassGroup classGroup = ClassGroup.create(programId, UUID.randomUUID(), 20,
                 LocalDateTime.of(2026, 2, 1, 8, 0), 6, null, "Programa A",
-                List.of(SchoolGrade.create("1ª Série", "1ª", 1)));
+                List.of(SchoolGradeRef.of(UUID.randomUUID(), "1ª Série", "1ª", 1)));
         Program program = program(programId, "Programa A");
         when(classGroupRepository.findBySchoolGradeId(schoolGradeId)).thenReturn(List.of(classGroup));
-        when(programRepository.findAllById(Set.of(programId))).thenReturn(List.of(program));
+        when(programRepository.findAllByIdIncludingDeleted(Set.of(programId))).thenReturn(List.of(program));
         when(scheduleRepository.findActiveWeekDaysByClassGroupIds(List.of(classGroup.getId())))
                 .thenReturn(List.of());
 

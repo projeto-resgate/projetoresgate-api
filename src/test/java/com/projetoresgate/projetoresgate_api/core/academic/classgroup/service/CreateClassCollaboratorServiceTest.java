@@ -9,7 +9,9 @@ import com.projetoresgate.projetoresgate_api.core.academic.collaborator.domain.C
 import com.projetoresgate.projetoresgate_api.core.academic.collaborator.repository.CollaboratorRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.EducatorCategoryItem;
 import com.projetoresgate.projetoresgate_api.core.academic.program.repository.EducatorCategoryItemRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
+import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -65,9 +67,14 @@ class CreateClassCollaboratorServiceTest {
         UUID categoryId = UUID.randomUUID();
 
         when(classGroupRepository.findByIdOrThrow(classGroup.getId())).thenReturn(classGroup);
-        when(collaboratorRepository.findByIdOrThrow(collaboratorId)).thenReturn(mock(Collaborator.class));
+        Collaborator collaborator = Collaborator.create(false, UUID.randomUUID(), null);
+        NaturalPerson person = NaturalPerson.create("Ana Souza", "ana@example.com", null, "52998224725",
+                null, null, null, null, null);
+        EducatorCategoryItem category = mock(EducatorCategoryItem.class);
+        when(collaboratorRepository.findByIdOrThrow(collaboratorId)).thenReturn(collaborator);
+        when(naturalPersonRepository.findByIdOrThrow(collaborator.getNaturalPersonId())).thenReturn(person);
         when(educatorCategoryItemRepository.findByIdAndProgramIdOrThrow(categoryId, classGroup.getProgramId()))
-                .thenReturn(mock(EducatorCategoryItem.class));
+                .thenReturn(category);
         when(repository.existsByClassGroupIdAndCollaboratorId(classGroup.getId(), collaboratorId)).thenReturn(false);
         when(repository.save(any(ClassCollaborator.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -94,6 +101,28 @@ class CreateClassCollaboratorServiceTest {
         when(repository.existsByClassGroupIdAndCollaboratorId(classGroup.getId(), collaboratorId)).thenReturn(true);
 
         assertThrows(IllegalStateException.class, () -> service.handle(
+                new CreateClassCollaboratorCommand(classGroup.getId(), collaboratorId, categoryId)));
+
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Não deve vincular educador cuja pessoa física foi excluída")
+    void handle_ShouldRejectCollaboratorWithDeletedPerson() {
+        ClassGroup classGroup = givenClassGroup();
+        UUID collaboratorId = UUID.randomUUID();
+        UUID categoryId = UUID.randomUUID();
+        Collaborator collaborator = Collaborator.create(false, UUID.randomUUID(), null);
+
+        when(classGroupRepository.findByIdOrThrow(classGroup.getId())).thenReturn(classGroup);
+        when(collaboratorRepository.findByIdOrThrow(collaboratorId)).thenReturn(collaborator);
+        when(educatorCategoryItemRepository.findByIdAndProgramIdOrThrow(categoryId, classGroup.getProgramId()))
+                .thenReturn(mock(EducatorCategoryItem.class));
+        when(repository.existsByClassGroupIdAndCollaboratorId(classGroup.getId(), collaboratorId)).thenReturn(false);
+        when(naturalPersonRepository.findByIdOrThrow(collaborator.getNaturalPersonId()))
+                .thenThrow(new ResourceNotFoundException("Pessoa física não encontrada"));
+
+        assertThrows(ResourceNotFoundException.class, () -> service.handle(
                 new CreateClassCollaboratorCommand(classGroup.getId(), collaboratorId, categoryId)));
 
         verify(repository, never()).save(any());

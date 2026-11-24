@@ -25,7 +25,7 @@ public class FindLegalPersonSummariesService implements FindLegalPersonSummaries
         if (isNull(ids) || ids.isEmpty()) {
             return List.of();
         }
-        return repository.findAllById(ids).stream()
+        return repository.findAllByIdIncludingDeleted(ids).stream()
                 .map(LegalPersonSummaryResponse::fromEntity)
                 .toList();
     }

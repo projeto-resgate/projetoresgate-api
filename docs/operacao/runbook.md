@@ -84,7 +84,8 @@ A VM roda a tag `:latest`. Para voltar a uma versão específica, **fixe uma tag
 | `Connection refused` ao banco                      | `db` ainda iniciando ou parado                              | `dc ps`; a API aguarda o healthcheck do `db`                      |
 | Login funciona no Swagger mas **não no navegador** | Cookie `Secure` sem HTTPS, ou CORS/SameSite                 | Servir por HTTPS; conferir `CORS-ALLOWED-ORIGINS` e `API_COOKIE_*` |
 | `401` em tudo após o deploy                        | `API_SECURITY_TOKEN_SECRET` mudou                           | Esperado: sessões antigas caem. Usuários fazem login de novo.     |
-| `429 Too Many Requests` no login                   | Rate limit (5 por 60 s por IP)                              | Aguarde 1 min. Atrás de proxy, todos podem parecer o mesmo IP |
+| `429 Too Many Requests`                            | Limite de requisições por IP (login/senha 5/min; público 20/min; geral 300/min) | Veja o `Retry-After` da resposta. Se **todos** os usuários recebem 429 ao mesmo tempo, há proxy na frente e falta `API_RATE_LIMIT_TRUSTED_PROXIES=1` |
+| Usuário diz que "não chegou o e-mail" de reset/confirmação | Limite de **3 e-mails/hora** por destinatário (ignora em silêncio) | Aguarde 1 hora ou reinicie a API (zera os baldes). Confira também `API_RATE_LIMIT_EMAIL_*` |
 | E-mail de reset/confirmação não chega              | Credencial Gmail/senha de app, ou link com `localhost`      | `dc logs api \| grep -i mail` |
 | Atualização não aconteceu                          | Watchtower parado, imagem privada sem credencial, tag errada| `dc logs watchtower`; confira `docker login` / `REPO_USER`        |
 | Disco cheio                                        | Imagens antigas ou logs                                     | `docker system prune -af` (cuidado: remove imagens não usadas); `WATCHTOWER_CLEANUP` já ajuda |

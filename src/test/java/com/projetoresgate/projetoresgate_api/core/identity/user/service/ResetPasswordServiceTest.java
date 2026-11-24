@@ -6,6 +6,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.user.repository.Passw
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
+import com.projetoresgate.projetoresgate_api.infrastructure.services.IRefreshTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,9 @@ class ResetPasswordServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private IRefreshTokenService refreshTokenService;
 
     @InjectMocks
     private ResetPasswordService resetPasswordService;
@@ -66,6 +70,20 @@ class ResetPasswordServiceTest {
         verify(userRepository).save(user);
         assertEquals("encodedNewPassword", user.getPassword());
         verify(passwordResetTokenRepository).delete(resetToken);
+    }
+
+    @Test
+    @DisplayName("Deve encerrar todas as sessões ao redefinir a senha")
+    void handle_shouldEndAllSessions() {
+        when(passwordResetTokenRepository.findByTokenHash(TokenUtils.hashToken(plainTextToken)))
+                .thenReturn(Optional.of(resetToken));
+        when(passwordEncoder.encode(newPassword)).thenReturn("encodedNewPassword");
+        long versionBefore = user.getTokenVersion();
+
+        resetPasswordService.handle(plainTextToken, newPassword);
+
+        verify(refreshTokenService).revokeAllUserTokens(user);
+        assertEquals(versionBefore + 1, user.getTokenVersion(), "access tokens antigos devem deixar de valer");
     }
 
     @Test

@@ -28,7 +28,11 @@ Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `F
 | RN-USR-06  | `logout-all` revoga todos os refresh tokens **e** invalida os access tokens (`tokenVersion`) | — | `LogoutAllService`                 |
 | RN-USR-07  | Reset de senha: token de 10 min, uso único, senha nova com **≥ 6 caracteres**           | 400  | `ResetPasswordService`             |
 | RN-USR-08  | `forgot-password` responde 200 sempre (não revela se o e-mail existe)                   | 200  | `RequestPasswordResetService`      |
-| RN-USR-09  | Login e refresh limitados a 5 requisições / 60 s por IP                                 | 429  | `RateLimitingFilter`               |
+| RN-USR-09  | Login, refresh, forgot-password e reset-password limitados a **5 req/min por IP** (camada AUTH)       | 429  | `RateLimitingFilter`               |
+| RN-USR-12  | Rotas públicas de escrita (criar usuário/pessoa, confirmar e-mail) limitadas a **20 req/min por IP** (PUBLIC) | 429 | `RateLimitingFilter`            |
+| RN-USR-13  | Demais rotas limitadas a **300 req/min por IP** (GENERAL); preflight `OPTIONS` não conta                | 429  | `RateLimitingFilter`               |
+| RN-USR-14  | Mesmo destinatário recebe no máximo **3 e-mails/hora** (reset e confirmação); excedido, ignora em silêncio, sem erro | — | `EmailRateLimiter`          |
+| RN-USR-15  | O IP do cliente é o da conexão; `X-Forwarded-For` só vale com `trusted-proxies > 0`                    | —    | `RateLimitingFilter`               |
 | RN-USR-11  | `POST /user` só é público com `api.user-registration.public=true` (dev); em produção exige autenticação | 401 | `SecurityConfigurations` |
 | RN-USR-10  | Usuário só edita/exclui **a si mesmo** (`PUT/DELETE /user` usam o usuário do token)     | —    | `UserController`                   |
 

@@ -52,7 +52,7 @@ class CreateClassScheduleServiceTest {
 
         when(classGroupRepository.findByIdOrThrow(classGroup.getId())).thenReturn(classGroup);
         when(scheduleRepository.save(any(ClassSchedule.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(programRepository.findByIdOrThrow(classGroup.getProgramId())).thenReturn(program);
+        when(programRepository.findByIdIncludingDeletedOrThrow(classGroup.getProgramId())).thenReturn(program);
         when(scheduleRepository.findActiveWeekDaysByClassGroupId(classGroup.getId()))
                 .thenReturn(List.of(WeekDay.MONDAY));
 

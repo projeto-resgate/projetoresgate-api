@@ -50,7 +50,7 @@ class FindCollaboratorByIdServiceTest {
         when(person.getCpf()).thenReturn("52998224725");
 
         when(repository.findByIdOrThrow(collaborator.getId())).thenReturn(collaborator);
-        when(naturalPersonRepository.findById(naturalPersonId)).thenReturn(Optional.of(person));
+        when(naturalPersonRepository.findByIdIncludingDeleted(naturalPersonId)).thenReturn(Optional.of(person));
 
         CollaboratorResponse response = service.handle(new FindCollaboratorByIdQuery(collaborator.getId()));
 

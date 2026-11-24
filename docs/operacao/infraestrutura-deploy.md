@@ -145,7 +145,8 @@ no serviço `watchtower`. Se for pública, não precisa de nada.
 | `API_USER_REGISTRATION_PUBLIC` | não         | `false` por padrão. **Nunca** coloque `true` em produção: liberaria criar administradores sem login |
 | `API_COOKIE_SECURE`            | não         | `true` por padrão. Sem HTTPS, o navegador **descarta** o cookie de refresh |
 | `API_COOKIE_SAME_SITE`         | não         | `Strict` por padrão                                                       |
-| `API_RATE_LIMIT_MAX_REQUESTS`  | não         | Padrão 5 por janela                                                       |
+| `API_RATE_LIMIT_TRUSTED_PROXIES` | não       | Padrão `0`. **Defina `1` quando houver proxy reverso (Caddy/Nginx) na frente da API**; sem isso o limite por IP trata todos os usuários como um só |
+| `API_RATE_LIMIT_*`             | não         | Limites por camada e por e-mail (padrões: login 5/min, público 20/min, geral 300/min, e-mail 3/h). Lista completa em [`tecnico/autenticacao.md`](../tecnico/autenticacao.md#variáveis-do-limite) |
 
 `DB_URL` é definido no próprio compose (`jdbc:postgresql://db:5432/projetoresgatedb`).
 

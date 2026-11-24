@@ -1,5 +1,9 @@
 package com.projetoresgate.projetoresgate_api.core.academic.collaborator.repository;
 
+import java.util.List;
+
+import java.util.Collection;
+
 import com.projetoresgate.projetoresgate_api.core.academic.collaborator.domain.Collaborator;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
@@ -58,4 +62,11 @@ public interface CollaboratorRepository extends JpaRepository<Collaborator, UUID
                            or lp.cnpj like concat('%', cast(:searchTerm as String), '%'))
                     """)
     Page<Collaborator> search(@Param("searchTerm") String searchTerm, Pageable pageable);
+
+    @Query(value = "SELECT * FROM collaborator WHERE id IN (:ids)", nativeQuery = true)
+    List<Collaborator> findAllByIdIncludingDeleted(@Param("ids") Collection<UUID> ids);
+
+    default Optional<Collaborator> findByIdIncludingDeleted(UUID id) {
+        return findAllByIdIncludingDeleted(List.of(id)).stream().findFirst();
+    }
 }

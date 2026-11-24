@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -64,5 +65,17 @@ class AutocompleteLearnerServiceTest {
         List<LearnerAutocompleteResponse> result = service.handle(new AutocompleteLearnerQuery("zzz", 10));
 
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Não deve sugerir educando cuja pessoa física foi excluída")
+    void handle_ShouldSkipLearnerWithDeletedPerson() {
+        Learner learner = Learner.create(UUID.randomUUID(), null, null, false, null, 2026, null, null);
+
+        when(repository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(learner)));
+        when(naturalPersonRepository.findAllById(any())).thenReturn(List.of());
+
+        assertTrue(service.handle(new AutocompleteLearnerQuery("ana", 10)).isEmpty());
     }
 }
