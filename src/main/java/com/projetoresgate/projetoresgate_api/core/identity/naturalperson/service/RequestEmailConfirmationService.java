@@ -8,6 +8,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase
 import com.projetoresgate.projetoresgate_api.infrastructure.email.JavaMailEmailService;
 import com.projetoresgate.projetoresgate_api.infrastructure.security.EmailRateLimiter;
 import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
+import com.projetoresgate.projetoresgate_api.shared.util.UrlUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,7 +67,7 @@ public class RequestEmailConfirmationService implements RequestEmailConfirmation
     }
 
     private String getConfirmationEmailHtml(String token) {
-        String confirmationUrl = frontendUrl.replaceAll("/+$", "") + "/confirm-email/" + token;
+        String confirmationUrl = UrlUtils.removeTrailingSlashes(frontendUrl) + "/confirm-email/" + token;
 
         return """
                 <html>

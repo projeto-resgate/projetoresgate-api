@@ -101,7 +101,8 @@ Renomear um programa ou excluir uma série reescreve o título de **todas** as t
 | Regra                                                          | Resposta |
 |----------------------------------------------------------------|----------|
 | Turma e educando precisam existir                              | 404      |
-| O educando **não pode estar duas vezes** na mesma turma         | 409      |
+| A **pessoa física do educando precisa existir** (não excluída)  | 404      |
+| O educando **não pode estar duas vezes** na mesma turma, mesmo com o vínculo **inativo** | 409 |
 | ⚠️ **Não valida** o status do educando: dá para vincular um `DROPPED_OUT` | — |
 | ⚠️ **Não valida** compatibilidade de série nem a **previsão de alunos** (é só uma projeção) | — |
 
@@ -113,7 +114,9 @@ Um educando pode estar em **várias turmas** ao mesmo tempo.
 
 Ao registrar desistência, **todos os vínculos** do educando com turmas viram `active = false` numa query
 única (`deactivateByLearnerId`). Os vínculos aparecem na turma como inativos, mas **não são removidos**.
-Reativar o educando **não** reativa os vínculos (ver [educandos](fluxo-educandos.md#reativar-reactivate)).
+Reativar o educando **sem** informar turma não reativa os vínculos. Para trazê-lo de volta a uma turma, use
+`POST /learner/{id}/reactivate` com `classGroupId` (ver [educandos](fluxo-educandos.md#reativar-reactivate)):
+é o caminho certo para vínculo **inativo**, porque o `POST` desta rota devolve 409 quando o vínculo já existe.
 
 ## Vincular educador
 
@@ -124,6 +127,7 @@ Reativar o educando **não** reativa os vínculos (ver [educandos](fluxo-educand
 | Turma e colaborador precisam existir                                                               | 404      |
 | A **categoria de educador precisa pertencer ao programa da turma**                                 | 404      |
 | O colaborador **não pode estar duas vezes** na mesma turma                                         | 409      |
+| A **pessoa física do colaborador precisa existir** (não excluída)                                  | 404      |
 
 A categoria é "o papel do educador **nesta turma**" (ex.: Professor, Auxiliar) e vem das categorias
 cadastradas no **programa**. Na edição, trocar a categoria exige que a nova também seja do programa.

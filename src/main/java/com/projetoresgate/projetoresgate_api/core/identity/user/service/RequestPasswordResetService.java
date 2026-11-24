@@ -8,6 +8,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.RequestP
 import com.projetoresgate.projetoresgate_api.infrastructure.email.JavaMailEmailService;
 import com.projetoresgate.projetoresgate_api.infrastructure.security.EmailRateLimiter;
 import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
+import com.projetoresgate.projetoresgate_api.shared.util.UrlUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,7 +58,7 @@ public class RequestPasswordResetService implements RequestPasswordResetUseCase 
         PasswordResetToken myToken = new PasswordResetToken(tokenHash, user, LocalDateTime.now().plusMinutes(10));
         passwordResetTokenRepository.save(myToken);
 
-        String resetUrl = frontendUrl.replaceAll("/+$", "") + "/reset-password?token=" + plainTextToken;
+        String resetUrl = UrlUtils.removeTrailingSlashes(frontendUrl) + "/reset-password?token=" + plainTextToken;
         String htmlContent = getResetPasswordHtml(resetUrl);
         javaMailEmailService.sendHtml(user.getEmail(), "Redefinição de Senha - Projeto Resgate", htmlContent);
     }

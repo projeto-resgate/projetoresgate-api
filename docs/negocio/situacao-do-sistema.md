@@ -30,7 +30,9 @@ pie showData title Funcionalidades pedidas pela ONG
 | Cadastro de **aluno** com responsáveis, escola, série, bolsa           | ✅      |                                                                                    |
 | Cadastrar responsável **dentro** do cadastro do aluno                  | ✅      |                                                                                    |
 | Cadastro de aluno em **etapas (steps)**                                | ✅      |                                                                                    |
-| **Desistência e retorno** do aluno, com motivo e data                  | ✅      |                                                                                    |
+| **Desistência e retorno** do aluno, com motivo e data                  | ✅      | Histórico consultável; ao voltar dá para indicar a turma                           |
+| Situação do aluno na lista: **cursando**, **sem turma** ou **desistente** | ✅   | Calculada pelas turmas em andamento hoje                                           |
+| **Local de trabalho** da pessoa (empresa já cadastrada)                | ✅      |                                                                                    |
 | **Pais/responsáveis como alunos**                                      | ✅      |                                                                                    |
 | Cadastro de **formações (turmas)** com dias, horários e séries         | ✅      | Nome da turma é automático                                                         |
 | **Matricular alunos** em formações                                     | ✅      | Vários alunos por turma; um aluno em várias turmas                                 |
