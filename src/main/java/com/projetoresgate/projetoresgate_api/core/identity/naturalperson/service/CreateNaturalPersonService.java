@@ -36,6 +36,11 @@ public class CreateNaturalPersonService implements CreateNaturalPersonUseCase {
             throw new InternalException("Já existe uma pessoa cadastrada com este CPF.");
         }
 
+        String rg = command.rg();
+        if (nonNull(rg) && !rg.isBlank() && repository.existsByRg(rg)) {
+            throw new InternalException("Já existe uma pessoa cadastrada com este RG.");
+        }
+
         if (nonNull(command.workplaceId())) {
             legalPersonRepository.findByIdOrThrow(command.workplaceId());
         }
@@ -55,7 +60,7 @@ public class CreateNaturalPersonService implements CreateNaturalPersonUseCase {
 
         NaturalPerson saved = repository.save(person);
 
-        requestEmailConfirmationUseCase.handle(saved.getEmail());
+        requestEmailConfirmationUseCase.handle(saved);
 
         return saved;
     }

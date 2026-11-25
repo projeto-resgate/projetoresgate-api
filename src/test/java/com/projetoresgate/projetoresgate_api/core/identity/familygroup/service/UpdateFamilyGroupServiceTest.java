@@ -108,7 +108,7 @@ class UpdateFamilyGroupServiceTest {
                 id, "Família Souza", null, null, null, null, null, null, null);
 
         when(repository.findByIdOrThrow(id)).thenReturn(familyGroup);
-        when(repository.existsByNameAndIdNot(anyString(), any(UUID.class))).thenReturn(true);
+        when(repository.existsByNameIgnoreCaseAndIdNot(anyString(), any(UUID.class))).thenReturn(true);
 
         InternalException exception = assertThrows(InternalException.class, () -> service.handle(command));
 

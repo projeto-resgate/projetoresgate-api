@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 public class RequestEmailConfirmationService implements RequestEmailConfirmationUseCase {
@@ -44,16 +43,21 @@ public class RequestEmailConfirmationService implements RequestEmailConfirmation
         if (!emailRateLimiter.tryAcquire(email)) {
             return;
         }
-        Optional<NaturalPerson> personOptional = naturalPersonRepository.findByEmail(email);
-        if (personOptional.isEmpty()) {
+        naturalPersonRepository.findAllByEmailIgnoreCase(email).stream()
+                .filter(person -> !person.isEmailVerified())
+                .forEach(this::sendConfirmation);
+    }
+
+    @Override
+    @Transactional
+    public void handle(NaturalPerson person) {
+        if (person.isEmailVerified() || !emailRateLimiter.tryAcquire(person.getEmail())) {
             return;
         }
-        NaturalPerson person = personOptional.get();
+        sendConfirmation(person);
+    }
 
-        if (person.isEmailVerified()) {
-            return;
-        }
-
+    private void sendConfirmation(NaturalPerson person) {
         emailConfirmationTokenRepository.deleteByNaturalPerson(person);
 
         String plainTextToken = TokenUtils.generateSecureToken();

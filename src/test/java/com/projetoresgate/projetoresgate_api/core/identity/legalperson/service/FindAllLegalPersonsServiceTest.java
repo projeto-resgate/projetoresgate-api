@@ -189,7 +189,7 @@ class FindAllLegalPersonsServiceTest {
         assertEquals("Razão Social LTDA", found.getCorporateName());
         assertEquals("Nome Fantasia", found.getTradeName());
         assertEquals("Display Name", found.getDisplayName());
-        assertEquals("6201-5/00", found.getMainCnaeCode());
+        assertEquals("6201500", found.getMainCnaeCode());
         assertEquals(RegistrationStatus.ACTIVE, found.getRegistrationStatus());
         assertEquals(CompanyStatus.ACTIVE, found.getCompanyStatus());
         assertEquals("São Paulo", found.getAddress().getCity());

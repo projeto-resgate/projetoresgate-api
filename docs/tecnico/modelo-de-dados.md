@@ -153,7 +153,8 @@ Pontos a notar:
   não carrega o objeto relacionado sozinho.
 - **Unicidade:** um educando por pessoa física, um colaborador por pessoa física, um vínculo
   educando↔turma e colaborador↔turma. Os índices únicos são **parciais** (`WHERE deleted_at IS NULL`),
-  então uma linha excluída libera a combinação para ser recriada.
+  então uma linha excluída libera a combinação para ser recriada. O mesmo vale para CPF e RG de pessoa física,
+  CNPJ de pessoa jurídica e e-mail de usuário (V019). E-mail de pessoa física **não** é único.
 
 ## Estados do educando
 

@@ -70,7 +70,7 @@ class UpdateLegalPersonServiceTest {
         assertEquals("Nova Razão Social", person.getCorporateName());
         assertEquals("Novo Nome Fantasia", person.getTradeName());
         assertEquals("Novo Display", person.getDisplayName());
-        assertEquals("8599-6/04", person.getMainCnaeCode());
+        assertEquals("8599604", person.getMainCnaeCode());
         assertEquals(RegistrationStatus.SUSPENDED, person.getRegistrationStatus());
         assertEquals(CompanyStatus.INACTIVE, person.getCompanyStatus());
         assertEquals("Rio de Janeiro", person.getAddress().getCity());
@@ -132,7 +132,7 @@ class UpdateLegalPersonServiceTest {
         assertNotNull(person.getAddress());
         assertEquals(originalAddressId, person.getAddress().getId());
         assertEquals("São Paulo", person.getAddress().getCity());
-        assertEquals("01310-100", person.getAddress().getZipCode());
+        assertEquals("01310100", person.getAddress().getZipCode());
         verify(repository).save(person);
     }
 

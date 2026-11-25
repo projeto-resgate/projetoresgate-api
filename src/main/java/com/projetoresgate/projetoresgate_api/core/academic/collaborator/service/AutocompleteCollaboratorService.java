@@ -9,6 +9,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Le
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
+import com.projetoresgate.projetoresgate_api.shared.util.MaskUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -43,7 +44,7 @@ public class AutocompleteCollaboratorService implements AutocompleteCollaborator
         String searchTerm = StringUtils.hasText(query.searchTerm()) ? query.searchTerm() : null;
 
         Pageable pageable = PageRequest.of(0, query.limit());
-        List<Collaborator> collaborators = repository.search(searchTerm, pageable).getContent();
+        List<Collaborator> collaborators = repository.search(searchTerm, MaskUtils.unmaskUpperCase(searchTerm), pageable).getContent();
 
         Set<UUID> naturalPersonIds = collaborators.stream()
                 .map(Collaborator::getNaturalPersonId)

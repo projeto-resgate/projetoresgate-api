@@ -27,9 +27,9 @@ public interface ProgramRepository extends JpaRepository<Program, UUID>, JpaSpec
                 .orElseThrow(() -> new ResourceNotFoundException("Programa não encontrado com ID: " + id));
     }
 
-    boolean existsByName(String name);
+    boolean existsByNameIgnoreCase(String name);
 
-    boolean existsByNameAndIdNot(String name, UUID id);
+    boolean existsByNameIgnoreCaseAndIdNot(String name, UUID id);
 
     boolean existsByInstitutionId(UUID institutionId);
 

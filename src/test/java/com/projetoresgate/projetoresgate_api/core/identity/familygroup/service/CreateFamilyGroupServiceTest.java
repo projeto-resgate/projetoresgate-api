@@ -50,7 +50,7 @@ class CreateFamilyGroupServiceTest {
                 new AddressCommand(null, null, "01310-100", "1000", null, "Apto 101", "Bela Vista", "São Paulo", "SP"));
 
         givenSequence();
-        when(repository.existsByName("Família Silva")).thenReturn(false);
+        when(repository.existsByNameIgnoreCase("Família Silva")).thenReturn(false);
         when(repository.save(any(FamilyGroup.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         FamilyGroup result = service.handle(command);
@@ -88,7 +88,7 @@ class CreateFamilyGroupServiceTest {
         CreateFamilyGroupCommand command = new CreateFamilyGroupCommand(
                 "Família Silva", null, null, null, null, null, null, null);
 
-        when(repository.existsByName("Família Silva")).thenReturn(true);
+        when(repository.existsByNameIgnoreCase("Família Silva")).thenReturn(true);
 
         InternalException exception = assertThrows(InternalException.class, () -> service.handle(command));
 

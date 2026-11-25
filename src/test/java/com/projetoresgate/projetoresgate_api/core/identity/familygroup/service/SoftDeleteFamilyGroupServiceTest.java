@@ -32,12 +32,15 @@ class SoftDeleteFamilyGroupServiceTest {
     void handle_ShouldSoftDeleteFamilyGroup() {
         UUID id = UUID.randomUUID();
         FamilyGroup familyGroup = mock(FamilyGroup.class);
+        when(familyGroup.getId()).thenReturn(id);
 
         when(repository.findByIdOrThrow(id)).thenReturn(familyGroup);
 
         service.handle(new SoftDeleteFamilyGroupCommand(id));
 
-        verify(repository).delete(familyGroup);
+        verify(repository).softDeleteAddressOf(id);
+        verify(repository).softDeleteKeepingMembers(id);
+        verify(repository, never()).delete(any(FamilyGroup.class));
     }
 
     @Test
@@ -52,6 +55,6 @@ class SoftDeleteFamilyGroupServiceTest {
                 () -> service.handle(new SoftDeleteFamilyGroupCommand(id)));
 
         assertEquals("Grupo familiar não encontrado com ID: " + id, exception.getMessage());
-        verify(repository, never()).delete(any(FamilyGroup.class));
+        verify(repository, never()).softDeleteKeepingMembers(any());
     }
 }

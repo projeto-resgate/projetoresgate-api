@@ -39,12 +39,12 @@ public interface CollaboratorRepository extends JpaRepository<Collaborator, UUID
             where (:searchTerm is null
                    or lower(np.name) like lower(concat('%', cast(:searchTerm as String), '%'))
                    or lower(np.nickname) like lower(concat('%', cast(:searchTerm as String), '%'))
-                   or np.cpf like concat('%', cast(:searchTerm as String), '%')
-                   or upper(np.rg) like upper(concat('%', cast(:searchTerm as String), '%'))
+                   or np.cpf like concat('%', cast(:document as String), '%')
+                   or np.rg like concat('%', cast(:document as String), '%')
                    or lower(lp.corporateName) like lower(concat('%', cast(:searchTerm as String), '%'))
                    or lower(lp.tradeName) like lower(concat('%', cast(:searchTerm as String), '%'))
                    or lower(lp.displayName) like lower(concat('%', cast(:searchTerm as String), '%'))
-                   or lp.cnpj like concat('%', cast(:searchTerm as String), '%'))
+                   or lp.cnpj like concat('%', cast(:document as String), '%'))
             order by np.name asc
             """,
             countQuery = """
@@ -54,14 +54,16 @@ public interface CollaboratorRepository extends JpaRepository<Collaborator, UUID
                     where (:searchTerm is null
                            or lower(np.name) like lower(concat('%', cast(:searchTerm as String), '%'))
                            or lower(np.nickname) like lower(concat('%', cast(:searchTerm as String), '%'))
-                           or np.cpf like concat('%', cast(:searchTerm as String), '%')
-                           or upper(np.rg) like upper(concat('%', cast(:searchTerm as String), '%'))
+                           or np.cpf like concat('%', cast(:document as String), '%')
+                           or np.rg like concat('%', cast(:document as String), '%')
                            or lower(lp.corporateName) like lower(concat('%', cast(:searchTerm as String), '%'))
                            or lower(lp.tradeName) like lower(concat('%', cast(:searchTerm as String), '%'))
                            or lower(lp.displayName) like lower(concat('%', cast(:searchTerm as String), '%'))
-                           or lp.cnpj like concat('%', cast(:searchTerm as String), '%'))
+                           or lp.cnpj like concat('%', cast(:document as String), '%'))
                     """)
-    Page<Collaborator> search(@Param("searchTerm") String searchTerm, Pageable pageable);
+    Page<Collaborator> search(@Param("searchTerm") String searchTerm,
+                              @Param("document") String document,
+                              Pageable pageable);
 
     @Query(value = "SELECT * FROM collaborator WHERE id IN (:ids)", nativeQuery = true)
     List<Collaborator> findAllByIdIncludingDeleted(@Param("ids") Collection<UUID> ids);

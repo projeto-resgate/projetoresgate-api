@@ -4,6 +4,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.address.usecase.comma
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Representative;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
+import com.projetoresgate.projetoresgate_api.shared.util.MaskUtils;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -26,6 +27,11 @@ public record CreateLegalPersonCommand(
         @Valid
         Representative representative
 ) {
+    public CreateLegalPersonCommand {
+        cnpj = MaskUtils.unmask(cnpj);
+        mainCnaeCode = MaskUtils.unmask(mainCnaeCode);
+    }
+
     public CreateLegalPersonCommand(String corporateName, String tradeName, String displayName, String cnpj, String mainCnaeCode, RegistrationStatus registrationStatus, CompanyStatus companyStatus, AddressCommand address) {
         this(corporateName, tradeName, displayName, cnpj, mainCnaeCode, registrationStatus, companyStatus, address, null);
     }

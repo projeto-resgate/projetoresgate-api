@@ -42,7 +42,10 @@ public class AutocompleteNaturalPersonService implements AutocompleteNaturalPers
 
                 String alphanumeric = query.searchTerm().replaceAll("[^a-zA-Z0-9]", "");
                 if (StringUtils.hasText(alphanumeric)) {
-                    orPredicates.add(cb.like(cb.upper(root.get("rg")), "%" + alphanumeric.toUpperCase() + "%"));
+                    orPredicates.add(cb.like(
+                            cb.upper(cb.function("regexp_replace", String.class, root.get("rg"),
+                                    cb.literal("[^0-9A-Za-z]"), cb.literal(""), cb.literal("g"))),
+                            "%" + alphanumeric.toUpperCase() + "%"));
                 }
             }
 

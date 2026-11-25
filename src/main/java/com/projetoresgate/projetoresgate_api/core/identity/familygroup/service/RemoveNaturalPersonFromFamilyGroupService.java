@@ -20,6 +20,16 @@ public class RemoveNaturalPersonFromFamilyGroupService implements RemoveNaturalP
     public void handle(RemoveNaturalPersonFromFamilyGroupCommand command) {
         familyGroupRepository.findByIdOrThrow(command.familyGroupId());
 
+        if (familyGroupRepository.isLearnerOnlyInFamilyGroup(command.familyGroupId(), command.naturalPersonId())) {
+            throw new IllegalStateException(
+                    "Esta pessoa é educando e este é o único grupo familiar dela. Vincule-a a outro grupo familiar antes de removê-la.");
+        }
+
+        if (familyGroupRepository.isResponsibleForLearnerInFamilyGroup(command.familyGroupId(), command.naturalPersonId())) {
+            throw new IllegalStateException(
+                    "Esta pessoa é responsável por um educando deste grupo familiar. Remova-a da lista de responsáveis antes de desvinculá-la.");
+        }
+
         if (familyGroupRepository.unlinkNaturalPerson(command.familyGroupId(), command.naturalPersonId()) == 0) {
             throw new IllegalStateException("Esta pessoa não está vinculada a este grupo familiar.");
         }

@@ -358,11 +358,11 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("POST /user/refresh - Deve retornar 400 se o cookie não for enviado")
-    void refresh_shouldReturn400WhenCookieIsMissing() throws Exception {
+    @DisplayName("POST /user/refresh - Deve retornar 401 se o cookie não for enviado")
+    void refresh_shouldReturn401WhenCookieIsMissing() throws Exception {
         mockMvc.perform(post("/user/refresh")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isUnauthorized());
 
         verify(refreshTokenUseCase, never()).handle(any());
     }

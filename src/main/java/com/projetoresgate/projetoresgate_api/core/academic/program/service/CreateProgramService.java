@@ -2,6 +2,7 @@ package com.projetoresgate.projetoresgate_api.core.academic.program.service;
 
 import com.projetoresgate.projetoresgate_api.core.academic.program.api.dto.ProgramResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.EducatorCategoryItem;
+import com.projetoresgate.projetoresgate_api.core.academic.program.domain.EducatorCategoryNames;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.Program;
 import com.projetoresgate.projetoresgate_api.core.academic.program.repository.ProgramRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.CreateProgramUseCase;
@@ -38,7 +39,7 @@ public class CreateProgramService implements CreateProgramUseCase {
     @Override
     @Transactional
     public ProgramResponse handle(CreateProgramCommand command) {
-        if (repository.existsByName(command.name())) {
+        if (repository.existsByNameIgnoreCase(command.name())) {
             throw new InternalException("Já existe um programa cadastrado com este nome.");
         }
         if (nonNull(command.institutionId())) {
@@ -53,6 +54,9 @@ public class CreateProgramService implements CreateProgramUseCase {
         );
 
         if (nonNull(command.educatorCategoryItems()) && !command.educatorCategoryItems().isEmpty()) {
+            EducatorCategoryNames.requireUnique(command.educatorCategoryItems().stream()
+                    .map(CreateProgramCommand.CreateEducatorCategoryItemCommand::name)
+                    .toList());
             List<EducatorCategoryItem> items = command.educatorCategoryItems().stream()
                     .map(item -> EducatorCategoryItem.create(
                             item.name(),
@@ -61,7 +65,7 @@ public class CreateProgramService implements CreateProgramUseCase {
             program.getEducatorCategoryItemList().addAll(items);
         }
 
-        return toResponse(repository.save(program));
+        return toResponse(repository.saveAndFlush(program));
     }
 
     private ProgramResponse toResponse(Program program) {

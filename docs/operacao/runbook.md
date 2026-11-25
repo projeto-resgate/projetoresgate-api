@@ -32,7 +32,7 @@ flowchart TD
     C -- não --> L[Veja os logs da API]
     C -- sim --> D{"Imagem é a esperada?<br/>docker inspect"}
     D -- não --> W[Veja logs do Watchtower]
-    D -- sim --> E{"curl -s -o /dev/null -w '%{http_code}'<br/>localhost:8080/actuator/health<br/>responde 401/403/200?"}
+    D -- sim --> E{"curl -s -o /dev/null -w '%{http_code}'<br/>localhost:8080/actuator/health<br/>responde 200?"}
     E -- "000 ou 5xx" --> L
     E -- ok --> F[Teste um login e uma listagem pelo front]
     F --> G[✅ Deploy validado]
@@ -46,8 +46,8 @@ docker inspect -f '{{.Config.Image}}' projetoresgate_api
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080/actuator/health
 ```
 
-> `/actuator/health` **exige autenticação** na configuração atual, então `401` ou `403` significa
-> *"a aplicação está de pé"*. `000` (sem conexão) ou `5xx` indicam problema.
+> `/actuator/health` é **público** e responde `200` com `{"status":"UP"}` quando a aplicação está de pé.
+> `000` (sem conexão), `503` (`DOWN`) ou outro `5xx` indicam problema.
 
 ## Rollback
 

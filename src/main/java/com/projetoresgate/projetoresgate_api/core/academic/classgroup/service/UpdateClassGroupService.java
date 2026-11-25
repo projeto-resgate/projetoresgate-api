@@ -96,7 +96,7 @@ public class UpdateClassGroupService implements UpdateClassGroupUseCase {
 
     private String resolveInstitutionName(ClassGroup classGroup) {
         return legalPersonRepository.findByIdIncludingDeleted(classGroup.getInstitutionId())
-                .map(LegalPerson::getDisplayName)
+                .map(LegalPerson::getName)
                 .orElse(null);
     }
 

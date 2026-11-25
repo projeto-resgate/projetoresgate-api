@@ -376,7 +376,7 @@ class FamilyGroupControllerTest {
                 .andExpect(jsonPath("$.address.neighborhood").value("Bela Vista"))
                 .andExpect(jsonPath("$.address.city").value("São Paulo"))
                 .andExpect(jsonPath("$.address.state").value("SP"))
-                .andExpect(jsonPath("$.address.zipCode").value("01310-100"))
+                .andExpect(jsonPath("$.address.zipCode").value("01310100"))
                 .andExpect(jsonPath("$.naturalPersonList").doesNotExist());
     }
 

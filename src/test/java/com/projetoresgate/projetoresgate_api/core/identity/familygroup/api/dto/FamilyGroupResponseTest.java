@@ -53,7 +53,7 @@ class FamilyGroupResponseTest {
         assertEquals("Bela Vista", response.address().neighborhood());
         assertEquals("São Paulo", response.address().city());
         assertEquals("SP", response.address().state());
-        assertEquals("01310-100", response.address().zipCode());
+        assertEquals("01310100", response.address().zipCode());
         assertEquals(dateCreated, response.dateCreated());
     }
 

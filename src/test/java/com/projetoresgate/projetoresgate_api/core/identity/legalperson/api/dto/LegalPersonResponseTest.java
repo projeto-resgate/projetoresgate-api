@@ -35,7 +35,7 @@ class LegalPersonResponseTest {
         assertEquals("Razão Social LTDA", response.corporateName());
         assertEquals("Nome Fantasia", response.tradeName());
         assertEquals("Display Name", response.displayName());
-        assertEquals("6201-5/00", response.mainCnaeCode());
+        assertEquals("6201500", response.mainCnaeCode());
         assertEquals(RegistrationStatus.ACTIVE, response.registrationStatus());
         assertEquals(CompanyStatus.ACTIVE, response.companyStatus());
         assertEquals(dateCreated, response.dateCreated());
@@ -43,7 +43,7 @@ class LegalPersonResponseTest {
         assertNotNull(response.address());
         assertEquals(address.getId(), response.address().id());
         assertEquals("São Paulo", response.address().city());
-        assertEquals("01310-100", response.address().zipCode());
+        assertEquals("01310100", response.address().zipCode());
 
         assertNotNull(response.representative());
         assertEquals("John Doe", response.representative().name());

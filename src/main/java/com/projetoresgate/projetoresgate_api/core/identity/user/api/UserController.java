@@ -9,7 +9,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.command.
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.query.AuthenticateUserQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.query.FindUserByIdQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.query.RefreshTokenQuery;
-import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
+import com.projetoresgate.projetoresgate_api.infrastructure.exception.UnauthorizedException;
 import com.projetoresgate.projetoresgate_api.infrastructure.security.UserDetailsImpl;
 import com.projetoresgate.projetoresgate_api.infrastructure.services.ICookieService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -113,14 +113,14 @@ public class UserController {
     @Operation(summary = "Renovar token de acesso", description = "Gera um novo access token usando o refresh token do cookie.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Access token renovado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Refresh token inválido ou expirado")
+            @ApiResponse(responseCode = "401", description = "Refresh token ausente, inválido ou expirado")
     })
     public ResponseEntity<RefreshTokenResponse> refreshToken(
             @CookieValue(value = "refreshToken", required = false) String refreshToken,
             HttpServletResponse httpResponse) {
 
         if (isNull(refreshToken) || refreshToken.isBlank()) {
-            throw new InternalException("Cookie de renovação não fornecido");
+            throw new UnauthorizedException("Cookie de renovação não fornecido.");
         }
 
         RefreshTokenQuery query = new RefreshTokenQuery(refreshToken);

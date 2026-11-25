@@ -980,4 +980,20 @@ class LearnerControllerTest {
 
         verify(findAllUseCase, never()).handle(any());
     }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("POST /learner/{id}/dropout - Deve retornar 400 quando a data for futura")
+    void dropOut_ShouldReturn400WhenEventDateIsInTheFuture() throws Exception {
+        mockMvc.perform(post("/learner/{id}/dropout", LEARNER_ID)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"reason":"Mudança","eventDate":"%s"}
+                                """.formatted(LocalDate.now().plusDays(1))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("eventDate"));
+
+        verify(dropoutUseCase, never()).handle(any());
+    }
 }

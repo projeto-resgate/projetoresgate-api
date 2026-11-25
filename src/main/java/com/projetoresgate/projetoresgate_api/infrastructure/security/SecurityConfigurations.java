@@ -72,6 +72,7 @@ public class SecurityConfigurations {
                             .requestMatchers(HttpMethod.POST, "/natural-person/request-email-confirmation").permitAll()
                             .requestMatchers(HttpMethod.POST, "/natural-person/confirm-email/**").permitAll()
                             .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
+                            .requestMatchers("/error").permitAll()
                             .anyRequest().authenticated();
                 })
                 .addFilterAfter(rateLimitingFilter, CorsFilter.class)

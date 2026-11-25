@@ -15,6 +15,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.shared.specification.SpecificationBuilder;
 import com.projetoresgate.projetoresgate_api.shared.specification.Specs;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
@@ -121,13 +122,18 @@ public class FindAllLearnersService implements FindAllLearnersUseCase {
 
         return (root, criteriaQuery, cb) -> {
             String pattern = "%" + searchTerm.toLowerCase(Locale.ROOT) + "%";
+            String digits = searchTerm.replaceAll("\\D", "");
 
             Subquery<UUID> subquery = criteriaQuery.subquery(UUID.class);
             var person = subquery.from(NaturalPerson.class);
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.like(cb.lower(person.get("name")), pattern));
+            predicates.add(cb.like(cb.lower(person.get("nickname")), pattern));
+            if (!digits.isEmpty()) {
+                predicates.add(cb.like(person.get("cpf"), "%" + digits + "%"));
+            }
             subquery.select(person.get("id"))
-                    .where(cb.or(
-                            cb.like(cb.lower(person.get("name")), pattern),
-                            cb.like(cb.lower(person.get("nickname")), pattern)));
+                    .where(cb.or(predicates.toArray(Predicate[]::new)));
 
             return root.get("naturalPersonId").in(subquery);
         };

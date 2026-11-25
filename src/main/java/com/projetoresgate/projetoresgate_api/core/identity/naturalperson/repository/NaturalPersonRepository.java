@@ -24,7 +24,11 @@ public interface NaturalPersonRepository extends JpaRepository<NaturalPerson, UU
 
     boolean existsByCpfAndIdNot(String cpf, UUID id);
 
-    Optional<NaturalPerson> findByEmail(String email);
+    boolean existsByRg(String rg);
+
+    boolean existsByRgAndIdNot(String rg, UUID id);
+
+    List<NaturalPerson> findAllByEmailIgnoreCase(String email);
 
     default NaturalPerson findByIdOrThrow(UUID id) {
         return findById(id)

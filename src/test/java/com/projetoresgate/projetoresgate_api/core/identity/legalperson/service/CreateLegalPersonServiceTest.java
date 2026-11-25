@@ -52,12 +52,12 @@ class CreateLegalPersonServiceTest {
         assertEquals("Razão Social LTDA", created.getCorporateName());
         assertEquals("Nome Fantasia", created.getTradeName());
         assertEquals("Display Name", created.getDisplayName());
-        assertEquals("6201-5/00", created.getMainCnaeCode());
+        assertEquals("6201500", created.getMainCnaeCode());
         assertEquals(RegistrationStatus.ACTIVE, created.getRegistrationStatus());
         assertEquals(CompanyStatus.ACTIVE, created.getCompanyStatus());
         assertNotNull(created.getAddress());
         assertNotNull(created.getAddress().getId());
-        assertEquals("01310-100", created.getAddress().getZipCode());
+        assertEquals("01310100", created.getAddress().getZipCode());
         assertEquals("São Paulo", created.getAddress().getCity());
         assertNull(created.getRepresentative());
 

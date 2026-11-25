@@ -81,11 +81,12 @@ flowchart LR
     D[Editar horário<br/>dia ou ativo] --> T
     E[Excluir horário] --> T
     F[Renomear programa] -->|todas as turmas do programa| T
-    G[Excluir série] -->|todas as turmas com a série| T
+    G[Renomear série] -->|todas as turmas com a série| T
 ```
 
-Renomear um programa ou excluir uma série reescreve o título de **todas** as turmas afetadas
-(`RefreshClassGroupTitlesService`), em lote e na mesma transação.
+Renomear um programa ou uma série reescreve o título de **todas** as turmas afetadas
+(`RefreshClassGroupTitlesService`), em lote e na mesma transação. **Excluir** uma série não recalcula: a turma
+continua mostrando a série excluída (RN-SER-04).
 
 ## Horários
 
@@ -131,6 +132,7 @@ Reativar o educando **sem** informar turma não reativa os vínculos. Para traz�
 
 A categoria é "o papel do educador **nesta turma**" (ex.: Professor, Auxiliar) e vem das categorias
 cadastradas no **programa**. Na edição, trocar a categoria exige que a nova também seja do programa.
+Uma categoria em uso por educadores de turma **não pode ser removida** do programa (409).
 
 ⚠️ Se o **programa da turma for trocado** (`PUT`), os educadores já vinculados **continuam** com a categoria
 do programa antigo — não há revalidação.

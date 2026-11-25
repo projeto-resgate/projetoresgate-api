@@ -14,6 +14,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.familygroup.repositor
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
+import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -96,7 +97,9 @@ public class UpdateLearnerService implements UpdateLearnerUseCase {
     }
 
     private void validateLearnerBelongsToFamilyGroup(UUID familyGroupId, UUID naturalPersonId) {
-        familyGroupRepository.findByIdOrThrow(familyGroupId);
+        if (!familyGroupRepository.existsByIdIncludingDeleted(familyGroupId)) {
+            throw new ResourceNotFoundException("Grupo familiar não encontrado com ID: " + familyGroupId);
+        }
         validatePersonBelongsToFamilyGroup(familyGroupId, naturalPersonId);
     }
 

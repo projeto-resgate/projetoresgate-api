@@ -20,6 +20,7 @@ public class SoftDeleteFamilyGroupService implements SoftDeleteFamilyGroupUseCas
     @Transactional
     public void handle(SoftDeleteFamilyGroupCommand command) {
         FamilyGroup familyGroup = repository.findByIdOrThrow(command.id());
-        repository.delete(familyGroup);
+        repository.softDeleteAddressOf(familyGroup.getId());
+        repository.softDeleteKeepingMembers(familyGroup.getId());
     }
 }

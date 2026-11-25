@@ -67,9 +67,9 @@ class FindAllCollaboratorsServiceTest {
         when(legalPerson.getId()).thenReturn(legalPersonId);
         when(firstNaturalPerson.getName()).thenReturn("Ana Souza");
         when(secondNaturalPerson.getName()).thenReturn("Bruno Lima");
-        when(legalPerson.getDisplayName()).thenReturn("Empresa X LTDA");
+        when(legalPerson.getName()).thenReturn("Empresa X LTDA");
 
-        when(repository.search(isNull(), any(Pageable.class)))
+        when(repository.search(isNull(), isNull(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(first, second), PAGEABLE, 2));
         when(naturalPersonRepository.findAllByIdIncludingDeleted(any()))
                 .thenReturn(List.of(firstNaturalPerson, secondNaturalPerson));
@@ -87,11 +87,11 @@ class FindAllCollaboratorsServiceTest {
     @Test
     @DisplayName("Deve converter termo em branco para busca nula")
     void handle_ShouldNormalizeBlankSearchTerm() {
-        when(repository.search(isNull(), any(Pageable.class)))
+        when(repository.search(isNull(), isNull(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(), PAGEABLE, 0));
 
         service.handle(new FindAllCollaboratorsQuery("   ", PAGEABLE));
 
-        verify(repository).search(isNull(), any(Pageable.class));
+        verify(repository).search(isNull(), isNull(), any(Pageable.class));
     }
 }

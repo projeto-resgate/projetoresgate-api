@@ -9,6 +9,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repositor
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.shared.testcontainers.PostgresIntegrationTest;
+import com.projetoresgate.projetoresgate_api.shared.util.MaskUtils;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -65,7 +66,7 @@ class CollaboratorRepositoryIntegrationTest extends PostgresIntegrationTest {
     private Page<Collaborator> search(String term) {
         entityManager.flush();
         entityManager.clear();
-        return repository.search(term, PageRequest.of(0, 10));
+        return repository.search(term, MaskUtils.unmaskUpperCase(term), PageRequest.of(0, 10));
     }
 
     private List<UUID> naturalPersonIds(Page<Collaborator> page) {
@@ -117,6 +118,18 @@ class CollaboratorRepositoryIntegrationTest extends PostgresIntegrationTest {
         Collaborator bruno = givenCollaborator("Bruno Lima", null, "55566677788", null);
 
         Page<Collaborator> result = search("666777");
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals(bruno.getNaturalPersonId(), naturalPersonIds(result).getFirst());
+    }
+
+    @Test
+    @DisplayName("Deve filtrar pelo CPF digitado com máscara")
+    void search_ShouldFilterByMaskedCpf() {
+        givenCollaborator("Ana Souza", null, "11122233344", null);
+        Collaborator bruno = givenCollaborator("Bruno Lima", null, "55566677788", null);
+
+        Page<Collaborator> result = search("555.666.777-88");
 
         assertEquals(1, result.getTotalElements());
         assertEquals(bruno.getNaturalPersonId(), naturalPersonIds(result).getFirst());

@@ -80,6 +80,18 @@ class AutocompleteNaturalPersonIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    @DisplayName("Deve encontrar por RG gravado com pontuação, digitando só letras e números")
+    void handle_ShouldFindByRgStoredWithPunctuation() {
+        repository.save(NaturalPerson.create("Ana Lima", "ana@test.com", null, null, "MG-11.222.333",
+                null, null, null, null));
+
+        List<NaturalPersonSummaryResponse> result = service.handle(new AutocompleteNaturalPersonQuery("mg11222", 10));
+
+        assertEquals(1, result.size());
+        assertEquals("Ana Lima", result.get(0).name());
+    }
+
+    @Test
     @DisplayName("Deve retornar o top-N ordenado por nome mesmo com searchTerm em branco")
     void handle_ShouldReturnTopNWhenBlankSearchTerm() {
         List<NaturalPersonSummaryResponse> result = service.handle(new AutocompleteNaturalPersonQuery("   ", 10));

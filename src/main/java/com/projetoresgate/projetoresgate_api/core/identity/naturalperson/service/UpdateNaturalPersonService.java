@@ -3,6 +3,7 @@ package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.servic
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.RequestEmailConfirmationUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.UpdateNaturalPersonUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.UpdateNaturalPersonCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
@@ -16,11 +17,14 @@ public class UpdateNaturalPersonService implements UpdateNaturalPersonUseCase {
 
     private final NaturalPersonRepository repository;
     private final LegalPersonRepository legalPersonRepository;
+    private final RequestEmailConfirmationUseCase requestEmailConfirmationUseCase;
 
     public UpdateNaturalPersonService(NaturalPersonRepository repository,
-                                      LegalPersonRepository legalPersonRepository) {
+                                      LegalPersonRepository legalPersonRepository,
+                                      RequestEmailConfirmationUseCase requestEmailConfirmationUseCase) {
         this.repository = repository;
         this.legalPersonRepository = legalPersonRepository;
+        this.requestEmailConfirmationUseCase = requestEmailConfirmationUseCase;
     }
 
     @Override
@@ -33,11 +37,18 @@ public class UpdateNaturalPersonService implements UpdateNaturalPersonUseCase {
             throw new InternalException("Já existe uma pessoa cadastrada com este CPF.");
         }
 
+        String rg = command.rg();
+        if (nonNull(rg) && !rg.isBlank() && repository.existsByRgAndIdNot(rg, person.getId())) {
+            throw new InternalException("Já existe uma pessoa cadastrada com este RG.");
+        }
+
         if (nonNull(command.workplaceId()) && !command.workplaceId().equals(person.getWorkplaceId())) {
             legalPersonRepository.findByIdOrThrow(command.workplaceId());
         }
 
-        return repository.save(
+        String previousEmail = person.getEmail();
+
+        NaturalPerson saved = repository.save(
                 person.update()
                         .name(command.name())
                         .email(command.email())
@@ -51,5 +62,11 @@ public class UpdateNaturalPersonService implements UpdateNaturalPersonUseCase {
                         .workplaceId(command.workplaceId())
                         .apply()
         );
+
+        if (nonNull(saved.getEmail()) && !saved.getEmail().equalsIgnoreCase(previousEmail)) {
+            requestEmailConfirmationUseCase.handle(saved);
+        }
+
+        return saved;
     }
 }

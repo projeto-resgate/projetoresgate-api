@@ -3,6 +3,7 @@ package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.shared.entity.AuditableEntity;
+import com.projetoresgate.projetoresgate_api.shared.util.MaskUtils;
 import jakarta.persistence.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
@@ -77,6 +78,10 @@ public class NaturalPerson extends AuditableEntity {
     }
 
     public void validate() {
+        this.cpf = MaskUtils.unmask(this.cpf);
+        this.rg = MaskUtils.unmaskUpperCase(this.rg);
+        this.phone = MaskUtils.unmask(this.phone);
+        this.cellphone = MaskUtils.unmask(this.cellphone);
         if (!StringUtils.hasText(this.name)) {
             throw new InternalException("O nome não pode ser vazio.");
         }
@@ -112,6 +117,9 @@ public class NaturalPerson extends AuditableEntity {
         }
 
         public Updater email(String email) {
+            if (!StringUtils.hasText(NaturalPerson.this.email) || !NaturalPerson.this.email.equalsIgnoreCase(email)) {
+                NaturalPerson.this.isEmailVerified = false;
+            }
             NaturalPerson.this.email = email;
             return this;
         }

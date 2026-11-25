@@ -4,6 +4,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repositor
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.RequestEmailConfirmationUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.UpdateNaturalPersonCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
@@ -30,6 +31,9 @@ class UpdateNaturalPersonServiceTest {
 
     @Mock
     private LegalPersonRepository legalPersonRepository;
+
+    @Mock
+    private RequestEmailConfirmationUseCase requestEmailConfirmationUseCase;
 
     @InjectMocks
     private UpdateNaturalPersonService service;
@@ -194,6 +198,51 @@ class UpdateNaturalPersonServiceTest {
         assertThrows(ResourceNotFoundException.class,
                 () -> service.handle(command));
 
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Trocar o e-mail deve desfazer a verificação e enviar nova confirmação")
+    void handle_ShouldResetVerificationWhenEmailChanges() {
+        person.confirmEmail();
+        UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
+                personId, "Old Name", "novo@test.com", "nick", null, null, null, null, null, null, null);
+
+        when(repository.findByIdOrThrow(personId)).thenReturn(person);
+        when(repository.save(any())).thenReturn(person);
+
+        service.handle(command);
+
+        assertFalse(person.isEmailVerified());
+        verify(requestEmailConfirmationUseCase).handle(person);
+    }
+
+    @Test
+    @DisplayName("Manter o e-mail, mesmo com outra caixa, não deve desfazer a verificação")
+    void handle_ShouldKeepVerificationWhenEmailIsTheSame() {
+        person.confirmEmail();
+        UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
+                personId, "New Name", "EMAIL@test.com", "nick", null, null, null, null, null, null, null);
+
+        when(repository.findByIdOrThrow(personId)).thenReturn(person);
+        when(repository.save(any())).thenReturn(person);
+
+        service.handle(command);
+
+        assertTrue(person.isEmailVerified());
+        verify(requestEmailConfirmationUseCase, never()).handle(any(NaturalPerson.class));
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando o RG pertencer a outra pessoa")
+    void handle_ShouldFailWhenRgExists() {
+        UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
+                personId, "Old Name", "email@test.com", "nick", "1234567", null, null, null, null, null, null);
+
+        when(repository.findByIdOrThrow(personId)).thenReturn(person);
+        when(repository.existsByRgAndIdNot("1234567", personId)).thenReturn(true);
+
+        assertThrows(InternalException.class, () -> service.handle(command));
         verify(repository, never()).save(any());
     }
 }

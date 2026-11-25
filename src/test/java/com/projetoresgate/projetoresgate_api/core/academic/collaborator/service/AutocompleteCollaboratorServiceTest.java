@@ -53,7 +53,7 @@ class AutocompleteCollaboratorServiceTest {
         when(naturalPerson.getId()).thenReturn(naturalPersonId);
         when(naturalPerson.getName()).thenReturn("Ana Souza");
 
-        when(repository.search(eq("ana"), any(Pageable.class)))
+        when(repository.search(eq("ana"), eq("ANA"), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(collaborator)));
         when(naturalPersonRepository.findAllById(any())).thenReturn(List.of(naturalPerson));
 
@@ -61,7 +61,7 @@ class AutocompleteCollaboratorServiceTest {
                 service.handle(new AutocompleteCollaboratorQuery("ana", 5));
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        verify(repository).search(eq("ana"), pageableCaptor.capture());
+        verify(repository).search(eq("ana"), eq("ANA"), pageableCaptor.capture());
 
         assertEquals(0, pageableCaptor.getValue().getPageNumber());
         assertEquals(5, pageableCaptor.getValue().getPageSize());

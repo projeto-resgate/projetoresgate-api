@@ -20,7 +20,7 @@ public class CreateSchoolGradeService implements CreateSchoolGradeUseCase {
     @Override
     @Transactional
     public SchoolGrade handle(CreateSchoolGradeCommand command) {
-        if (repository.existsByName(command.name())) {
+        if (repository.existsByNameIgnoreCase(command.name())) {
             throw new InternalException("Já existe uma série escolar cadastrada com este nome.");
         }
 

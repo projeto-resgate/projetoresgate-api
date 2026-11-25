@@ -15,7 +15,7 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.Optional;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -56,7 +56,7 @@ class RequestEmailConfirmationServiceTest {
     @Test
     @DisplayName("Não deve fazer nada se o e-mail da pessoa física não existir")
     void handle_shouldDoNothing_whenEmailDoesNotExist() {
-        when(naturalPersonRepository.findByEmail(personEmail)).thenReturn(Optional.empty());
+        when(naturalPersonRepository.findAllByEmailIgnoreCase(personEmail)).thenReturn(List.of());
 
         requestEmailConfirmationService.handle(personEmail);
 
@@ -67,7 +67,7 @@ class RequestEmailConfirmationServiceTest {
     @DisplayName("Não deve fazer nada se o e-mail da pessoa física já estiver verificado")
     void handle_shouldDoNothing_whenEmailIsAlreadyVerified() {
         existingPerson.confirmEmail();
-        when(naturalPersonRepository.findByEmail(personEmail)).thenReturn(Optional.of(existingPerson));
+        when(naturalPersonRepository.findAllByEmailIgnoreCase(personEmail)).thenReturn(List.of(existingPerson));
 
         requestEmailConfirmationService.handle(personEmail);
 
@@ -84,7 +84,7 @@ class RequestEmailConfirmationServiceTest {
             mockedTokenUtils.when(TokenUtils::generateSecureToken).thenReturn(plainTextToken);
             mockedTokenUtils.when(() -> TokenUtils.hashToken(plainTextToken)).thenReturn(expectedTokenHash);
 
-            when(naturalPersonRepository.findByEmail(personEmail)).thenReturn(Optional.of(existingPerson));
+            when(naturalPersonRepository.findAllByEmailIgnoreCase(personEmail)).thenReturn(List.of(existingPerson));
 
             ArgumentCaptor<EmailConfirmationToken> tokenCaptor = ArgumentCaptor.forClass(EmailConfirmationToken.class);
             ArgumentCaptor<String> htmlCaptor = ArgumentCaptor.forClass(String.class);
@@ -112,5 +112,41 @@ class RequestEmailConfirmationServiceTest {
         requestEmailConfirmationService.handle(personEmail);
 
         verifyNoInteractions(naturalPersonRepository, emailConfirmationTokenRepository, javaMailEmailService);
+    }
+
+    @Test
+    @DisplayName("Deve enviar confirmação a cada pessoa não verificada que compartilha o e-mail")
+    void handle_shouldSendToEveryUnverifiedPersonSharingTheEmail() {
+        NaturalPerson child = NaturalPerson.create("Criança", personEmail, null, null, null, null, null, null, null);
+        NaturalPerson verified = NaturalPerson.create("Responsável", personEmail, null, null, null, null, null, null, null);
+        verified.confirmEmail();
+        when(naturalPersonRepository.findAllByEmailIgnoreCase(personEmail)).thenReturn(List.of(existingPerson, child, verified));
+
+        requestEmailConfirmationService.handle(personEmail);
+
+        verify(emailConfirmationTokenRepository).deleteByNaturalPerson(existingPerson);
+        verify(emailConfirmationTokenRepository).deleteByNaturalPerson(child);
+        verify(emailConfirmationTokenRepository, never()).deleteByNaturalPerson(verified);
+        verify(javaMailEmailService, times(2)).sendHtml(eq(personEmail), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("Deve enviar confirmação só para a pessoa informada")
+    void handlePerson_shouldSendOnlyToGivenPerson() {
+        requestEmailConfirmationService.handle(existingPerson);
+
+        verify(emailConfirmationTokenRepository).deleteByNaturalPerson(existingPerson);
+        verify(javaMailEmailService).sendHtml(eq(personEmail), anyString(), anyString());
+        verifyNoInteractions(naturalPersonRepository);
+    }
+
+    @Test
+    @DisplayName("Não deve enviar confirmação para pessoa já verificada")
+    void handlePerson_shouldSkipVerifiedPerson() {
+        existingPerson.confirmEmail();
+
+        requestEmailConfirmationService.handle(existingPerson);
+
+        verifyNoInteractions(emailConfirmationTokenRepository, javaMailEmailService);
     }
 }

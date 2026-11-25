@@ -29,7 +29,7 @@ class CreateSchoolGradeServiceTest {
     @Test
     @DisplayName("Deve criar a série com o id gerado e devolver a entidade salva")
     void handle_ShouldCreateSchoolGrade() {
-        when(repository.existsByName("Primeiro ano")).thenReturn(false);
+        when(repository.existsByNameIgnoreCase("Primeiro ano")).thenReturn(false);
         when(repository.save(any(SchoolGrade.class))).thenAnswer(i -> i.getArgument(0));
 
         SchoolGrade result = service.handle(new CreateSchoolGradeCommand("Primeiro ano", null, 1));
@@ -44,7 +44,7 @@ class CreateSchoolGradeServiceTest {
     @Test
     @DisplayName("Deve lançar exceção quando o nome já está cadastrado e não salvar nada")
     void handle_ShouldFailWhenNameAlreadyExists() {
-        when(repository.existsByName("Primeiro ano")).thenReturn(true);
+        when(repository.existsByNameIgnoreCase("Primeiro ano")).thenReturn(true);
 
         InternalException exception = assertThrows(InternalException.class,
                 () -> service.handle(new CreateSchoolGradeCommand("Primeiro ano", null, 1)));
@@ -56,7 +56,7 @@ class CreateSchoolGradeServiceTest {
     @Test
     @DisplayName("Deve delegar a validação de domínio e não salvar quando a ordem é inválida")
     void handle_ShouldNotSaveWhenDomainValidationFails() {
-        when(repository.existsByName("Primeiro ano")).thenReturn(false);
+        when(repository.existsByNameIgnoreCase("Primeiro ano")).thenReturn(false);
 
         assertThrows(InternalException.class,
                 () -> service.handle(new CreateSchoolGradeCommand("Primeiro ano", null, 0)));
@@ -67,7 +67,7 @@ class CreateSchoolGradeServiceTest {
     @Test
     @DisplayName("Deve persistir o nome exatamente como recebido, sem normalizar")
     void handle_ShouldPersistNameAsReceived() {
-        when(repository.existsByName("Primeiro ano do Ensino Médio")).thenReturn(false);
+        when(repository.existsByNameIgnoreCase("Primeiro ano do Ensino Médio")).thenReturn(false);
         when(repository.save(any(SchoolGrade.class))).thenAnswer(i -> i.getArgument(0));
 
         service.handle(new CreateSchoolGradeCommand("Primeiro ano do Ensino Médio", null, 1));

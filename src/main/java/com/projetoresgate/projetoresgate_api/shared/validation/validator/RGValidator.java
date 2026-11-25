@@ -14,6 +14,7 @@ public class RGValidator implements ConstraintValidator<RG, String> {
             return true;
         }
 
-        return value.matches("^\\d{7,14}$");
+        String normalized = value.replaceAll("[^0-9A-Za-z]", "").toUpperCase();
+        return normalized.matches("^([A-Z]{2})?\\d{4,13}[0-9X]$");
     }
 }

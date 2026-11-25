@@ -31,7 +31,7 @@ resultados, ordenados por nome). O termo é comparado, com busca **parcial** (co
 | Nome      | Sem diferenciar maiúsculas/minúsculas                               |
 | Apelido   | Sem diferenciar maiúsculas/minúsculas                               |
 | CPF       | Só os **dígitos** do termo (pontuação é ignorada)                   |
-| RG        | Só **letras e números** do termo, sem diferenciar maiúsculas        |
+| RG        | Só **letras e números** do termo e do RG gravado, sem diferenciar maiúsculas |
 
 Os critérios são combinados com **OU**: basta um bater. Sem termo, devolve as primeiras pessoas por nome.
 
@@ -142,7 +142,7 @@ O status gravado no cadastro (`Learner.status`) continua tendo só `ACTIVE` e `D
 
 1. Falha com **409** se já estiver `DROPPED_OUT`.
 2. Registra `LearnerStatusHistory(DROPOUT)` — o **motivo é obrigatório** (400 se vazio). O histórico é consultável em `GET /learner/{id}/status-history`.
-3. A data do evento é a informada ou **hoje**.
+3. A data do evento é a informada ou **hoje**; data futura dá **400**.
 4. Muda o status para `DROPPED_OUT`.
 5. **Desativa todos os vínculos do educando com turmas** (`ClassLearner.active = false`) e devolve na
    resposta **quantos vínculos foram desativados** (`deactivatedClassLinks`).
@@ -184,8 +184,8 @@ Lista vazia se nunca houve evento; **404** se o educando não existir.
 
 | Operação                       | Efeito                                                                                          |
 |--------------------------------|-------------------------------------------------------------------------------------------------|
-| `DELETE /family-group/{id}`    | Soft delete só do grupo. Pessoas e educandos **não** são afetados.                               |
-| `DELETE .../natural-person/{id}` (da família) | Só **desvincula** a pessoa da família (409 se não estava vinculada). Não exclui a pessoa. |
+| `DELETE /family-group/{id}`    | Soft delete do grupo e do endereço dele. Pessoas, educandos e os **vínculos** das pessoas com o grupo continuam: o educando segue editável informando o `familyGroupId` excluído. Novos cadastros com essa família dão 404. |
+| `DELETE .../natural-person/{id}` (da família) | Só **desvincula** a pessoa da família. Não exclui a pessoa. **409** se: não estava vinculada; é educando e esta é a única família ativa dela; ou é responsável por um educando desta família. |
 
 Ver [tabela completa de cascatas](regras-implementadas.md#exclusão-e-cascatas).
 

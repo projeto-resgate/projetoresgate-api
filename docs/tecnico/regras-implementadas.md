@@ -14,27 +14,34 @@ Ver [ADR 002](../adr/002-tratamento-de-erros.md).
 regra removida fica riscada (`~~RN-XXX-NN~~`).
 
 Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `FAM` família · `END` endereço ·
-`PRG` programa · `SER` série · `LRN` educando · `COL` colaborador · `TUR` turma.
+`PRG` programa · `SER` série · `LRN` educando · `COL` colaborador · `TUR` turma · `GER` geral.
+
+## Regras gerais
+
+| ID         | Regra                                                                                   | HTTP | Onde                               |
+|------------|-----------------------------------------------------------------------------------------|------|------------------------------------|
+| RN-GER-01  | Dados com máscara são gravados **só com o valor**: a API aceita com ou sem máscara e remove `.`, `-`, `/`, `(`, `)` e espaços de CPF, RG (também em maiúsculas), CNPJ, CNAE, CEP, telefone e celular (inclusive do representante). Letras não são removidas, então valor inválido continua sendo recusado. A **exibição com máscara é do front** | — | `MaskUtils`, comandos e `validate()` das entidades |
+| RN-GER-02  | A migration V020 limpou os valores já gravados; CPF/RG cuja limpeza criaria duplicidade com outro registro ativo foram mantidos como estavam | — | `V020__Remove_masks_from_stored_values.sql` |
 
 ## Usuário e acesso
 
 | ID         | Regra                                                                                   | HTTP | Onde                               |
 |------------|-----------------------------------------------------------------------------------------|------|------------------------------------|
-| RN-USR-01  | E-mail do usuário é único                                                               | 400  | `CreateUserService`                |
+| RN-USR-01  | E-mail do usuário é único entre usuários ativos (o de um usuário excluído pode ser reutilizado) | 400  | `CreateUserService`                |
 | RN-USR-02  | E-mail e nome do usuário são obrigatórios                                               | 400  | `User.validate`                    |
 | RN-USR-03  | Todo usuário criado nasce com o papel `ADMIN`                                           | —    | `User` (construtor)                |
 | RN-USR-04  | Login com e-mail inexistente ou senha errada devolve a **mesma** resposta               | 401  | `AuthenticateUserService`          |
-| RN-USR-05  | Access token dura 15 min; refresh token dura 7 dias e **rotaciona** a cada uso          | 400  | `TokenService`, `RefreshTokenServiceImpl` |
+| RN-USR-05  | Access token dura 15 min; refresh token dura 7 dias e **rotaciona** a cada uso; refresh ausente, inválido ou expirado devolve 401 | 401  | `TokenService`, `RefreshTokenServiceImpl` |
 | RN-USR-06  | `logout-all` revoga todos os refresh tokens **e** invalida os access tokens (`tokenVersion`) | — | `LogoutAllService`                 |
 | RN-USR-07  | Reset de senha: token de 10 min, uso único, senha nova com **≥ 6 caracteres**           | 400  | `ResetPasswordService`             |
 | RN-USR-08  | `forgot-password` responde 200 sempre (não revela se o e-mail existe)                   | 200  | `RequestPasswordResetService`      |
 | RN-USR-09  | Login, refresh, forgot-password e reset-password limitados a **5 req/min por IP** (camada AUTH)       | 429  | `RateLimitingFilter`               |
+| RN-USR-10  | Usuário só edita/exclui **a si mesmo** (`PUT/DELETE /user` usam o usuário do token)     | —    | `UserController`                   |
+| RN-USR-11  | `POST /user` só é público com `api.user-registration.public=true` (dev); em produção exige autenticação | 401 | `SecurityConfigurations` |
 | RN-USR-12  | Rotas públicas de escrita (criar usuário/pessoa, confirmar e-mail) limitadas a **20 req/min por IP** (PUBLIC) | 429 | `RateLimitingFilter`            |
 | RN-USR-13  | Demais rotas limitadas a **300 req/min por IP** (GENERAL); preflight `OPTIONS` não conta                | 429  | `RateLimitingFilter`               |
 | RN-USR-14  | Mesmo destinatário recebe no máximo **3 e-mails/hora** (reset e confirmação); excedido, ignora em silêncio, sem erro | — | `EmailRateLimiter`          |
 | RN-USR-15  | O IP do cliente é o da conexão; `X-Forwarded-For` só vale com `trusted-proxies > 0`                    | —    | `RateLimitingFilter`               |
-| RN-USR-11  | `POST /user` só é público com `api.user-registration.public=true` (dev); em produção exige autenticação | 401 | `SecurityConfigurations` |
-| RN-USR-10  | Usuário só edita/exclui **a si mesmo** (`PUT/DELETE /user` usam o usuário do token)     | —    | `UserController`                   |
 
 ## Pessoa física
 
@@ -45,56 +52,71 @@ Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `F
 | RN-PES-03  | RG ≤ 20 caracteres; telefone e celular ≤ 20 caracteres                                  | 400  | `NaturalPerson.validate`           |
 | RN-PES-04  | Data de nascimento **não pode estar no futuro**                                         | 400  | `NaturalPerson.validate`           |
 | RN-PES-05  | Ao criar, dispara e-mail de confirmação (token de **24 h**)                             | —    | `RequestEmailConfirmationService`  |
-| RN-PES-06  | Pedir confirmação de e-mail já verificado, ou de e-mail inexistente, não faz nada       | 200  | `RequestEmailConfirmationService`  |
+| RN-PES-06  | `request-email-confirmation` envia um link a **cada** pessoa ainda não verificada com aquele e-mail (sem diferenciar maiúsculas); e-mail inexistente ou já verificado não faz nada | 200  | `RequestEmailConfirmationService`  |
 | RN-PES-07  | Gênero: `MALE`, `FEMALE` ou `OTHER`                                                     | 400  | `Gender`                           |
+| RN-PES-08  | RG, quando informado, aceita pontuação, prefixo de UF e dígito `X` (ex.: `12.345.678-X`, `MG-12.345.678`) e é **único** entre ativos; mesma validação ao criar e editar. Pode ser o próprio CPF (CIN) | 400 | `RGValidator`, `Create/UpdateNaturalPersonService` |
+| RN-PES-09  | E-mail **pode se repetir** entre pessoas (ex.: criança com o e-mail do responsável)     | —    | `NaturalPerson`                    |
+| RN-PES-10  | Trocar o e-mail desfaz a verificação e envia nova confirmação ao e-mail novo (mudar só maiúsculas/minúsculas não conta) | — | `NaturalPerson.Updater`, `UpdateNaturalPersonService` |
+| RN-PES-11  | A resposta traz `emailVerified`                                                         | —    | `NaturalPersonResponse`            |
+| RN-PES-12  | O filtro `cpf=` e `cellphone=` da listagem aceitam valor com pontuação                   | —    | `FindAllNaturalPersonsService`     |
+| RN-PES-13  | Campos opcionais enviados vazios (`""`) — apelido, RG, CPF, telefone e celular — são tratados como não informados | — | `Create/UpdateNaturalPersonCommand` |
+| RN-PES-14  | A busca por RG (autocomplete e listagem) ignora a pontuação, inclusive de registros antigos ainda gravados com máscara | — | `AutocompleteNaturalPersonService`, `FindAllNaturalPersonsService` |
 
 ## Pessoa jurídica
 
 | ID         | Regra                                                                                   | HTTP | Onde                               |
 |------------|-----------------------------------------------------------------------------------------|------|------------------------------------|
-| RN-EMP-01  | CNPJ obrigatório, válido (`@CNPJ`), armazenado **só com dígitos** (≤ 14) e **único**    | 400  | `Create/UpdateLegalPersonService`  |
+| RN-EMP-01  | CNPJ obrigatório, válido (`@CNPJ`), gravado **sem máscara** (≤ 14) e **único** entre ativas | 400  | `Create/UpdateLegalPersonService`  |
 | RN-EMP-02  | Razão social obrigatória                                                                | 400  | `LegalPerson.validate`             |
 | RN-EMP-03  | Status de registro (`ACTIVE/INAPT/SUSPENDED/DOWN`) e da empresa (`ACTIVE/INACTIVE/BLOCKED`) obrigatórios | 400 | `LegalPerson.validate` |
 | RN-EMP-04  | **Endereço é obrigatório**                                                              | 400  | `LegalPerson.validate`             |
 | RN-EMP-05  | Representante é opcional; se informado, **nome é obrigatório** (≤ 255)                  | 400  | `Representative.validate`          |
 | RN-EMP-06  | CNAE principal ≤ 20 caracteres                                                          | 400  | `LegalPerson.validate`             |
+| RN-EMP-07  | Nome exibido (autocomplete, turmas, educandos, colaboradores, local de trabalho): nome de exibição; se vazio, nome fantasia; se vazio, razão social | — | `LegalPerson.getName` |
 
 ## Endereço
 
 | ID         | Regra                                                                                   | HTTP | Onde                               |
 |------------|-----------------------------------------------------------------------------------------|------|------------------------------------|
 | RN-END-01  | CEP, cidade e estado são obrigatórios                                                   | 400  | `Address.validate`                 |
-| RN-END-02  | Limites: CEP 20, tipo de logradouro 50, logradouro 255, número 20, ponto de referência 255, complemento 100, bairro 100, cidade 100, estado 50 | 400 | `Address.validate` |
+| RN-END-02  | Limites: CEP 20, tipo de logradouro 50, logradouro 255, número 20, ponto de referência 255, complemento 100, bairro 100, cidade 100 | 400 | `Address.validate` |
+| RN-END-03  | CEP com **8 dígitos**, gravado sem máscara (`89010-000` → `89010000`)                  | 400  | `Address.validate`                 |
+| RN-END-04  | Estado é a **sigla da UF** (27 opções); aceita minúsculas e grava em maiúsculas          | 400  | `Address.validate`                 |
 
 ## Grupo familiar
 
 | ID         | Regra                                                                                   | HTTP | Onde                               |
 |------------|-----------------------------------------------------------------------------------------|------|------------------------------------|
-| RN-FAM-01  | Nome obrigatório (≤ 255) e **único**                                                    | 400  | `CreateFamilyGroupService`         |
+| RN-FAM-01  | Nome obrigatório (≤ 255) e **único** entre ativos, sem diferenciar maiúsculas/minúsculas | 400  | `CreateFamilyGroupService`         |
 | RN-FAM-02  | ID amigável `FAM-<n>` gerado por sequence; não editável                                 | 400  | `FamilyGroup.validate`             |
 | RN-FAM-03  | Rendas e despesas não podem ser negativas                                               | 400  | `FamilyGroup.validate`             |
 | RN-FAM-04  | Número de moradores ≥ 1 quando informado                                                | 400  | `FamilyGroup.validate`             |
 | RN-FAM-05  | Vincular pessoa já vinculada à família                                                  | 409  | `AddNaturalPersonToFamilyGroupService` |
 | RN-FAM-06  | Desvincular pessoa que não está na família                                              | 409  | `RemoveNaturalPersonFromFamilyGroupService` |
 | RN-FAM-07  | Uma pessoa pode estar em **mais de uma** família (relação N–N)                          | —    | `family_group_natural_person`      |
+| RN-FAM-08  | Não dá para desvincular um **educando** do seu único grupo familiar ativo (vincule-o a outro antes) | 409 | `RemoveNaturalPersonFromFamilyGroupService` |
+| RN-FAM-09  | Não dá para desvincular quem é **responsável** por um educando daquela família (tire-o da lista de responsáveis antes) | 409 | `RemoveNaturalPersonFromFamilyGroupService` |
+| RN-FAM-10  | Excluir a família **mantém** os vínculos das pessoas (o educando continua editável informando a família excluída) e exclui o endereço | — | `SoftDeleteFamilyGroupService` |
 
 ## Programa
 
 | ID         | Regra                                                                                   | HTTP | Onde                               |
 |------------|-----------------------------------------------------------------------------------------|------|------------------------------------|
-| RN-PRG-01  | Nome obrigatório e **único**                                                            | 400  | `Create/UpdateProgramService`      |
+| RN-PRG-01  | Nome obrigatório e **único** entre ativos, sem diferenciar maiúsculas/minúsculas        | 400  | `Create/UpdateProgramService`      |
 | RN-PRG-02  | Status obrigatório: `ACTIVE` ou `INACTIVE`                                              | 400  | `Program.validate`                 |
 | RN-PRG-03  | Categoria de educador exige nome                                                        | 400  | `EducatorCategoryItem.validate`    |
-| RN-PRG-04  | No update, categorias **ausentes da lista são removidas**; as com `id` são editadas; sem `id` são criadas | —  | `UpdateProgramService` |
+| RN-PRG-04  | No update, se `educatorCategoryItems` vier **nulo**, as categorias são mantidas; se vier uma lista, as ausentes são removidas, as com `id` são editadas e as sem `id` são criadas | —  | `UpdateProgramService` |
 | RN-PRG-05  | No update, categoria com `id` que **não é do programa** é rejeitada                     | 400  | `UpdateProgramService`             |
 | RN-PRG-06  | Renomear o programa **recalcula o título** de todas as suas turmas                      | —    | `UpdateProgramService`             |
 | RN-PRG-07  | Instituição do programa é opcional                                                      | —    | `Program`                          |
+| RN-PRG-08  | Categoria vinculada a educadores de turmas **não pode ser removida**                    | 409  | `UpdateProgramService`             |
+| RN-PRG-09  | O programa não pode ter duas categorias com o mesmo nome (sem diferenciar maiúsculas)   | 400  | `EducatorCategoryNames`            |
 
 ## Série escolar
 
 | ID         | Regra                                                                                   | HTTP | Onde                               |
 |------------|-----------------------------------------------------------------------------------------|------|------------------------------------|
-| RN-SER-01  | Nome obrigatório (≤ 255) e **único** entre ativas                                       | 400  | `CreateSchoolGradeService`         |
+| RN-SER-01  | Nome obrigatório (≤ 255) e **único** entre ativas, sem diferenciar maiúsculas/minúsculas | 400  | `CreateSchoolGradeService`         |
 | RN-SER-02  | Ordem (`gradeOrder`) obrigatória e **≥ 1**; define a ordenação no título das turmas     | 400  | `SchoolGrade.validate`             |
 | RN-SER-03  | Abreviação ≤ 50 caracteres (opcional)                                                   | 400  | `SchoolGrade.validate`             |
 | RN-SER-04  | **Renomear** uma série recalcula o título das turmas que a usam. **Excluir** não recalcula: a turma continua mostrando a série excluída | — | `UpdateSchoolGradeService`, `SchoolGradeRef` |
@@ -124,6 +146,8 @@ Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `F
 | RN-LRN-19  | `GET /learner` devolve `status` calculado: `ACTIVE` (turma em andamento), `NO_CLASS`, `DROPPED_OUT`; o filtro `status` usa os mesmos valores | — | `FindAllLearnersService` |
 | RN-LRN-20  | Histórico de desistências e retomadas consultável em `GET /learner/{id}/status-history`, mais recente primeiro | 404 | `FindLearnerStatusHistoryService` |
 | RN-LRN-21  | Vincular à turma (inclusive pela reativação) exige a pessoa física do educando existente | 404 | `ActivateClassLearnerLinkService`, `CreateClassLearnerService` |
+| RN-LRN-22  | A data da desistência não pode estar no futuro                                          | 400  | `DropoutLearnerCommand`            |
+| RN-LRN-23  | A busca (`searchTerm`) de `GET /learner` também encontra pelo CPF, com ou sem pontuação  | —    | `FindAllLearnersService`           |
 
 ## Colaborador
 
@@ -132,7 +156,8 @@ Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `F
 | RN-COL-01  | Pessoa física obrigatória e existente                                                   | 400/404 | `CreateCollaboratorService`     |
 | RN-COL-02  | Uma pessoa física só pode ter **um** cadastro de colaborador                            | 409  | `CreateCollaboratorService`        |
 | RN-COL-03  | Pessoa jurídica é opcional; se informada, precisa existir                               | 404  | `CreateCollaboratorService`        |
-| RN-COL-04  | `isVoluntary` assume `false` quando não enviado                                         | —    | `CreateCollaboratorService`        |
+| RN-COL-04  | `isVoluntary` é obrigatório (criar e editar)                                            | 400  | `Create/UpdateCollaboratorCommand` |
+| RN-COL-05  | A busca e o autocomplete de colaborador encontram por CPF, RG e CNPJ da empresa digitados com ou sem máscara | — | `FindAllCollaboratorsService`, `AutocompleteCollaboratorService` |
 
 ## Turma
 
@@ -173,6 +198,10 @@ Como funciona no código:
   turma e o título mantêm uma série excluída. A criação continua exigindo série existente.
 - `LegalPerson.address` usa `@NotFound(IGNORE)` para não quebrar a leitura quando o endereço foi excluído.
 - Pessoas com `deleted_at` continuam **fora** do grupo familiar (a relação família ↔ pessoa respeita o filtro).
+- As listagens de educandos e educadores **da turma** usam SQL nativo para continuar exibindo vínculos cuja
+  pessoa física ou colaborador foi excluído.
+- CPF, RG, CNPJ e e-mail de usuário são únicos **só entre registros ativos** (índices parciais, V019): é possível
+  recadastrar o documento de um registro excluído.
 
 ### O que cada exclusão arrasta
 
@@ -182,19 +211,20 @@ Em **negrito**, o que **não** é verificado e pode deixar referências "órfãs
 |--------------------|----------------------------------------------------------|------------------------------------------------------------------------------|
 | **Turma**          | Horários, educadores, educandos (vínculos), séries da turma | —                                                                          |
 | **Educando**       | — (não existe exclusão de educando; só desistência)      | —                                                                            |
-| **Grupo familiar** | Só o grupo                                               | **Educandos e responsáveis da família continuam**; pessoas continuam         |
-| **Pessoa física**  | Só a pessoa                                              | **Educando, colaborador, responsabilidade, vínculos com família continuam**; some do autocomplete e não pode ser vinculada a novas turmas |
+| **Grupo familiar** | O grupo e o endereço dele                                | **Educandos, responsáveis e os vínculos das pessoas com o grupo continuam**; o educando segue editável informando a família excluída |
+| **Pessoa física**  | Só a pessoa                                              | **Educando, colaborador, responsabilidade, vínculos com família e com turmas continuam** (a turma segue listando); some do autocomplete e não pode ser vinculada a novas turmas |
 | **Pessoa jurídica**| Só a empresa (e seu endereço, por cascade)               | **Programas, turmas, educandos, colaboradores e locais de trabalho que a referenciam continuam**, exibindo o nome |
 | **Programa**       | Só o programa                                            | **Suas turmas continuam**, com o nome do programa; o título não é recalculado |
 | **Série escolar**  | Só a série                                               | Turmas e títulos mantêm a série; educandos/responsáveis seguem com `schoolGradeId` |
-| **Colaborador**    | Só o colaborador                                         | **Vínculos com turmas continuam**                                            |
+| **Colaborador**    | Só o colaborador                                         | **Vínculos com turmas continuam** e aparecem na lista de educadores da turma |
 | **Usuário**        | Só o usuário (soft delete)                               | Refresh tokens continuam no banco até expirar (e não há revogação)           |
 
 ### Limitações conhecidas
 - A busca (`search`) de **colaborador**, que faz join com a pessoa física, **esconde** quem tem pessoa excluída.
+- A busca por nome/CPF de `GET /learner` (`searchTerm`) não encontra educando cuja pessoa física foi excluída.
 - A relação `FamilyGroup` ↔ `NaturalPerson` (ManyToMany) não lista pessoas excluídas.
 
-Testes: `DeletedRecordsLookupIntegrationTest` e `DeletedParentPolicyIntegrationTest` (banco real).
+Testes: `DeletedRecordsLookupIntegrationTest`, `DeletedParentPolicyIntegrationTest` e `DeletionConsistencyIntegrationTest` (banco real).
 
 ## Mensagens de erro
 
@@ -208,5 +238,15 @@ Formato único (`ErrorResponse`):
 }
 ```
 
-`errors` só aparece em falha de validação de campos (`@Valid`). Mensagens são em português e escritas
-para serem exibidas diretamente ao usuário.
+`errors` só aparece em falha de validação de campos (`@Valid`) ou em JSON com valor de tipo errado (o campo
+vem em `field`). Mensagens são em português e escritas para serem exibidas diretamente ao usuário.
+
+| Situação                                                              | HTTP |
+|-----------------------------------------------------------------------|------|
+| JSON mal formatado, enum/data/número inválido no corpo                | 400  |
+| Parâmetro de rota ou query com tipo errado (UUID, número, enum)       | 400 (enum lista os valores aceitos) |
+| Parâmetro obrigatório ausente                                         | 400  |
+| Endereço inexistente (com token válido)                               | 404  |
+| Método HTTP não suportado                                             | 405  |
+| `Content-Type` diferente de JSON                                      | 415  |
+| Sem token ou token inválido                                           | 401  |

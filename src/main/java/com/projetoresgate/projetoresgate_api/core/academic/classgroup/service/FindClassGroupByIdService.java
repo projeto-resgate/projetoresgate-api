@@ -36,7 +36,7 @@ public class FindClassGroupByIdService implements FindClassGroupByIdUseCase {
                 .map(Program::getName)
                 .orElse(null);
         String institutionName = legalPersonRepository.findByIdIncludingDeleted(classGroup.getInstitutionId())
-                .map(LegalPerson::getDisplayName)
+                .map(LegalPerson::getName)
                 .orElse(null);
 
         return ClassGroupResponse.fromEntity(classGroup, programName, institutionName);

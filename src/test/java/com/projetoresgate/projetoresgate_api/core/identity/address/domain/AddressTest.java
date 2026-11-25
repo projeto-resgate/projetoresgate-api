@@ -21,7 +21,7 @@ class AddressTest {
         assertNotNull(address.getId());
         assertEquals("Rua", address.getStreetType());
         assertEquals("das Palmeiras", address.getStreetName());
-        assertEquals("01310-100", address.getZipCode());
+        assertEquals("01310100", address.getZipCode());
         assertEquals("1000", address.getNumber());
         assertEquals("Próximo à praça", address.getReferencePoint());
         assertEquals("Apto 101", address.getComplement());
@@ -100,7 +100,16 @@ class AddressTest {
         InternalException exception = assertThrows(InternalException.class, () ->
                 Address.create(null, null, "0123456789012345678901", "1000", null, null, null, "São Paulo", "SP")
         );
-        assertEquals("O CEP não pode exceder 20 caracteres.", exception.getMessage());
+        assertEquals("O CEP deve ter 8 dígitos.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção se o CEP tiver letras")
+    void validate_ShouldFailIfZipCodeHasLetters() {
+        InternalException exception = assertThrows(InternalException.class, () ->
+                Address.create(null, null, "abc", "1000", null, null, null, "São Paulo", "SP")
+        );
+        assertEquals("O CEP deve ter 8 dígitos.", exception.getMessage());
     }
 
     @Test
@@ -143,7 +152,7 @@ class AddressTest {
         assertEquals(originalId, address.getId());
         assertEquals("Avenida", address.getStreetType());
         assertEquals("Paulista", address.getStreetName());
-        assertEquals("20040-020", address.getZipCode());
+        assertEquals("20040020", address.getZipCode());
         assertEquals("200", address.getNumber());
         assertEquals("Em frente ao museu", address.getReferencePoint());
         assertEquals("Sala 5", address.getComplement());
@@ -196,7 +205,14 @@ class AddressTest {
         InternalException exception = assertThrows(InternalException.class, () ->
                 Address.create(null, null, "01310-100", "1000", null, null, null, "São Paulo", "A".repeat(51))
         );
-        assertEquals("O estado não pode exceder 50 caracteres.", exception.getMessage());
+        assertEquals("O estado deve ser a sigla de uma UF brasileira (ex.: SC).", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Deve aceitar a UF em minúsculas e gravá-la em maiúsculas")
+    void validate_ShouldNormalizeStateToUpperCase() {
+        Address address = Address.create(null, null, "01310-100", "1000", null, null, null, "São Paulo", " sp ");
+        assertEquals("SP", address.getState());
     }
 
     @Test

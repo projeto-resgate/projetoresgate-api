@@ -5,6 +5,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.address.usecase.comma
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Representative;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
+import com.projetoresgate.projetoresgate_api.shared.util.MaskUtils;
 import jakarta.validation.Valid;
 import org.hibernate.validator.constraints.br.CNPJ;
 
@@ -26,6 +27,11 @@ public record UpdateLegalPersonCommand(
         @Valid
         Representative representative
 ) {
+    public UpdateLegalPersonCommand {
+        cnpj = MaskUtils.unmask(cnpj);
+        mainCnaeCode = MaskUtils.unmask(mainCnaeCode);
+    }
+
     public UpdateLegalPersonCommand(UUID id, String corporateName, String tradeName, String displayName, String cnpj, String mainCnaeCode, RegistrationStatus registrationStatus, CompanyStatus companyStatus, AddressCommand address) {
         this(id, corporateName, tradeName, displayName, cnpj, mainCnaeCode, registrationStatus, companyStatus, address, null);
     }

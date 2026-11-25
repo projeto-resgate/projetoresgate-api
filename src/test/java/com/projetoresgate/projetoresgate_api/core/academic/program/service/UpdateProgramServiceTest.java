@@ -1,5 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.academic.program.service;
 
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassCollaboratorRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.RefreshClassGroupTitlesUseCase;
 import com.projetoresgate.projetoresgate_api.core.academic.program.api.dto.ProgramResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.EducatorCategoryItem;
@@ -41,6 +42,9 @@ class UpdateProgramServiceTest {
     @Mock
     private RefreshClassGroupTitlesUseCase refreshClassGroupTitlesUseCase;
 
+    @Mock
+    private ClassCollaboratorRepository classCollaboratorRepository;
+
     @InjectMocks
     private UpdateProgramService service;
 
@@ -63,7 +67,7 @@ class UpdateProgramServiceTest {
                 programId, "Programa B", "https://novo-site.com", ProgramStatus.INACTIVE, null);
 
         when(repository.findByIdOrThrow(programId)).thenReturn(program);
-        when(repository.existsByNameAndIdNot("Programa B", programId)).thenReturn(false);
+        when(repository.existsByNameIgnoreCaseAndIdNot("Programa B", programId)).thenReturn(false);
         when(repository.save(any(Program.class))).thenAnswer(i -> i.getArgument(0));
 
         ProgramResponse response = service.handle(command);
@@ -82,7 +86,7 @@ class UpdateProgramServiceTest {
                 programId, "Programa B", null, ProgramStatus.ACTIVE, null);
 
         when(repository.findByIdOrThrow(programId)).thenReturn(program);
-        when(repository.existsByNameAndIdNot("Programa B", programId)).thenReturn(true);
+        when(repository.existsByNameIgnoreCaseAndIdNot("Programa B", programId)).thenReturn(true);
 
         InternalException exception = assertThrows(InternalException.class, () -> service.handle(command));
         assertEquals("Já existe um programa cadastrado com este nome.", exception.getMessage());
@@ -173,7 +177,7 @@ class UpdateProgramServiceTest {
     @DisplayName("Deve remover todas as categorias quando a lista da requisição for nula ou vazia")
     void reconcile_ShouldRemoveAllWhenRequestEmpty() {
         UpdateProgramCommand command = new UpdateProgramCommand(
-                programId, "Programa A", null, ProgramStatus.ACTIVE, null);
+                programId, "Programa A", null, ProgramStatus.ACTIVE, List.of());
 
         when(repository.findByIdOrThrow(programId)).thenReturn(program);
         when(repository.save(any(Program.class))).thenAnswer(i -> i.getArgument(0));
@@ -199,6 +203,52 @@ class UpdateProgramServiceTest {
         InternalException exception = assertThrows(InternalException.class, () -> service.handle(command));
         assertTrue(exception.getMessage().contains("não pertence ao programa"));
         verify(itemRepository, never()).delete(any(EducatorCategoryItem.class));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Deve manter as categorias quando a lista não for enviada")
+    void reconcile_ShouldKeepItemsWhenListIsNull() {
+        UpdateProgramCommand command = new UpdateProgramCommand(
+                programId, "Programa A", null, ProgramStatus.INACTIVE, null);
+
+        when(repository.findByIdOrThrow(programId)).thenReturn(program);
+        when(repository.save(any(Program.class))).thenAnswer(i -> i.getArgument(0));
+
+        service.handle(command);
+
+        assertEquals(List.of(existingItem), program.getEducatorCategoryItemList());
+        verify(itemRepository, never()).delete(any(EducatorCategoryItem.class));
+    }
+
+    @Test
+    @DisplayName("Não deve remover categoria vinculada a educadores de turmas")
+    void reconcile_ShouldRejectRemovalOfItemInUse() {
+        UpdateProgramCommand command = new UpdateProgramCommand(
+                programId, "Programa A", null, ProgramStatus.ACTIVE, List.of());
+
+        when(repository.findByIdOrThrow(programId)).thenReturn(program);
+        when(classCollaboratorRepository.existsByEducatorCategoryItemId(existingItem.getId())).thenReturn(true);
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> service.handle(command));
+
+        assertTrue(exception.getMessage().contains("Fonoaudiólogo"));
+        assertEquals(List.of(existingItem), program.getEducatorCategoryItemList());
+        verify(itemRepository, never()).delete(any(EducatorCategoryItem.class));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Não deve aceitar categorias com o mesmo nome")
+    void reconcile_ShouldRejectDuplicatedNames() {
+        UpdateProgramCommand command = new UpdateProgramCommand(
+                programId, "Programa A", null, ProgramStatus.ACTIVE, List.of(
+                        new UpdateProgramCommand.UpdateEducatorCategoryItemCommand(null, "Professor"),
+                        new UpdateProgramCommand.UpdateEducatorCategoryItemCommand(null, " professor ")));
+
+        when(repository.findByIdOrThrow(programId)).thenReturn(program);
+
+        assertThrows(InternalException.class, () -> service.handle(command));
         verify(repository, never()).save(any());
     }
 }

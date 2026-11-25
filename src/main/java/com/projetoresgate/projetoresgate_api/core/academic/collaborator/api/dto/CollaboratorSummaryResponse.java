@@ -6,6 +6,8 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.
 
 import java.util.UUID;
 
+import static java.util.Objects.isNull;
+
 public record CollaboratorSummaryResponse(
         UUID id,
         UUID naturalPersonId,
@@ -19,9 +21,9 @@ public record CollaboratorSummaryResponse(
         return new CollaboratorSummaryResponse(
                 entity.getId(),
                 entity.getNaturalPersonId(),
-                naturalPerson == null ? null : naturalPerson.getName(),
+                isNull(naturalPerson) ? null : naturalPerson.getName(),
                 entity.getLegalPersonId(),
-                legalPerson == null ? null : legalPerson.getDisplayName(),
+                isNull(legalPerson) ? null : legalPerson.getName(),
                 entity.isVoluntary()
         );
     }

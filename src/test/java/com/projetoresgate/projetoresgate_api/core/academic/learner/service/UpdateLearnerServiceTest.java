@@ -72,6 +72,7 @@ class UpdateLearnerServiceTest {
     void givenPersonBelongsToFamilyGroup() {
         lenient().when(familyGroupRepository.existsNaturalPersonMember(any(UUID.class), any(UUID.class)))
                 .thenReturn(true);
+        lenient().when(familyGroupRepository.existsByIdIncludingDeleted(any(UUID.class))).thenReturn(true);
     }
 
     private void givenNotMemberOfFamilyGroup(UUID naturalPersonId) {

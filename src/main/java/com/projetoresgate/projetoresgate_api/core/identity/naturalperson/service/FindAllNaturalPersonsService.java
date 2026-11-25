@@ -6,6 +6,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.query.FindAllNaturalPersonsQuery;
 import com.projetoresgate.projetoresgate_api.shared.specification.SpecificationBuilder;
 import com.projetoresgate.projetoresgate_api.shared.specification.Specs;
+import com.projetoresgate.projetoresgate_api.shared.util.MaskUtils;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
@@ -28,9 +29,9 @@ public class FindAllNaturalPersonsService implements FindAllNaturalPersonsUseCas
     public Page<NaturalPerson> handle(FindAllNaturalPersonsQuery query) {
 
         Specification<NaturalPerson> genericFilters = new SpecificationBuilder<NaturalPerson>()
-                .with("cpf", "~", query.cpf())
-                .with("rg", "~", query.rg())
-                .with("cellphone", "~", query.cellphone())
+                .with("cpf", "~", onlyDigits(query.cpf()))
+                .with("rg", "~", MaskUtils.unmaskUpperCase(query.rg()))
+                .with("cellphone", "~", onlyDigits(query.cellphone()))
                 .with("gender", ":", query.gender())
                 .build();
 
@@ -56,10 +57,21 @@ public class FindAllNaturalPersonsService implements FindAllNaturalPersonsUseCas
 
             String alphanumeric = searchTerm.replaceAll("[^a-zA-Z0-9]", "");
             if (StringUtils.hasText(alphanumeric)) {
-                orPredicates.add(cb.like(cb.upper(root.get("rg")), "%" + alphanumeric.toUpperCase() + "%"));
+                orPredicates.add(cb.like(
+                            cb.upper(cb.function("regexp_replace", String.class, root.get("rg"),
+                                    cb.literal("[^0-9A-Za-z]"), cb.literal(""), cb.literal("g"))),
+                            "%" + alphanumeric.toUpperCase() + "%"));
             }
 
             return cb.or(orPredicates.toArray(new Predicate[0]));
         };
+    }
+
+    private static String onlyDigits(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        String digits = value.replaceAll("\\D", "");
+        return digits.isEmpty() ? value : digits;
     }
 }

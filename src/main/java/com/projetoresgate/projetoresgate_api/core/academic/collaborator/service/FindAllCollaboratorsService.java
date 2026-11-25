@@ -9,6 +9,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Le
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
+import com.projetoresgate.projetoresgate_api.shared.util.MaskUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
@@ -42,7 +43,7 @@ public class FindAllCollaboratorsService implements FindAllCollaboratorsUseCase 
     public Page<CollaboratorSummaryResponse> handle(FindAllCollaboratorsQuery query) {
         String searchTerm = StringUtils.hasText(query.searchTerm()) ? query.searchTerm() : null;
 
-        Page<Collaborator> page = repository.search(searchTerm, query.pageable());
+        Page<Collaborator> page = repository.search(searchTerm, MaskUtils.unmaskUpperCase(searchTerm), query.pageable());
 
         Map<UUID, NaturalPerson> naturalPersons = resolveNaturalPersons(page.getContent());
         Map<UUID, LegalPerson> legalPersons = resolveLegalPersons(page.getContent());

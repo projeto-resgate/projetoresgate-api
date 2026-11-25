@@ -64,7 +64,7 @@ public class CreateClassGroupService implements CreateClassGroupUseCase {
 
         ClassGroup saved = repository.save(classGroup);
 
-        return ClassGroupResponse.fromEntity(saved, program.getName(), institution.getDisplayName());
+        return ClassGroupResponse.fromEntity(saved, program.getName(), institution.getName());
     }
 
     private List<SchoolGradeRef> loadSchoolGrades(List<UUID> ids) {
