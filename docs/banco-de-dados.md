@@ -154,6 +154,43 @@ seed (o valor aplicado é o maior entre o maior `FAM-<n>` já existente e o últ
 sequence, então o setval também cobre cadastros feitos pela API). Como o script inteiro é um único
 bloco `DO`, qualquer erro faz rollback de tudo — ou o seed inteiro entra, ou nada entra.
 
+O seed também traz colaboradores, turmas, horários e vínculos de educandos e educadores com as turmas.
+Os dados seguem as mesmas regras da API: CPF e CNPJ com dígito verificador válido, documentos, CEP e
+telefones **sem máscara** (RN-GER-01), responsáveis sempre da família do educando e categoria de educador
+sempre do programa da turma.
+
+O que o seed cobre, para demonstração e testes manuais:
+
+| Item | Quantidade / situação |
+|---|---|
+| Pessoas físicas | 35 (pais, mães, avô, tio, irmãos, educadores sem família) |
+| Grupos familiares | 10 (`FAM-1` a `FAM-10`), em cidades e UFs diferentes |
+| Educandos | 17: 13 `ACTIVE`, 3 `NO_CLASS` e 1 `DROPPED_OUT` |
+| Colaboradores | 11, voluntários e contratados, com e sem empresa |
+| Turmas | 7: **4 em andamento** (até 5 alunos e 3 educadores), **1 futura** (começa em fev/2027), **1 encerrada** (1º semestre de 2026) e **1 inativa** |
+
+Casos especiais incluídos:
+- **Desistente:** Vitor Rocha (`DROPPED_OUT`), com histórico de desistência e o vínculo com a turma inativo.
+- **Reativada:** Manuela Rocha, com desistência e retorno no histórico; está em uma turma em andamento e em uma futura.
+- **Só turma futura ou encerrada:** Thiago Costa e Laura Almeida aparecem como `NO_CLASS`.
+- **Sem turma e sem série:** Sofia Ramos.
+- **Educanda em duas turmas:** Júlia Pereira (uma inativa e uma em andamento).
+- **Irmã que também é responsável:** Mariana Santos (de Lucas) e Camila Souza (de Carlos).
+- **Responsável que não é pai nem mãe:** avô (Roberto Santos) e tio/tutor legal (Eduardo Rocha).
+Quando o seed muda um dado que já existia, o script traz um `UPDATE` que só altera a linha se ela ainda
+tiver o valor antigo, para corrigir bancos já semeados sem sobrescrever o que foi editado depois.
+
+Usuários do seed (só para desenvolvimento local; produção não roda o seed):
+
+| E-mail                          | Senha       |
+|---------------------------------|-------------|
+| `admin@projetoresgate.com`      | `Admin@123` |
+| `maria.silva@example.com`       | `Senha@123` |
+| `contato@projetoresgate.com.br` | `Senha@123` |
+
+As datas das turmas são fixas: depois de março de 2027 todas terão terminado e os educandos voltam a
+aparecer como `NO_CLASS`. Nesse caso, atualize as datas no `init.sql` (bloco de turmas e o `UPDATE` do final).
+
 ## Variáveis de ambiente
 
 Valem para o perfil de **produção** (padrão). Com `--spring.profiles.active=dev` a aplicação usa o
