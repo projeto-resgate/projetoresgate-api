@@ -53,6 +53,11 @@ curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080/actuator/health
 
 A VM roda a tag `:latest`. Para voltar a uma versão específica, **fixe uma tag `prod-<sha>`** anterior.
 
+> O Docker Hub guarda só a tag `prod-` do deploy atual e **uma anterior** (a limpeza automática apaga as demais; ver
+> [pipeline](pipeline-ci-cd.md#limpeza-das-tags-no-docker-hub)). Se precisar voltar mais de um deploy, rode o
+> `deploy.yml` informando no campo `ref` o commit ou a tag do git da versão boa: ele gera a imagem de novo e vira o
+> `:latest`.
+
 1. Descubra a tag boa: Docker Hub → tags do repositório, ou `Actions` → execução do `deploy.yml` daquela versão
    (`prod-` + 12 primeiros caracteres do commit).
 2. **Pare o Watchtower** para ele não "consertar" de volta para `:latest`:
