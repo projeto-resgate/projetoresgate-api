@@ -36,10 +36,7 @@ public class AutocompleteLegalPersonService implements AutocompleteLegalPersonUs
                 orPredicates.add(cb.like(cb.lower(root.get("tradeName")), textSearch));
                 orPredicates.add(cb.like(cb.lower(root.get("displayName")), textSearch));
 
-                String digits = query.searchTerm().replaceAll("\\D", "");
-                if (StringUtils.hasText(digits)) {
-                    orPredicates.add(cb.like(root.get("cnpj"), "%" + digits + "%"));
-                }
+                orPredicates.add(cb.like(root.get("cnpj"), textSearch));
             }
 
             if (orPredicates.isEmpty()) {

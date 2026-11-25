@@ -121,4 +121,12 @@ class UserTest {
         assertTrue(user.getRoles().contains(UserRole.ADMIN));
         assertTrue(user.getRoles().contains(UserRole.ADMIN));
     }
+
+    @Test
+    @DisplayName("Deve gravar o e-mail sem espaços e em minúsculas")
+    void create_ShouldNormalizeEmail() {
+        User user = User.create("  Ana.Silva@Example.COM ", "password123", "Ana", null);
+
+        assertEquals("ana.silva@example.com", user.getEmail());
+    }
 }

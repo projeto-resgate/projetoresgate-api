@@ -34,8 +34,8 @@ public class UpdateUserService implements UpdateUserUseCase {
                 .orElseThrow(() -> new InternalException("Usuário não encontrado."));
 
         user.update()
-                .name(StringUtils.hasText(cmd.name()) ? cmd.name() : user.getName())
-                .nickname(nonNull(cmd.nickname()) ? cmd.nickname() : user.getNickname())
+                .name(cmd.name())
+                .nickname(cmd.nickname())
                 .apply();
 
         boolean passwordChanged = false;

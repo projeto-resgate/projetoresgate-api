@@ -9,6 +9,7 @@ import org.hibernate.annotations.SQLRestriction;
 import org.springframework.util.StringUtils;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
@@ -43,7 +44,7 @@ public class User extends AuditableEntity {
 
     private User(UUID id, String email, String encodedPassword, String name, String nickname) {
         this.id = id;
-        this.email = email;
+        this.email = StringUtils.hasText(email) ? email.trim().toLowerCase(Locale.ROOT) : email;
         this.password = encodedPassword;
         this.name = name;
         this.nickname = nickname;

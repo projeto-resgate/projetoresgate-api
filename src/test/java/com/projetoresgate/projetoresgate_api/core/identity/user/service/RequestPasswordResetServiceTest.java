@@ -56,7 +56,7 @@ class RequestPasswordResetServiceTest {
     @Test
     @DisplayName("Não deve fazer nada se o e-mail do usuário não existir")
     void handle_shouldDoNothing_whenUserEmailDoesNotExist() {
-        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.empty());
+        when(userRepository.findByEmailIgnoreCase(userEmail)).thenReturn(Optional.empty());
 
         requestPasswordResetService.handle(userEmail);
 
@@ -73,7 +73,7 @@ class RequestPasswordResetServiceTest {
             mockedTokenUtils.when(TokenUtils::generateSecureToken).thenReturn(plainTextToken);
             mockedTokenUtils.when(() -> TokenUtils.hashToken(plainTextToken)).thenReturn(expectedTokenHash);
 
-            when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(existingUser));
+            when(userRepository.findByEmailIgnoreCase(userEmail)).thenReturn(Optional.of(existingUser));
 
             ArgumentCaptor<PasswordResetToken> tokenCaptor = ArgumentCaptor.forClass(PasswordResetToken.class);
             ArgumentCaptor<String> htmlCaptor = ArgumentCaptor.forClass(String.class);

@@ -35,18 +35,8 @@ public class AutocompleteNaturalPersonService implements AutocompleteNaturalPers
                 orPredicates.add(cb.like(cb.lower(root.get("name")), textSearch));
                 orPredicates.add(cb.like(cb.lower(root.get("nickname")), textSearch));
 
-                String digits = query.searchTerm().replaceAll("\\D", "");
-                if (StringUtils.hasText(digits)) {
-                    orPredicates.add(cb.like(root.get("cpf"), "%" + digits + "%"));
-                }
-
-                String alphanumeric = query.searchTerm().replaceAll("[^a-zA-Z0-9]", "");
-                if (StringUtils.hasText(alphanumeric)) {
-                    orPredicates.add(cb.like(
-                            cb.upper(cb.function("regexp_replace", String.class, root.get("rg"),
-                                    cb.literal("[^0-9A-Za-z]"), cb.literal(""), cb.literal("g"))),
-                            "%" + alphanumeric.toUpperCase() + "%"));
-                }
+                orPredicates.add(cb.like(root.get("cpf"), textSearch));
+                orPredicates.add(cb.like(cb.lower(root.get("rg")), textSearch));
             }
 
             if (orPredicates.isEmpty()) {

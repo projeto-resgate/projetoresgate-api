@@ -418,8 +418,10 @@ class LearnerControllerTest {
 
     @Test
     @WithMockCustomUser
-    @DisplayName("PUT /learner/{id} - Deve retornar 400 quando a lista de responsáveis não for informada")
-    void update_ShouldReturn400WhenResponsibleListIsMissing() throws Exception {
+    @DisplayName("PUT /learner/{id} - Lista de responsáveis ausente deve ser aceita, como no POST")
+    void update_ShouldAcceptMissingResponsibleList() throws Exception {
+        when(updateUseCase.handle(any(UpdateLearnerCommand.class))).thenReturn(givenResponse());
+
         String body = """
                 {
                   "naturalPersonId": "%s",
@@ -432,10 +434,9 @@ class LearnerControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string(containsString("A lista de responsáveis é obrigatória")));
+                .andExpect(status().isOk());
 
-        verify(updateUseCase, never()).handle(any());
+        verify(updateUseCase).handle(any());
     }
 
     @Test

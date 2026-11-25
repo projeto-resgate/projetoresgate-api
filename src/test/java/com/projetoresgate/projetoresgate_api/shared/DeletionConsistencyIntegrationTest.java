@@ -4,8 +4,10 @@ import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.Cla
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.ClassGroup;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.ClassLearner;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassCollaboratorRepository;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassCollaboratorRow;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassGroupRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassLearnerRepository;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassLearnerRow;
 import com.projetoresgate.projetoresgate_api.core.academic.collaborator.domain.Collaborator;
 import com.projetoresgate.projetoresgate_api.core.academic.collaborator.repository.CollaboratorRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Learner;
@@ -116,11 +118,12 @@ class DeletionConsistencyIntegrationTest extends PostgresIntegrationTest {
         naturalPersonRepository.delete(naturalPersonRepository.findByIdOrThrow(person.getId()));
         flushAndClear();
 
-        Page<ClassLearner> all = classLearnerRepository.findAllByClassGroupId(classGroup.getId(), null, null, PageRequest.of(0, 10));
-        Page<ClassLearner> byName = classLearnerRepository.findAllByClassGroupId(classGroup.getId(), true, "excluída", PageRequest.of(0, 10));
+        Page<ClassLearnerRow> all = classLearnerRepository.findRowsByClassGroupId(classGroup.getId(), null, null, PageRequest.of(0, 10));
+        Page<ClassLearnerRow> byName = classLearnerRepository.findRowsByClassGroupId(classGroup.getId(), true, "excluída", PageRequest.of(0, 10));
 
         assertEquals(1, all.getTotalElements());
         assertEquals(learner.getId(), all.getContent().getFirst().getLearnerId());
+        assertEquals("Ana Excluída", all.getContent().getFirst().getLearnerName());
         assertEquals(1, byName.getTotalElements());
     }
 
@@ -136,12 +139,14 @@ class DeletionConsistencyIntegrationTest extends PostgresIntegrationTest {
         collaboratorRepository.delete(collaboratorRepository.findByIdOrThrow(collaborator.getId()));
         flushAndClear();
 
-        Page<ClassCollaborator> all = classCollaboratorRepository.findAllByClassGroupId(
+        Page<ClassCollaboratorRow> all = classCollaboratorRepository.findRowsByClassGroupId(
                 classGroup.getId(), null, null, null, PageRequest.of(0, 10));
-        Page<ClassCollaborator> byCategory = classCollaboratorRepository.findAllByClassGroupId(
+        Page<ClassCollaboratorRow> byCategory = classCollaboratorRepository.findRowsByClassGroupId(
                 classGroup.getId(), true, category.getId(), "bruno", PageRequest.of(0, 10));
 
         assertEquals(1, all.getTotalElements());
+        assertEquals("Bruno Educador", all.getContent().getFirst().getCollaboratorName());
+        assertEquals("Professor", all.getContent().getFirst().getEducatorCategoryItemName());
         assertEquals(1, byCategory.getTotalElements());
         assertTrue(classCollaboratorRepository.existsByEducatorCategoryItemId(category.getId()));
     }

@@ -30,8 +30,8 @@ resultados, ordenados por nome). O termo é comparado, com busca **parcial** (co
 |-----------|---------------------------------------------------------------------|
 | Nome      | Sem diferenciar maiúsculas/minúsculas                               |
 | Apelido   | Sem diferenciar maiúsculas/minúsculas                               |
-| CPF       | Só os **dígitos** do termo (pontuação é ignorada)                   |
-| RG        | Só **letras e números** do termo e do RG gravado, sem diferenciar maiúsculas |
+| CPF       | Contém o termo (enviar **sem máscara**: o CPF é gravado só com dígitos) |
+| RG        | Contém o termo, sem diferenciar maiúsculas (enviar sem máscara)     |
 
 Os critérios são combinados com **OU**: basta um bater. Sem termo, devolve as primeiras pessoas por nome.
 

@@ -141,7 +141,6 @@ class AutocompleteLegalPersonServiceTest {
         Specification<LegalPerson> capturedSpec = specCaptor.getValue();
         capturedSpec.toPredicate(root, query, cb);
 
-        verify(cb, atLeastOnce()).like(any(), eq("%acme 123%"));
-        verify(cb, atLeastOnce()).like(any(), eq("%123%"));
+        verify(cb, times(4)).like(any(), eq("%acme 123%"));
     }
 }

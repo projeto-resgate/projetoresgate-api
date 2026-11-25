@@ -66,9 +66,9 @@ class AutocompleteLegalPersonIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("Deve encontrar por CNPJ com máscara mandando apenas os dígitos")
+    @DisplayName("Deve encontrar pelos dígitos do CNPJ")
     void handle_ShouldFindByCnpjDigits() {
-        List<LegalPersonSummaryResponse> result = service.handle(new AutocompleteLegalPersonQuery("11.222.333/0001-81", 10));
+        List<LegalPersonSummaryResponse> result = service.handle(new AutocompleteLegalPersonQuery("11222333000181", 10));
 
         assertEquals(1, result.size());
         assertEquals("Acme LTDA", result.get(0).displayName());

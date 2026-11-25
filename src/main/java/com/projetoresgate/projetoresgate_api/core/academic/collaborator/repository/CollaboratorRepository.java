@@ -1,9 +1,5 @@
 package com.projetoresgate.projetoresgate_api.core.academic.collaborator.repository;
 
-import java.util.List;
-
-import java.util.Collection;
-
 import com.projetoresgate.projetoresgate_api.core.academic.collaborator.domain.Collaborator;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
@@ -14,6 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,37 +31,50 @@ public interface CollaboratorRepository extends JpaRepository<Collaborator, UUID
     }
 
     @Query(value = """
-            select c from Collaborator c
-            join NaturalPerson np on np.id = c.naturalPersonId
-            left join LegalPerson lp on lp.id = c.legalPersonId
-            where (:searchTerm is null
-                   or lower(np.name) like lower(concat('%', cast(:searchTerm as String), '%'))
-                   or lower(np.nickname) like lower(concat('%', cast(:searchTerm as String), '%'))
-                   or np.cpf like concat('%', cast(:document as String), '%')
-                   or np.rg like concat('%', cast(:document as String), '%')
-                   or lower(lp.corporateName) like lower(concat('%', cast(:searchTerm as String), '%'))
-                   or lower(lp.tradeName) like lower(concat('%', cast(:searchTerm as String), '%'))
-                   or lower(lp.displayName) like lower(concat('%', cast(:searchTerm as String), '%'))
-                   or lp.cnpj like concat('%', cast(:document as String), '%'))
-            order by np.name asc
+            select c.id as "id",
+                   c.natural_person_id as "naturalPersonId",
+                   np.name as "naturalPersonName",
+                   np.cpf as "naturalPersonCpf",
+                   c.legal_person_id as "legalPersonId",
+                   coalesce(nullif(trim(lp.display_name), ''), nullif(trim(lp.trade_name), ''), lp.corporate_name) as "legalPersonName",
+                   c.is_voluntary as "isVoluntary"
+            from collaborator c
+            join natural_person np on np.id = c.natural_person_id
+            left join legal_person lp on lp.id = c.legal_person_id
+            where c.deleted_at is null
+              and (cast(:onlyActivePeople as boolean) = false or np.deleted_at is null)
+              and (cast(:searchTerm as text) is null
+                   or strpos(lower(np.name), lower(cast(:searchTerm as text))) > 0
+                   or strpos(lower(coalesce(np.nickname, '')), lower(cast(:searchTerm as text))) > 0
+                   or strpos(coalesce(np.cpf, ''), cast(:searchTerm as text)) > 0
+                   or strpos(lower(coalesce(np.rg, '')), lower(cast(:searchTerm as text))) > 0
+                   or strpos(lower(coalesce(lp.corporate_name, '')), lower(cast(:searchTerm as text))) > 0
+                   or strpos(lower(coalesce(lp.trade_name, '')), lower(cast(:searchTerm as text))) > 0
+                   or strpos(lower(coalesce(lp.display_name, '')), lower(cast(:searchTerm as text))) > 0
+                   or strpos(coalesce(lp.cnpj, ''), cast(:searchTerm as text)) > 0)
+            order by np.name asc, c.id asc
             """,
             countQuery = """
-                    select count(c) from Collaborator c
-                    join NaturalPerson np on np.id = c.naturalPersonId
-                    left join LegalPerson lp on lp.id = c.legalPersonId
-                    where (:searchTerm is null
-                           or lower(np.name) like lower(concat('%', cast(:searchTerm as String), '%'))
-                           or lower(np.nickname) like lower(concat('%', cast(:searchTerm as String), '%'))
-                           or np.cpf like concat('%', cast(:document as String), '%')
-                           or np.rg like concat('%', cast(:document as String), '%')
-                           or lower(lp.corporateName) like lower(concat('%', cast(:searchTerm as String), '%'))
-                           or lower(lp.tradeName) like lower(concat('%', cast(:searchTerm as String), '%'))
-                           or lower(lp.displayName) like lower(concat('%', cast(:searchTerm as String), '%'))
-                           or lp.cnpj like concat('%', cast(:document as String), '%'))
-                    """)
-    Page<Collaborator> search(@Param("searchTerm") String searchTerm,
-                              @Param("document") String document,
-                              Pageable pageable);
+            select count(*)
+            from collaborator c
+            join natural_person np on np.id = c.natural_person_id
+            left join legal_person lp on lp.id = c.legal_person_id
+            where c.deleted_at is null
+              and (cast(:onlyActivePeople as boolean) = false or np.deleted_at is null)
+              and (cast(:searchTerm as text) is null
+                   or strpos(lower(np.name), lower(cast(:searchTerm as text))) > 0
+                   or strpos(lower(coalesce(np.nickname, '')), lower(cast(:searchTerm as text))) > 0
+                   or strpos(coalesce(np.cpf, ''), cast(:searchTerm as text)) > 0
+                   or strpos(lower(coalesce(np.rg, '')), lower(cast(:searchTerm as text))) > 0
+                   or strpos(lower(coalesce(lp.corporate_name, '')), lower(cast(:searchTerm as text))) > 0
+                   or strpos(lower(coalesce(lp.trade_name, '')), lower(cast(:searchTerm as text))) > 0
+                   or strpos(lower(coalesce(lp.display_name, '')), lower(cast(:searchTerm as text))) > 0
+                   or strpos(coalesce(lp.cnpj, ''), cast(:searchTerm as text)) > 0)
+            """,
+            nativeQuery = true)
+    Page<CollaboratorRow> searchRows(@Param("searchTerm") String searchTerm,
+                                     @Param("onlyActivePeople") boolean onlyActivePeople,
+                                     Pageable pageable);
 
     @Query(value = "SELECT * FROM collaborator WHERE id IN (:ids)", nativeQuery = true)
     List<Collaborator> findAllByIdIncludingDeleted(@Param("ids") Collection<UUID> ids);

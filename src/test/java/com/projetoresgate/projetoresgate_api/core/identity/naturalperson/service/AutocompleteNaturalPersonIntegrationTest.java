@@ -63,7 +63,7 @@ class AutocompleteNaturalPersonIntegrationTest extends PostgresIntegrationTest {
     @Test
     @DisplayName("Deve encontrar por dígitos do CPF")
     void handle_ShouldFindByCpfDigits() {
-        List<NaturalPersonSummaryResponse> result = service.handle(new AutocompleteNaturalPersonQuery("529.982.247-25", 10));
+        List<NaturalPersonSummaryResponse> result = service.handle(new AutocompleteNaturalPersonQuery("52998224725", 10));
 
         assertEquals(1, result.size());
         assertEquals("Pedro Almeida", result.get(0).name());

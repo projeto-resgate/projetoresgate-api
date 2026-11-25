@@ -31,4 +31,22 @@ public interface LearnerRepository extends JpaRepository<Learner, UUID>, JpaSpec
     default Optional<Learner> findByIdIncludingDeleted(UUID id) {
         return findAllByIdIncludingDeleted(List.of(id)).stream().findFirst();
     }
+
+    @Query(value = """
+            select l.id as "id",
+                   np.name as "name",
+                   np.cpf as "cpf",
+                   l.status as "status"
+            from learner l
+            join natural_person np on np.id = l.natural_person_id and np.deleted_at is null
+            where l.deleted_at is null
+              and (cast(:searchTerm as text) is null
+                   or strpos(lower(np.name), lower(cast(:searchTerm as text))) > 0
+                   or strpos(lower(coalesce(np.nickname, '')), lower(cast(:searchTerm as text))) > 0
+                   or strpos(coalesce(np.cpf, ''), cast(:searchTerm as text)) > 0)
+            order by l.date_created desc, l.id asc
+            limit :limit
+            """, nativeQuery = true)
+    List<LearnerAutocompleteRow> autocomplete(@Param("searchTerm") String searchTerm,
+                                              @Param("limit") int limit);
 }

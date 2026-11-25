@@ -1,7 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto;
 
-import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Learner;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.LearnerStatus;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.repository.LearnerAutocompleteRow;
 
 import java.util.UUID;
 
@@ -11,12 +11,12 @@ public record LearnerAutocompleteResponse(
         String cpf,
         boolean active
 ) {
-    public static LearnerAutocompleteResponse fromEntity(Learner entity, String name, String cpf) {
+    public static LearnerAutocompleteResponse fromRow(LearnerAutocompleteRow row) {
         return new LearnerAutocompleteResponse(
-                entity.getId(),
-                name,
-                cpf,
-                entity.getStatus() == LearnerStatus.ACTIVE
+                row.getId(),
+                row.getName(),
+                row.getCpf(),
+                LearnerStatus.ACTIVE.name().equals(row.getStatus())
         );
     }
 }

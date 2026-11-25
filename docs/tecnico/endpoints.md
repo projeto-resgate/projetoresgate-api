@@ -16,7 +16,7 @@ vale o Swagger.
 | Autenticação      | `Authorization: Bearer <accessToken>` em tudo, **exceto** as rotas marcadas 🔓                      |
 | IDs               | UUID nas rotas (`/{id}`)                                                                           |
 | Criar             | `POST` → `201 Created` (com `Location` em alguns) e corpo                                          |
-| Editar            | `PUT /{id}` → `200` com o recurso; o `id` vem **da URL**, nunca do corpo                           |
+| Editar            | `PUT /{id}` → `200` com o recurso; o `id` vem **da URL**, nunca do corpo. O corpo é o **mesmo do POST** e substitui o registro inteiro: campo ausente vale como não enviado (RN-GER-04) |
 | Excluir           | `DELETE /{id}` → `204 No Content` (soft delete)                                                    |
 | Listar            | `GET` paginado + filtros dinâmicos ([ADR 009](../adr/009-busca-com-specification-builder.md))      |
 | Autocomplete      | `GET /autocomplete?searchTerm=&limit=` — leve, para campos de busca                                |
@@ -38,7 +38,7 @@ vale o Swagger.
 | POST   | `/user/logout`           | Encerra esta sessão                                   |
 | POST   | `/user/logout-all`       | Encerra todas as sessões                              |
 | GET    | `/user/{id}`             | Busca usuário                                         |
-| PUT    | `/user`                  | Edita **o próprio** usuário (nome, apelido)           |
+| PUT    | `/user`                  | Edita **o próprio** usuário (nome obrigatório, apelido; senha opcional) |
 | DELETE | `/user`                  | Exclui **o próprio** usuário                          |
 
 Fluxos: [`autenticacao.md`](autenticacao.md).
@@ -136,7 +136,7 @@ Fluxos: [`fluxo-educandos.md`](fluxo-educandos.md).
 | Método | Rota                                        | Descrição                                   |
 |--------|---------------------------------------------|---------------------------------------------|
 | POST   | `/class-group`                              | Cria                                        |
-| PUT    | `/class-group/{id}`                         | Edita (parcial)                             |
+| PUT    | `/class-group/{id}`                         | Edita (substitui; mesmo corpo do POST)      |
 | DELETE | `/class-group/{id}`                         | Exclui (cascata nos vínculos)               |
 | GET    | `/class-group`                              | Lista resumida                              |
 | GET    | `/class-group/{id}`                         | Detalhe                                     |

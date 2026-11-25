@@ -1,6 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
@@ -9,6 +10,7 @@ public record UpdateClassCollaboratorCommand(
         UUID id,
         @JsonIgnore
         UUID classGroupId,
+        @NotNull(message = "O tipo de educador é obrigatório")
         UUID educatorCategoryItemId,
         Boolean active
 ) {

@@ -198,7 +198,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos")
     })
-    public ResponseEntity<Void> update(@RequestBody UpdateUserCommand cmd,
+    public ResponseEntity<Void> update(@RequestBody @Valid UpdateUserCommand cmd,
                                        @AuthenticationPrincipal UserDetailsImpl userDetails,
                                        HttpServletResponse httpResponse) {
         updateUserUseCase.handle(cmd.withId(userDetails.getUser().getId()));

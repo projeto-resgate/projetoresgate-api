@@ -43,11 +43,13 @@ Os sub-recursos são endpoints aninhados na turma:
 
 ### Edição (`PUT /class-group/{id}`)
 
-É **parcial**: campos `null` mantêm o valor atual (programa, instituição, previsão, `active`). Exceções:
+Recebe o **mesmo corpo do POST** e substitui a turma inteira (RN-GER-04):
 
-- `note` **sempre** é sobrescrita (enviar `null` apaga a observação);
-- `schoolGradeIds` só muda as séries se for enviado (`null` mantém; lista vazia **remove todas**);
-- mudar `startDate` ou `durationInMonths` **recalcula** `endDate`. Se só a duração mudar, usa-se o início atual.
+- programa, instituição, previsão, início e duração são **obrigatórios** (400 se faltarem);
+- `schoolGradeIds` ausente ou vazio **remove todas** as séries;
+- `note` ausente apaga a observação;
+- `active` ausente vale `true` (o padrão da criação);
+- `endDate` é sempre recalculado a partir de `startDate` + `durationInMonths`.
 
 ## Título automático
 

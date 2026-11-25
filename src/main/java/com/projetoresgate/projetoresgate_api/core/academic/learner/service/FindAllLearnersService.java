@@ -122,16 +122,13 @@ public class FindAllLearnersService implements FindAllLearnersUseCase {
 
         return (root, criteriaQuery, cb) -> {
             String pattern = "%" + searchTerm.toLowerCase(Locale.ROOT) + "%";
-            String digits = searchTerm.replaceAll("\\D", "");
 
             Subquery<UUID> subquery = criteriaQuery.subquery(UUID.class);
             var person = subquery.from(NaturalPerson.class);
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.like(cb.lower(person.get("name")), pattern));
             predicates.add(cb.like(cb.lower(person.get("nickname")), pattern));
-            if (!digits.isEmpty()) {
-                predicates.add(cb.like(person.get("cpf"), "%" + digits + "%"));
-            }
+            predicates.add(cb.like(person.get("cpf"), pattern));
             subquery.select(person.get("id"))
                     .where(cb.or(predicates.toArray(Predicate[]::new)));
 

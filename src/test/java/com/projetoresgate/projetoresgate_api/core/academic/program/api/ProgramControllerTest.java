@@ -140,7 +140,7 @@ class ProgramControllerTest {
     void update_ShouldReturn200() throws Exception {
         UUID id = UUID.randomUUID();
         UpdateProgramCommand command = new UpdateProgramCommand(
-                null, "Programa B", null, ProgramStatus.ACTIVE, null);
+                null, "Programa B", null, ProgramStatus.ACTIVE, null, null);
 
         ProgramResponse response = ProgramResponse.fromEntity(buildProgram("Programa B"), null);
 

@@ -44,7 +44,7 @@ public class RequestPasswordResetService implements RequestPasswordResetUseCase 
         if (!emailRateLimiter.tryAcquire(email)) {
             return;
         }
-        Optional<User> userOptional = userRepository.findByEmail(email);
+        Optional<User> userOptional = userRepository.findByEmailIgnoreCase(email);
         if (userOptional.isEmpty()) {
             return;
         }

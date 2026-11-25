@@ -1,8 +1,8 @@
 package com.projetoresgate.projetoresgate_api.core.academic.program.repository;
 
+import java.util.Collection;
 import java.util.List;
 
-import java.util.Collection;
 
 import org.springframework.data.repository.query.Param;
 

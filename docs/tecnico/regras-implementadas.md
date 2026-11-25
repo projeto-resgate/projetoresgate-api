@@ -20,14 +20,16 @@ Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `F
 
 | ID         | Regra                                                                                   | HTTP | Onde                               |
 |------------|-----------------------------------------------------------------------------------------|------|------------------------------------|
-| RN-GER-01  | Dados com máscara são gravados **só com o valor**: a API aceita com ou sem máscara e remove `.`, `-`, `/`, `(`, `)` e espaços de CPF, RG (também em maiúsculas), CNPJ, CNAE, CEP, telefone e celular (inclusive do representante). Letras não são removidas, então valor inválido continua sendo recusado. A **exibição com máscara é do front** | — | `MaskUtils`, comandos e `validate()` das entidades |
+| RN-GER-01  | Dados com máscara são gravados **só com o valor**: ao criar e editar, a API aceita com ou sem máscara e remove `.`, `-`, `/`, `(`, `)` e espaços de CPF, RG (também em maiúsculas), CNPJ, CNAE, CEP, telefone e celular (inclusive do representante). Letras não são removidas, então valor inválido continua sendo recusado. A **exibição com máscara é do front** | — | `MaskUtils`, comandos e `validate()` das entidades |
 | RN-GER-02  | A migration V020 limpou os valores já gravados; CPF/RG cuja limpeza criaria duplicidade com outro registro ativo foram mantidos como estavam | — | `V020__Remove_masks_from_stored_values.sql` |
+| RN-GER-03  | Buscas, filtros e autocompletes **não tratam máscara**: o termo é comparado como foi enviado. Como os valores são gravados limpos, o front deve enviar CPF, RG, CNPJ, CEP e telefones **sem máscara** ao buscar | — | Serviços de listagem e autocomplete |
+| RN-GER-04  | **PUT recebe o mesmo corpo do POST e se comporta igual**: substitui o registro inteiro. Campo obrigatório no POST é obrigatório no PUT (400); campo opcional ausente fica **nulo**; lista ausente vale como **lista vazia**; `active` ausente vale o padrão da criação (`true`). Exceções: `PUT /user` não altera e-mail e só troca a senha quando `password` (com `currentPassword`) é enviado; o vínculo de educador com a turma não troca o colaborador | 400 | Comandos `Update*Command` e serviços de edição |
 
 ## Usuário e acesso
 
 | ID         | Regra                                                                                   | HTTP | Onde                               |
 |------------|-----------------------------------------------------------------------------------------|------|------------------------------------|
-| RN-USR-01  | E-mail do usuário é único entre usuários ativos (o de um usuário excluído pode ser reutilizado) | 400  | `CreateUserService`                |
+| RN-USR-01  | E-mail do usuário é único entre usuários ativos, **sem diferenciar maiúsculas**; é gravado sem espaços nas pontas e em minúsculas (V021 converteu os existentes), e login e "esqueci a senha" também não diferenciam maiúsculas. O e-mail de um usuário excluído pode ser reutilizado | 400  | `User`, `CreateUserService`, `UserRepository.findByEmailIgnoreCase` |
 | RN-USR-02  | E-mail e nome do usuário são obrigatórios                                               | 400  | `User.validate`                    |
 | RN-USR-03  | Todo usuário criado nasce com o papel `ADMIN`                                           | —    | `User` (construtor)                |
 | RN-USR-04  | Login com e-mail inexistente ou senha errada devolve a **mesma** resposta               | 401  | `AuthenticateUserService`          |
@@ -58,9 +60,9 @@ Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `F
 | RN-PES-09  | E-mail **pode se repetir** entre pessoas (ex.: criança com o e-mail do responsável)     | —    | `NaturalPerson`                    |
 | RN-PES-10  | Trocar o e-mail desfaz a verificação e envia nova confirmação ao e-mail novo (mudar só maiúsculas/minúsculas não conta) | — | `NaturalPerson.Updater`, `UpdateNaturalPersonService` |
 | RN-PES-11  | A resposta traz `emailVerified`                                                         | —    | `NaturalPersonResponse`            |
-| RN-PES-12  | O filtro `cpf=` e `cellphone=` da listagem aceitam valor com pontuação                   | —    | `FindAllNaturalPersonsService`     |
+| ~~RN-PES-12~~ | ~~O filtro `cpf=` e `cellphone=` aceitam valor com pontuação~~ (substituída pela RN-GER-03) | — | — |
 | RN-PES-13  | Campos opcionais enviados vazios (`""`) — apelido, RG, CPF, telefone e celular — são tratados como não informados | — | `Create/UpdateNaturalPersonCommand` |
-| RN-PES-14  | A busca por RG (autocomplete e listagem) ignora a pontuação, inclusive de registros antigos ainda gravados com máscara | — | `AutocompleteNaturalPersonService`, `FindAllNaturalPersonsService` |
+| ~~RN-PES-14~~ | ~~A busca por RG ignora a pontuação~~ (substituída pela RN-GER-03) | — | — |
 
 ## Pessoa jurídica
 
@@ -97,6 +99,7 @@ Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `F
 | RN-FAM-08  | Não dá para desvincular um **educando** do seu único grupo familiar ativo (vincule-o a outro antes) | 409 | `RemoveNaturalPersonFromFamilyGroupService` |
 | RN-FAM-09  | Não dá para desvincular quem é **responsável** por um educando daquela família (tire-o da lista de responsáveis antes) | 409 | `RemoveNaturalPersonFromFamilyGroupService` |
 | RN-FAM-10  | Excluir a família **mantém** os vínculos das pessoas (o educando continua editável informando a família excluída) e exclui o endereço | — | `SoftDeleteFamilyGroupService` |
+| RN-FAM-11  | No PUT, endereço ausente deixa a família **sem endereço** (o endereço anterior é excluído) | — | `UpdateFamilyGroupService` |
 
 ## Programa
 
@@ -105,7 +108,7 @@ Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `F
 | RN-PRG-01  | Nome obrigatório e **único** entre ativos, sem diferenciar maiúsculas/minúsculas        | 400  | `Create/UpdateProgramService`      |
 | RN-PRG-02  | Status obrigatório: `ACTIVE` ou `INACTIVE`                                              | 400  | `Program.validate`                 |
 | RN-PRG-03  | Categoria de educador exige nome                                                        | 400  | `EducatorCategoryItem.validate`    |
-| RN-PRG-04  | No update, se `educatorCategoryItems` vier **nulo**, as categorias são mantidas; se vier uma lista, as ausentes são removidas, as com `id` são editadas e as sem `id` são criadas | —  | `UpdateProgramService` |
+| RN-PRG-04  | No update, a lista `educatorCategoryItems` substitui as categorias: as com `id` são editadas, as sem `id` são criadas e as ausentes são removidas (lista ausente = remover todas, respeitando a RN-PRG-08). O `institutionId` também é substituído (ausente = sem instituição) | — | `UpdateProgramService` |
 | RN-PRG-05  | No update, categoria com `id` que **não é do programa** é rejeitada                     | 400  | `UpdateProgramService`             |
 | RN-PRG-06  | Renomear o programa **recalcula o título** de todas as suas turmas                      | —    | `UpdateProgramService`             |
 | RN-PRG-07  | Instituição do programa é opcional                                                      | —    | `Program`                          |
@@ -147,7 +150,7 @@ Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `F
 | RN-LRN-20  | Histórico de desistências e retomadas consultável em `GET /learner/{id}/status-history`, mais recente primeiro | 404 | `FindLearnerStatusHistoryService` |
 | RN-LRN-21  | Vincular à turma (inclusive pela reativação) exige a pessoa física do educando existente | 404 | `ActivateClassLearnerLinkService`, `CreateClassLearnerService` |
 | RN-LRN-22  | A data da desistência não pode estar no futuro                                          | 400  | `DropoutLearnerCommand`            |
-| RN-LRN-23  | A busca (`searchTerm`) de `GET /learner` também encontra pelo CPF, com ou sem pontuação  | —    | `FindAllLearnersService`           |
+| RN-LRN-23  | A busca (`searchTerm`) de `GET /learner` também encontra pelo CPF (enviado sem máscara)   | —    | `FindAllLearnersService`           |
 
 ## Colaborador
 
@@ -157,7 +160,7 @@ Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `F
 | RN-COL-02  | Uma pessoa física só pode ter **um** cadastro de colaborador                            | 409  | `CreateCollaboratorService`        |
 | RN-COL-03  | Pessoa jurídica é opcional; se informada, precisa existir                               | 404  | `CreateCollaboratorService`        |
 | RN-COL-04  | `isVoluntary` é obrigatório (criar e editar)                                            | 400  | `Create/UpdateCollaboratorCommand` |
-| RN-COL-05  | A busca e o autocomplete de colaborador encontram por CPF, RG e CNPJ da empresa digitados com ou sem máscara | — | `FindAllCollaboratorsService`, `AutocompleteCollaboratorService` |
+| RN-COL-05  | A busca e o autocomplete de colaborador encontram por nome, apelido, CPF, RG, razão social, nome fantasia, nome de exibição e CNPJ da empresa (documentos enviados sem máscara) | — | `CollaboratorRepository.searchRows` |
 
 ## Turma
 
@@ -174,7 +177,7 @@ Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `F
 | RN-TUR-09  | A categoria do educador deve ser do **programa da turma**                               | 404  | `findByIdAndProgramIdOrThrow`      |
 | RN-TUR-10  | Criar/editar/excluir horário recalcula o título                                         | —    | `*ClassScheduleService`            |
 | RN-TUR-11  | Excluir turma remove (soft) horários, educadores, educandos e séries associadas         | —    | `SoftDeleteClassGroupService`      |
-| RN-TUR-12  | Editar turma: campos `null` preservam o valor atual (exceto `note`)                     | —    | `ClassGroup.Updater`               |
+| ~~RN-TUR-12~~ | ~~Editar turma: campos `null` preservam o valor atual~~ (substituída pela RN-GER-04) | — | — |
 
 ## Exclusão e cascatas
 
@@ -190,16 +193,18 @@ Tudo é **soft delete**: o registro continua no banco com `deleted_at` preenchid
 | **Escolher** em autocomplete / seletores                               | Registros excluídos **não aparecem**                                                             |
 
 Como funciona no código:
-- Leituras de nome e título usam `findByIdIncludingDeleted` / `findAllByIdIncludingDeleted` (consulta nativa
-  que ignora o filtro `deleted_at`) nos repositórios de programa, categoria de educador, pessoa física,
-  pessoa jurídica, educando e colaborador. **Só leituras** usam esses métodos.
+- **Listagens que juntam nomes** (colaboradores e seu autocomplete, educandos e educadores da turma, turmas e
+  autocomplete de educando) são **uma query SQL nativa** que devolve uma projection (`*Row`) já com os nomes.
+  O SQL lê as tabelas direto, então cada `JOIN` decide se filtra `deleted_at`: nome de pai excluído aparece;
+  autocompletes filtram pessoa excluída. O nome da empresa usa o mesmo fallback de `LegalPerson.getName()`
+  (nome de exibição → nome fantasia → razão social).
+- Demais leituras de nome e título usam `findByIdIncludingDeleted` / `findAllByIdIncludingDeleted` (consulta
+  nativa que ignora o filtro `deleted_at`). **Só leituras** usam esses métodos.
 - Validação de criação e de troca de pai usa o `findById` normal, que não enxerga excluídos.
 - Série escolar: a turma referencia a série pela entidade `SchoolGradeRef` (sem filtro de exclusão), então a
   turma e o título mantêm uma série excluída. A criação continua exigindo série existente.
 - `LegalPerson.address` usa `@NotFound(IGNORE)` para não quebrar a leitura quando o endereço foi excluído.
 - Pessoas com `deleted_at` continuam **fora** do grupo familiar (a relação família ↔ pessoa respeita o filtro).
-- As listagens de educandos e educadores **da turma** usam SQL nativo para continuar exibindo vínculos cuja
-  pessoa física ou colaborador foi excluído.
 - CPF, RG, CNPJ e e-mail de usuário são únicos **só entre registros ativos** (índices parciais, V019): é possível
   recadastrar o documento de um registro excluído.
 
@@ -220,11 +225,10 @@ Em **negrito**, o que **não** é verificado e pode deixar referências "órfãs
 | **Usuário**        | Só o usuário (soft delete)                               | Refresh tokens continuam no banco até expirar (e não há revogação)           |
 
 ### Limitações conhecidas
-- A busca (`search`) de **colaborador**, que faz join com a pessoa física, **esconde** quem tem pessoa excluída.
 - A busca por nome/CPF de `GET /learner` (`searchTerm`) não encontra educando cuja pessoa física foi excluída.
 - A relação `FamilyGroup` ↔ `NaturalPerson` (ManyToMany) não lista pessoas excluídas.
 
-Testes: `DeletedRecordsLookupIntegrationTest`, `DeletedParentPolicyIntegrationTest` e `DeletionConsistencyIntegrationTest` (banco real).
+Testes: `DeletedRecordsLookupIntegrationTest`, `DeletedParentPolicyIntegrationTest`, `DeletionConsistencyIntegrationTest` e `ListingQueriesIntegrationTest` (banco real).
 
 ## Mensagens de erro
 

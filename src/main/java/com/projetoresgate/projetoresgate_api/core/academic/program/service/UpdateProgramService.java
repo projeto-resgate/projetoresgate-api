@@ -12,6 +12,7 @@ import com.projetoresgate.projetoresgate_api.core.academic.program.repository.Pr
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.UpdateProgramUseCase;
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.command.UpdateProgramCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.api.dto.LegalPersonSummaryResponse;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.FindLegalPersonSummariesUseCase;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import org.springframework.util.StringUtils;
 import java.util.*;
 
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 @Service
 public class UpdateProgramService implements UpdateProgramUseCase {
@@ -30,17 +32,20 @@ public class UpdateProgramService implements UpdateProgramUseCase {
     private final FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase;
     private final RefreshClassGroupTitlesUseCase refreshClassGroupTitlesUseCase;
     private final ClassCollaboratorRepository classCollaboratorRepository;
+    private final LegalPersonRepository legalPersonRepository;
 
     public UpdateProgramService(ProgramRepository repository,
                                 EducatorCategoryItemRepository itemRepository,
                                 FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase,
                                 RefreshClassGroupTitlesUseCase refreshClassGroupTitlesUseCase,
-                                ClassCollaboratorRepository classCollaboratorRepository) {
+                                ClassCollaboratorRepository classCollaboratorRepository,
+                                LegalPersonRepository legalPersonRepository) {
         this.repository = repository;
         this.itemRepository = itemRepository;
         this.findLegalPersonSummariesUseCase = findLegalPersonSummariesUseCase;
         this.refreshClassGroupTitlesUseCase = refreshClassGroupTitlesUseCase;
         this.classCollaboratorRepository = classCollaboratorRepository;
+        this.legalPersonRepository = legalPersonRepository;
     }
 
     @Override
@@ -52,6 +57,10 @@ public class UpdateProgramService implements UpdateProgramUseCase {
             throw new InternalException("Já existe um programa cadastrado com este nome.");
         }
 
+        if (nonNull(command.institutionId()) && !command.institutionId().equals(program.getInstitutionId())) {
+            legalPersonRepository.findByIdOrThrow(command.institutionId());
+        }
+
         String previousName = program.getName();
 
         reconcileEducatorCategoryItems(program, command.educatorCategoryItems());
@@ -61,6 +70,7 @@ public class UpdateProgramService implements UpdateProgramUseCase {
                         .name(command.name())
                         .webSiteUrl(command.webSiteUrl())
                         .status(command.status())
+                        .institutionId(command.institutionId())
                         .apply()
         );
 
@@ -71,10 +81,8 @@ public class UpdateProgramService implements UpdateProgramUseCase {
         return toResponse(updated);
     }
 
-    private void reconcileEducatorCategoryItems(Program program, List<UpdateProgramCommand.UpdateEducatorCategoryItemCommand> requested) {
-        if (isNull(requested)) {
-            return;
-        }
+    private void reconcileEducatorCategoryItems(Program program, List<UpdateProgramCommand.UpdateEducatorCategoryItemCommand> items) {
+        List<UpdateProgramCommand.UpdateEducatorCategoryItemCommand> requested = isNull(items) ? List.of() : items;
 
         EducatorCategoryNames.requireUnique(requested.stream()
                 .map(UpdateProgramCommand.UpdateEducatorCategoryItemCommand::name)

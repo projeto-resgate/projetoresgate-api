@@ -7,7 +7,6 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repositor
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.UpdateLegalPersonUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.UpdateLegalPersonCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
-import com.projetoresgate.projetoresgate_api.infrastructure.utils.CnpjUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +27,7 @@ public class UpdateLegalPersonService implements UpdateLegalPersonUseCase {
     public LegalPerson handle(UpdateLegalPersonCommand command) {
         LegalPerson person = repository.findByIdOrThrow(command.id());
 
-        String cnpj = CnpjUtils.onlyDigits(command.cnpj());
+        String cnpj = command.cnpj();
         if (nonNull(cnpj) && !cnpj.isBlank() && repository.existsByCnpjAndIdNot(cnpj, person.getId())) {
             throw new InternalException("Já existe uma empresa cadastrada com este CNPJ.");
         }
@@ -51,7 +50,7 @@ public class UpdateLegalPersonService implements UpdateLegalPersonUseCase {
 
     private void updateAddress(LegalPerson person, AddressCommand command) {
         if (isNull(command)) {
-            return;
+            throw new InternalException("O endereço é obrigatório.");
         }
 
         Address current = nonNull(person.getAddress())

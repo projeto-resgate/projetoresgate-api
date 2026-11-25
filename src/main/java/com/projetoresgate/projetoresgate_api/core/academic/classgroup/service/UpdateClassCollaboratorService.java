@@ -13,7 +13,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.reposit
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static java.util.Objects.nonNull;
+import static java.util.Objects.isNull;
 
 @Service
 public class UpdateClassCollaboratorService implements UpdateClassCollaboratorUseCase {
@@ -39,21 +39,20 @@ public class UpdateClassCollaboratorService implements UpdateClassCollaboratorUs
         ClassCollaborator classCollaborator = repository.findByIdAndClassGroupIdOrThrow(
                 command.id(), command.classGroupId());
 
-        if (nonNull(command.educatorCategoryItemId())
-                && !command.educatorCategoryItemId().equals(classCollaborator.getEducatorCategoryItemId())) {
+        if (!command.educatorCategoryItemId().equals(classCollaborator.getEducatorCategoryItemId())) {
             educatorCategoryItemRepository.findByIdAndProgramIdOrThrow(
                     command.educatorCategoryItemId(), classCollaborator.getClassGroup().getProgramId());
         }
 
         classCollaborator.update()
                 .educatorCategoryItemId(command.educatorCategoryItemId())
-                .active(command.active())
+                .active(isNull(command.active()) || command.active())
                 .apply();
 
         ClassCollaborator saved = repository.save(classCollaborator);
 
         Collaborator collaborator = collaboratorRepository.findByIdIncludingDeleted(saved.getCollaboratorId()).orElse(null);
-        NaturalPerson person = collaborator == null ? null
+        NaturalPerson person = isNull(collaborator) ? null
                 : naturalPersonRepository.findByIdIncludingDeleted(collaborator.getNaturalPersonId()).orElse(null);
         String categoryName = educatorCategoryItemRepository.findByIdIncludingDeleted(saved.getEducatorCategoryItemId())
                 .map(item -> item.getName())
@@ -61,7 +60,7 @@ public class UpdateClassCollaboratorService implements UpdateClassCollaboratorUs
 
         return ClassCollaboratorResponse.fromEntity(
                 saved,
-                person == null ? null : person.getName(),
+                isNull(person) ? null : person.getName(),
                 categoryName);
     }
 }

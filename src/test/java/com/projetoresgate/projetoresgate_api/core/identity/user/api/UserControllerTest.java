@@ -245,7 +245,7 @@ class UserControllerTest {
     @WithMockCustomUser
     @DisplayName("PUT /user - Ao trocar a senha deve apagar o cookie de refresh (as sessões foram encerradas)")
     void updateUser_shouldRemoveRefreshCookie_whenPasswordChanged() throws Exception {
-        UpdateUserCommand command = new UpdateUserCommand(null, null, null, "new-password", "old-password");
+        UpdateUserCommand command = new UpdateUserCommand(null, "Nome", null, "new-password", "old-password");
 
         mockMvc.perform(put("/user")
                         .with(csrf())
@@ -255,6 +255,19 @@ class UserControllerTest {
 
         verify(updateUserUseCase).handle(any(UpdateUserCommand.class));
         verify(cookieService).removeRefreshTokenCookie(any(HttpServletResponse.class));
+    }
+
+    @Test
+    @DisplayName("PUT /user - Deve retornar 400 sem o nome, como no cadastro")
+    @WithMockCustomUser
+    void updateUser_shouldReturn400WhenNameIsMissing() throws Exception {
+        mockMvc.perform(put("/user")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nickname\":\"x\"}"))
+                .andExpect(status().isBadRequest());
+
+        verify(updateUserUseCase, never()).handle(any());
     }
 
     @Test

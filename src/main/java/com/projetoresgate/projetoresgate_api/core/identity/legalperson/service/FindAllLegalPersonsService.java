@@ -4,7 +4,6 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Le
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.FindAllLegalPersonsUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.query.FindAllLegalPersonsQuery;
-import com.projetoresgate.projetoresgate_api.infrastructure.utils.CnpjUtils;
 import com.projetoresgate.projetoresgate_api.shared.specification.SpecificationBuilder;
 import com.projetoresgate.projetoresgate_api.shared.specification.Specs;
 import jakarta.persistence.criteria.Predicate;
@@ -29,7 +28,7 @@ public class FindAllLegalPersonsService implements FindAllLegalPersonsUseCase {
     public Page<LegalPerson> handle(FindAllLegalPersonsQuery query) {
 
         Specification<LegalPerson> genericFilters = new SpecificationBuilder<LegalPerson>()
-                .with("cnpj", ":", CnpjUtils.onlyDigits(query.cnpj()))
+                .with("cnpj", ":", query.cnpj())
                 .with("corporateName", "~", query.corporateName())
                 .with("registrationStatus", ":", query.registrationStatus())
                 .with("companyStatus", ":", query.companyStatus())
@@ -51,10 +50,7 @@ public class FindAllLegalPersonsService implements FindAllLegalPersonsUseCase {
             orPredicates.add(cb.like(cb.lower(root.get("tradeName")), textSearch));
             orPredicates.add(cb.like(cb.lower(root.get("displayName")), textSearch));
 
-            String digits = searchTerm.replaceAll("\\D", "");
-            if (StringUtils.hasText(digits)) {
-                orPredicates.add(cb.like(root.get("cnpj"), "%" + digits + "%"));
-            }
+            orPredicates.add(cb.like(root.get("cnpj"), textSearch));
 
             return cb.or(orPredicates.toArray(new Predicate[0]));
         };

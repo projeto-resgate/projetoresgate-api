@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static java.util.Objects.nonNull;
+import static java.util.Objects.isNull;
 
 @Service
 public class UpdateClassScheduleService implements UpdateClassScheduleUseCase {
@@ -39,12 +39,10 @@ public class UpdateClassScheduleService implements UpdateClassScheduleUseCase {
                 .endTime(command.endTime())
                 .apply();
 
-        if (nonNull(command.active())) {
-            if (command.active()) {
-                schedule.activate();
-            } else {
-                schedule.deactivate();
-            }
+        if (isNull(command.active()) || command.active()) {
+            schedule.activate();
+        } else {
+            schedule.deactivate();
         }
 
         ClassSchedule saved = repository.save(schedule);

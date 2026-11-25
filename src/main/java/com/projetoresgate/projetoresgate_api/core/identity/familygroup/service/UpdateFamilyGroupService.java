@@ -54,7 +54,7 @@ public class UpdateFamilyGroupService implements UpdateFamilyGroupUseCase {
 
     private Address toAddress(AddressCommand addressCommand, Address existingAddress) {
         if (isNull(addressCommand)) {
-            return existingAddress;
+            return null;
         }
         if (nonNull(existingAddress)) {
             existingAddress.update()

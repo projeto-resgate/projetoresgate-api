@@ -7,7 +7,6 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repositor
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.CreateLegalPersonUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.CreateLegalPersonCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
-import com.projetoresgate.projetoresgate_api.infrastructure.utils.CnpjUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +25,7 @@ public class CreateLegalPersonService implements CreateLegalPersonUseCase {
     @Override
     @Transactional
     public LegalPerson handle(CreateLegalPersonCommand command) {
-        String cnpj = CnpjUtils.onlyDigits(command.cnpj());
+        String cnpj = command.cnpj();
 
         if (nonNull(cnpj) && !cnpj.isBlank() && repository.existsByCnpj(cnpj)) {
             throw new InternalException("Já existe uma empresa cadastrada com este CNPJ.");

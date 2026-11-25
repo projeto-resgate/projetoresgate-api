@@ -27,7 +27,6 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Le
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.legalperson.service.FindLegalPersonSummariesService;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.service.SoftDeleteLegalPersonService;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.command.SoftDeleteLegalPersonCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
@@ -43,7 +42,6 @@ import org.springframework.data.domain.PageRequest;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -79,8 +77,7 @@ class DeletedParentPolicyIntegrationTest extends PostgresIntegrationTest {
                 legalPersonRepository, schoolGradeRepository, schoolGradeRefRepository);
         updateClassGroup = new UpdateClassGroupService(classGroupRepository, programRepository,
                 legalPersonRepository, schoolGradeRepository, schoolGradeRefRepository, scheduleRepository);
-        findAll = new FindAllClassGroupsService(classGroupRepository, programRepository,
-                new FindLegalPersonSummariesService(legalPersonRepository));
+        findAll = new FindAllClassGroupsService(classGroupRepository);
         findById = new FindClassGroupByIdService(classGroupRepository, programRepository, legalPersonRepository);
         createSchedule = new CreateClassScheduleService(classGroupRepository, scheduleRepository, programRepository);
         deleteProgram = new SoftDeleteProgramService(programRepository);

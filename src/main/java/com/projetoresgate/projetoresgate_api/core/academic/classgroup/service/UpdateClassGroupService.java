@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @Service
@@ -69,11 +70,9 @@ public class UpdateClassGroupService implements UpdateClassGroupUseCase {
                 .startDate(command.startDate())
                 .durationInMonths(command.durationInMonths())
                 .note(command.note())
-                .active(command.active());
-
-        if (nonNull(command.schoolGradeIds())) {
-            updater.schoolGradeList(loadSchoolGrades(classGroup, command.schoolGradeIds()));
-        }
+                .active(isNull(command.active()) || command.active())
+                .schoolGradeList(loadSchoolGrades(classGroup,
+                        isNull(command.schoolGradeIds()) ? List.of() : command.schoolGradeIds()));
 
         updater.apply();
 
@@ -101,7 +100,7 @@ public class UpdateClassGroupService implements UpdateClassGroupUseCase {
     }
 
     private List<SchoolGradeRef> loadSchoolGrades(ClassGroup classGroup, List<UUID> ids) {
-        if (ids == null || ids.isEmpty()) {
+        if (isNull(ids) || ids.isEmpty()) {
             return new ArrayList<>();
         }
 

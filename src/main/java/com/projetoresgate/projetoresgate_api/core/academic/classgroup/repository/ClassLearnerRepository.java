@@ -34,33 +34,42 @@ public interface ClassLearnerRepository extends JpaRepository<ClassLearner, UUID
     boolean existsByClassGroupIdAndLearnerId(UUID classGroupId, UUID learnerId);
 
     @Query(value = """
-            select cl.* from class_learner cl
+            select cl.id as "id",
+                   cl.class_group_id as "classGroupId",
+                   cl.learner_id as "learnerId",
+                   np.name as "learnerName",
+                   np.cpf as "learnerCpf",
+                   l.status as "learnerStatus",
+                   cl.active as "active",
+                   cl.date_created as "dateCreated"
+            from class_learner cl
             join learner l on l.id = cl.learner_id and l.deleted_at is null
             join natural_person np on np.id = l.natural_person_id
             where cl.class_group_id = :classGroupId
               and cl.deleted_at is null
               and (cast(:active as boolean) is null or cl.active = cast(:active as boolean))
               and (cast(:searchTerm as text) is null
-                   or lower(np.name) like lower(concat('%', cast(:searchTerm as text), '%'))
-                   or lower(np.nickname) like lower(concat('%', cast(:searchTerm as text), '%')))
-            order by cl.active desc, np.name asc
+                   or strpos(lower(np.name), lower(cast(:searchTerm as text))) > 0
+                   or strpos(lower(coalesce(np.nickname, '')), lower(cast(:searchTerm as text))) > 0)
+            order by cl.active desc, np.name asc, cl.id asc
             """,
             countQuery = """
-                    select count(*) from class_learner cl
-                    join learner l on l.id = cl.learner_id and l.deleted_at is null
-                    join natural_person np on np.id = l.natural_person_id
-                    where cl.class_group_id = :classGroupId
-                      and cl.deleted_at is null
-                      and (cast(:active as boolean) is null or cl.active = cast(:active as boolean))
-                      and (cast(:searchTerm as text) is null
-                           or lower(np.name) like lower(concat('%', cast(:searchTerm as text), '%'))
-                           or lower(np.nickname) like lower(concat('%', cast(:searchTerm as text), '%')))
-                    """,
+            select count(*)
+            from class_learner cl
+            join learner l on l.id = cl.learner_id and l.deleted_at is null
+            join natural_person np on np.id = l.natural_person_id
+            where cl.class_group_id = :classGroupId
+              and cl.deleted_at is null
+              and (cast(:active as boolean) is null or cl.active = cast(:active as boolean))
+              and (cast(:searchTerm as text) is null
+                   or strpos(lower(np.name), lower(cast(:searchTerm as text))) > 0
+                   or strpos(lower(coalesce(np.nickname, '')), lower(cast(:searchTerm as text))) > 0)
+            """,
             nativeQuery = true)
-    Page<ClassLearner> findAllByClassGroupId(@Param("classGroupId") UUID classGroupId,
-                                             @Param("active") Boolean active,
-                                             @Param("searchTerm") String searchTerm,
-                                             Pageable pageable);
+    Page<ClassLearnerRow> findRowsByClassGroupId(@Param("classGroupId") UUID classGroupId,
+                                                 @Param("active") Boolean active,
+                                                 @Param("searchTerm") String searchTerm,
+                                                 Pageable pageable);
 
     @Query("""
             select distinct cl.learnerId from ClassLearner cl
