@@ -54,8 +54,31 @@ por papel como escopo novo.
 ## O que NÃO fazer
 
 * **NUNCA** commite chaves secretas (JWT Secret, senhas de banco) no Git. Use variáveis de ambiente (`System.getenv()`).
-* **NUNCA** desabilite o CSRF se a API for consumida por navegadores (embora para APIs REST stateless, muitas vezes seja
-  desabilitado, entenda o risco).
+* **NUNCA** troque a autenticação por **cookie de sessão** (ou mova o access token para cookie) sem reativar o CSRF.
+  O CSRF está desligado de propósito; veja abaixo.
+
+## Por que o CSRF está desligado
+
+CSRF é quando um **site de terceiros** faz o navegador da vítima enviar uma requisição para a nossa API e o navegador
+anexa **sozinho** a credencial dela. Só funciona com credencial que o navegador envia automaticamente: cookie.
+
+| Credencial | Como chega | Risco de CSRF |
+|---|---|---|
+| Access token (JWT) | Cabeçalho `Authorization: Bearer`, colocado pelo front via JavaScript | **Nenhum**: outro site não consegue ler o token nem fazer o navegador anexá-lo |
+| Refresh token | Cookie `HttpOnly` em `/user/refresh` e `/user/logout` | Coberto: `SameSite=Strict` em produção faz o navegador **não** enviar o cookie em requisição vinda de outro site; e o CORS só libera as origens do front, então outro site não lê a resposta do refresh |
+
+Por isso o `.csrf(AbstractHttpConfigurer::disable)` em `SecurityConfigurations` é seguro: todas as rotas protegidas
+exigem o cabeçalho `Authorization`, e as duas rotas que usam cookie estão cobertas pelo `SameSite=Strict`. Ligar o
+CSRF do Spring exigiria que o front buscasse e reenviasse um token CSRF em todo `POST/PUT/DELETE`, sem ganho real.
+
+Isso deixa de valer se:
+- o cookie de refresh passar a usar `SameSite=None` (necessário se o front ficar em **outro domínio** que a API).
+  Nesse caso, reative o CSRF ao menos em `/user/refresh` e `/user/logout`, ou volte a servir front e API no mesmo
+  domínio (o desenho atual, com Caddy: ver [`frontend-deploy.md`](../operacao/frontend-deploy.md));
+- a autenticação passar a usar cookie de sessão ou o access token for para cookie.
+
+No SonarCloud, o alerta "Make sure disabling Spring Security's CSRF protection is safe here" é um *security
+hotspot*: deve ser revisado e marcado como **Safe**, com a justificativa acima.
 * **NUNCA** crie seu próprio algoritmo de criptografia. Use os padrões da indústria (BCrypt, Argon2).
 
 ## Exemplo

@@ -31,7 +31,7 @@ public enum WeekDay {
 
     public static Optional<WeekDay> from(DayOfWeek dayOfWeek) {
         for (WeekDay weekDay : values()) {
-            if (weekDay.dayOfWeek == dayOfWeek) {
+            if (weekDay.dayOfWeek.equals(dayOfWeek)) {
                 return Optional.of(weekDay);
             }
         }
