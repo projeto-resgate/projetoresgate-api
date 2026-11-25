@@ -1,8 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.academic.collaborator.api.dto;
 
-import com.projetoresgate.projetoresgate_api.core.academic.collaborator.domain.Collaborator;
-import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
-import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
+import com.projetoresgate.projetoresgate_api.core.academic.collaborator.repository.CollaboratorRow;
 
 import java.util.UUID;
 
@@ -14,15 +12,14 @@ public record CollaboratorSummaryResponse(
         String legalPersonName,
         boolean isVoluntary
 ) {
-    public static CollaboratorSummaryResponse fromEntity(Collaborator entity, NaturalPerson naturalPerson,
-                                                         LegalPerson legalPerson) {
+    public static CollaboratorSummaryResponse fromRow(CollaboratorRow row) {
         return new CollaboratorSummaryResponse(
-                entity.getId(),
-                entity.getNaturalPersonId(),
-                naturalPerson == null ? null : naturalPerson.getName(),
-                entity.getLegalPersonId(),
-                legalPerson == null ? null : legalPerson.getDisplayName(),
-                entity.isVoluntary()
+                row.getId(),
+                row.getNaturalPersonId(),
+                row.getNaturalPersonName(),
+                row.getLegalPersonId(),
+                row.getLegalPersonName(),
+                row.getIsVoluntary()
         );
     }
 }

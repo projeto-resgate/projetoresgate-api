@@ -1,6 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.academic.learner.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.projetoresgate.projetoresgate_api.config.security.WithMockCustomUser;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.command.ResponsibleCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.DropoutLearnerResponse;
@@ -34,7 +34,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -418,8 +418,10 @@ class LearnerControllerTest {
 
     @Test
     @WithMockCustomUser
-    @DisplayName("PUT /learner/{id} - Deve retornar 400 quando a lista de responsáveis não for informada")
-    void update_ShouldReturn400WhenResponsibleListIsMissing() throws Exception {
+    @DisplayName("PUT /learner/{id} - Lista de responsáveis ausente deve ser aceita, como no POST")
+    void update_ShouldAcceptMissingResponsibleList() throws Exception {
+        when(updateUseCase.handle(any(UpdateLearnerCommand.class))).thenReturn(givenResponse());
+
         String body = """
                 {
                   "naturalPersonId": "%s",
@@ -432,10 +434,9 @@ class LearnerControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string(containsString("A lista de responsáveis é obrigatória")));
+                .andExpect(status().isOk());
 
-        verify(updateUseCase, never()).handle(any());
+        verify(updateUseCase).handle(any());
     }
 
     @Test
@@ -979,5 +980,21 @@ class LearnerControllerTest {
                 .andExpect(status().isUnauthorized());
 
         verify(findAllUseCase, never()).handle(any());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("POST /learner/{id}/dropout - Deve retornar 400 quando a data for futura")
+    void dropOut_ShouldReturn400WhenEventDateIsInTheFuture() throws Exception {
+        mockMvc.perform(post("/learner/{id}/dropout", LEARNER_ID)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"reason":"Mudança","eventDate":"%s"}
+                                """.formatted(LocalDate.now().plusDays(1))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("eventDate"));
+
+        verify(dropoutUseCase, never()).handle(any());
     }
 }

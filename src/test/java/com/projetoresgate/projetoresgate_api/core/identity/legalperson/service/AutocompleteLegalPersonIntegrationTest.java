@@ -12,7 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import java.util.List;
 
@@ -66,9 +66,9 @@ class AutocompleteLegalPersonIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("Deve encontrar por CNPJ com máscara mandando apenas os dígitos")
+    @DisplayName("Deve encontrar pelos dígitos do CNPJ")
     void handle_ShouldFindByCnpjDigits() {
-        List<LegalPersonSummaryResponse> result = service.handle(new AutocompleteLegalPersonQuery("11.222.333/0001-81", 10));
+        List<LegalPersonSummaryResponse> result = service.handle(new AutocompleteLegalPersonQuery("11222333000181", 10));
 
         assertEquals(1, result.size());
         assertEquals("Acme LTDA", result.get(0).displayName());

@@ -28,7 +28,7 @@ public class UpdateSchoolGradeService implements UpdateSchoolGradeUseCase {
     public SchoolGrade handle(UpdateSchoolGradeCommand command) {
         SchoolGrade schoolGrade = repository.findByIdOrThrow(command.id());
 
-        if (StringUtils.hasText(command.name()) && repository.existsByNameAndIdNot(command.name(), schoolGrade.getId())) {
+        if (StringUtils.hasText(command.name()) && repository.existsByNameIgnoreCaseAndIdNot(command.name(), schoolGrade.getId())) {
             throw new InternalException("Já existe uma série escolar cadastrada com este nome.");
         }
 

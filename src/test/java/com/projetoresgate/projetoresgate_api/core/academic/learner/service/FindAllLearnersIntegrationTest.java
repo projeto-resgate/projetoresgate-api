@@ -5,6 +5,10 @@ import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.Cla
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassGroupRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassLearnerRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerSummaryResponse;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Learner;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.LearnerParticipationStatus;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.repository.LearnerRepository;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.FindAllLearnersQuery;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.Program;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.enums.ProgramStatus;
 import com.projetoresgate.projetoresgate_api.core.academic.program.repository.ProgramRepository;
@@ -13,20 +17,16 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.Le
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
-import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.LearnerParticipationStatus;
-import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Learner;
-import com.projetoresgate.projetoresgate_api.core.academic.learner.repository.LearnerRepository;
-import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.FindAllLearnersQuery;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.FindLegalPersonSummariesUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
-import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.FindLegalPersonSummariesUseCase;
 import com.projetoresgate.projetoresgate_api.shared.testcontainers.PostgresIntegrationTest;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
@@ -36,8 +36,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataJpaTest
 @DisplayName("FindAllLearners - Integração")

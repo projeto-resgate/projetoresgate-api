@@ -10,7 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -63,7 +63,7 @@ class AutocompleteNaturalPersonIntegrationTest extends PostgresIntegrationTest {
     @Test
     @DisplayName("Deve encontrar por dígitos do CPF")
     void handle_ShouldFindByCpfDigits() {
-        List<NaturalPersonSummaryResponse> result = service.handle(new AutocompleteNaturalPersonQuery("529.982.247-25", 10));
+        List<NaturalPersonSummaryResponse> result = service.handle(new AutocompleteNaturalPersonQuery("52998224725", 10));
 
         assertEquals(1, result.size());
         assertEquals("Pedro Almeida", result.get(0).name());
@@ -77,6 +77,18 @@ class AutocompleteNaturalPersonIntegrationTest extends PostgresIntegrationTest {
         assertEquals(1, result.size());
         assertEquals("Maria Souza", result.get(0).name());
         assertEquals("87654321", result.get(0).rg());
+    }
+
+    @Test
+    @DisplayName("Deve encontrar por RG gravado com pontuação, digitando só letras e números")
+    void handle_ShouldFindByRgStoredWithPunctuation() {
+        repository.save(NaturalPerson.create("Ana Lima", "ana@test.com", null, null, "MG-11.222.333",
+                null, null, null, null));
+
+        List<NaturalPersonSummaryResponse> result = service.handle(new AutocompleteNaturalPersonQuery("mg11222", 10));
+
+        assertEquals(1, result.size());
+        assertEquals("Ana Lima", result.get(0).name());
     }
 
     @Test

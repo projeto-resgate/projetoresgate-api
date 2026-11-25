@@ -4,6 +4,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import static java.util.Objects.nonNull;
+
 public record CreateUserCommand(
         @NotBlank(message = "O nome não pode ser vazio.")
         String name,
@@ -18,4 +20,7 @@ public record CreateUserCommand(
         @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres.")
         String password
 ) {
+    public CreateUserCommand {
+        email = nonNull(email) ? email.trim() : null;
+    }
 }

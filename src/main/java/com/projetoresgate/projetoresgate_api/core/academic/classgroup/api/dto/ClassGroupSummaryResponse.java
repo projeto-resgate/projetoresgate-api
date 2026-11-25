@@ -1,6 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.academic.classgroup.api.dto;
 
-import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.ClassGroup;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassGroupRow;
 
 import java.util.UUID;
 
@@ -13,15 +13,15 @@ public record ClassGroupSummaryResponse(
         String institutionName,
         boolean active
 ) {
-    public static ClassGroupSummaryResponse fromEntity(ClassGroup entity, String programName, String institutionName) {
+    public static ClassGroupSummaryResponse fromRow(ClassGroupRow row) {
         return new ClassGroupSummaryResponse(
-                entity.getId(),
-                entity.getTitle(),
-                entity.getProgramId(),
-                programName,
-                entity.getInstitutionId(),
-                institutionName,
-                entity.isActive()
+                row.getId(),
+                row.getTitle(),
+                row.getProgramId(),
+                row.getProgramName(),
+                row.getInstitutionId(),
+                row.getInstitutionName(),
+                row.getActive()
         );
     }
 }

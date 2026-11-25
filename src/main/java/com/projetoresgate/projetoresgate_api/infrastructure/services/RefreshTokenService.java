@@ -3,7 +3,7 @@ package com.projetoresgate.projetoresgate_api.infrastructure.services;
 import com.projetoresgate.projetoresgate_api.core.identity.user.domain.RefreshToken;
 import com.projetoresgate.projetoresgate_api.core.identity.user.domain.User;
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.RefreshTokenRepository;
-import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
+import com.projetoresgate.projetoresgate_api.infrastructure.exception.UnauthorizedException;
 import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,20 +40,20 @@ public class RefreshTokenService implements IRefreshTokenService {
     @Transactional(readOnly = true)
     public User validateRefreshToken(String plainTextToken) {
         if (isNull(plainTextToken) || plainTextToken.isBlank()) {
-            throw new InternalException("Token de renovação inválido ou não fornecido.");
+            throw new UnauthorizedException("Token de renovação inválido ou não fornecido.");
         }
 
         String tokenHash = TokenUtils.hashToken(plainTextToken);
         Optional<RefreshToken> refreshTokenOpt = refreshTokenRepository.findByTokenHash(tokenHash);
 
         if (refreshTokenOpt.isEmpty()) {
-            throw new InternalException("Token de renovação inválido ou não encontrado.");
+            throw new UnauthorizedException("Token de renovação inválido ou não encontrado.");
         }
 
         RefreshToken refreshToken = refreshTokenOpt.get();
 
         if (refreshToken.isExpired()) {
-            throw new InternalException("Token de renovação expirou.");
+            throw new UnauthorizedException("Token de renovação expirou.");
         }
 
         return refreshToken.getUser();

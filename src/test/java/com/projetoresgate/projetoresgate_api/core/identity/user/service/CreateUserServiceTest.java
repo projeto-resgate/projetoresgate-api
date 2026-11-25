@@ -38,7 +38,7 @@ class CreateUserServiceTest {
     void handle_ShouldCreateUser() {
         CreateUserCommand command = new CreateUserCommand("John Doe", "john@test.com", "johny", "password123");
 
-        when(repository.findByEmail(command.email())).thenReturn(Optional.empty());
+        when(repository.findByEmailIgnoreCase(command.email())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(command.password())).thenReturn("encoded-password");
         when(repository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -62,7 +62,7 @@ class CreateUserServiceTest {
         CreateUserCommand command = new CreateUserCommand("John Doe", "john@test.com", "johny", "password123");
         User existing = User.create("john@test.com", "encoded", "John", null);
 
-        when(repository.findByEmail(command.email())).thenReturn(Optional.of(existing));
+        when(repository.findByEmailIgnoreCase(command.email())).thenReturn(Optional.of(existing));
 
         InternalException exception = assertThrows(InternalException.class, () -> service.handle(command));
         assertEquals("Este e-mail já está cadastrado.", exception.getMessage());

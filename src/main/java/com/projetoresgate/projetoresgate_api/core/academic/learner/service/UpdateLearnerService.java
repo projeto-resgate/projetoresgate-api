@@ -14,15 +14,17 @@ import com.projetoresgate.projetoresgate_api.core.identity.familygroup.repositor
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
+import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.UUID;
 
 import static java.util.Objects.nonNull;
-
 
 @Service
 public class UpdateLearnerService implements UpdateLearnerUseCase {
@@ -59,11 +61,11 @@ public class UpdateLearnerService implements UpdateLearnerUseCase {
         validateNaturalPersonOwnership(learner, command.naturalPersonId());
 
         validateLearnerBelongsToFamilyGroup(command.familyGroupId(), command.naturalPersonId());
-        if (nonNull(command.institutionId())) {
+        if (nonNull(command.institutionId()) && !command.institutionId().equals(learner.getInstitutionId())) {
             legalPersonRepository.findByIdOrThrow(command.institutionId());
         }
 
-        if (nonNull(command.schoolGradeId())) {
+        if (nonNull(command.schoolGradeId()) && !command.schoolGradeId().equals(learner.getSchoolGradeId())) {
             schoolGradeRepository.findByIdOrThrow(command.schoolGradeId());
         }
 
@@ -95,7 +97,9 @@ public class UpdateLearnerService implements UpdateLearnerUseCase {
     }
 
     private void validateLearnerBelongsToFamilyGroup(UUID familyGroupId, UUID naturalPersonId) {
-        familyGroupRepository.findByIdOrThrow(familyGroupId);
+        if (!familyGroupRepository.existsByIdIncludingDeleted(familyGroupId)) {
+            throw new ResourceNotFoundException("Grupo familiar não encontrado com ID: " + familyGroupId);
+        }
         validatePersonBelongsToFamilyGroup(familyGroupId, naturalPersonId);
     }
 
@@ -112,12 +116,18 @@ public class UpdateLearnerService implements UpdateLearnerUseCase {
             return new ArrayList<>();
         }
 
+        Map<UUID, UUID> currentGradeByPerson = new HashMap<>();
+        for (Responsible current : learner.getResponsibleList()) {
+            currentGradeByPerson.put(current.getNaturalPersonId(), current.getSchoolGradeId());
+        }
+
         List<Responsible> responsibles = new ArrayList<>(commands.size());
 
         for (ResponsibleCommand command : commands) {
             validatePersonBelongsToFamilyGroup(familyGroupId, command.naturalPersonId());
 
-            if (nonNull(command.schoolGradeId())) {
+            if (nonNull(command.schoolGradeId())
+                    && !command.schoolGradeId().equals(currentGradeByPerson.get(command.naturalPersonId()))) {
                 schoolGradeRepository.findByIdOrThrow(command.schoolGradeId());
             }
 

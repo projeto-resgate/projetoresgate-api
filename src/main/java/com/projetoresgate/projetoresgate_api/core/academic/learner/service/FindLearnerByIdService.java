@@ -44,7 +44,7 @@ public class FindLearnerByIdService implements FindLearnerByIdUseCase {
             return Map.of();
         }
 
-        return naturalPersonRepository.findAllById(naturalPersonIds).stream()
+        return naturalPersonRepository.findAllByIdIncludingDeleted(naturalPersonIds).stream()
                 .collect(Collectors.toMap(NaturalPerson::getId, NaturalPerson::getName));
     }
 }

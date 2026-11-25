@@ -1,0 +1,105 @@
+spring:
+  application:
+    name: projetoresgate-api
+  lifecycle:
+    timeout-per-shutdown-phase: 25s
+  datasource:
+    url: "${DB_URL}"
+    username: "${DB_USERNAME}"
+    password: "${DB_PASSWORD}"
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  messages:
+    encoding: UTF-8
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: "${MAIL_USERNAME}"
+    password: "${MAIL_PASSWORD}"
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 10000
+          writetimeout: 10000
+
+api:
+  security:
+    token:
+      secret: "${API_SECURITY_TOKEN_SECRET}"
+    access-token:
+      duration: "${API_SECURITY_ACCESS_TOKEN_DURATION:900}"
+    refresh-token:
+      duration: "${API_SECURITY_REFRESH_TOKEN_DURATION:604800}"
+      cleanup:
+        enabled: "${API_SECURITY_REFRESH_TOKEN_CLEANUP_ENABLED:true}"
+        rate: "${API_SECURITY_REFRESH_TOKEN_CLEANUP_RATE:3600000}"
+  cookie:
+    secure: "${API_COOKIE_SECURE:true}"
+    same-site: "${API_COOKIE_SAME_SITE:Strict}"
+  rate-limit:
+    enabled: "${API_RATE_LIMIT_ENABLED:true}"
+    max-requests: "${API_RATE_LIMIT_MAX_REQUESTS:5}"
+    window-seconds: "${API_RATE_LIMIT_WINDOW_SECONDS:60}"
+    public:
+      max-requests: "${API_RATE_LIMIT_PUBLIC_MAX_REQUESTS:20}"
+      window-seconds: "${API_RATE_LIMIT_PUBLIC_WINDOW_SECONDS:60}"
+    general:
+      max-requests: "${API_RATE_LIMIT_GENERAL_MAX_REQUESTS:300}"
+      window-seconds: "${API_RATE_LIMIT_GENERAL_WINDOW_SECONDS:60}"
+    email:
+      max-requests: "${API_RATE_LIMIT_EMAIL_MAX_REQUESTS:3}"
+      window-seconds: "${API_RATE_LIMIT_EMAIL_WINDOW_SECONDS:3600}"
+    trusted-proxies: "${API_RATE_LIMIT_TRUSTED_PROXIES:0}"
+  user-registration:
+    public: "${API_USER_REGISTRATION_PUBLIC:false}"
+
+cors:
+  allowed-origins: "${CORS-ALLOWED-ORIGINS}"
+
+app:
+  frontend-url: "${FRONTEND_URL}"
+  mail:
+    max-attempts: "${APP_MAIL_MAX_ATTEMPTS:3}"
+    retry-delay-seconds: "${APP_MAIL_RETRY_DELAY_SECONDS:10}"
+    retry-backoff-multiplier: "${APP_MAIL_RETRY_BACKOFF_MULTIPLIER:4.0}"
+
+management:
+  health:
+    mail:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,prometheus"
+  endpoint:
+    health:
+      probes:
+        enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+server:
+  shutdown: graceful
+  error:
+    include-stacktrace: never
+
+springdoc:
+  api-docs:
+    enabled: "${API_DOCS_ENABLED:false}"
+  swagger-ui:
+    enabled: "${API_DOCS_ENABLED:false}"
+    tags-sorter: alpha
+    operations-sorter: alpha
+    doc-expansion: none

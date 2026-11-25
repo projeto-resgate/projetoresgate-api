@@ -84,33 +84,63 @@ Por que cada escolha:
 Disparo: **Actions → Deploy - Projeto Resgate API → Run workflow**. O campo `ref` (padrão `main`) permite
 escolher outra branch, tag ou SHA.
 
+O deploy tem **três jobs encadeados**:
+
+```mermaid
+flowchart LR
+    R["resolve<br/>ref → SHA"] --> C["ci<br/>ci.yml reutilizado<br/>testes + Sonar"]
+    C --> B["build-and-push<br/>environment: production<br/>(aprovação)"]
+```
+
+| Job              | O que faz                                                                                                   |
+|------------------|-------------------------------------------------------------------------------------------------------------|
+| `resolve`        | Faz o checkout da `ref` e grava o **SHA exato** (`git rev-parse HEAD`) e a tag `prod-<12 primeiros do SHA>`. O `ref` digitado entra por variável de ambiente, nunca interpolado no script (evita injeção de comando) |
+| `ci`             | Chama o `ci.yml` como workflow reutilizável (`workflow_call`) **nesse SHA**: `mvnw clean verify` e Sonar. **Sempre roda** |
+| `build-and-push` | Só roda se o `ci` passou (`needs: [resolve, ci]`). Usa `environment: production`, então a **aprovação manual só é pedida para um commit que já passou nos testes** |
+
+Etapas do `build-and-push`:
+
 | Etapa                  | Detalhe                                                                                        |
 |------------------------|------------------------------------------------------------------------------------------------|
-| Checkout               | Na `ref` informada.                                                                            |
-| Tag                    | `prod-<12 primeiros caracteres do SHA>` — identifica exatamente qual commit está na imagem.    |
+| Checkout               | No SHA resolvido (o mesmo que o CI validou).                                                   |
 | Login                  | `DOCKERHUB_USERNAME` + `DOCKERHUB_TOKEN` (token de acesso, não a senha).                       |
-| Build                  | Usa o `Dockerfile` (multi-stage: Maven → Corretto 21 Alpine) com cache `type=gha`.             |
+| Build                  | Usa o `Dockerfile` (multi-stage, ver abaixo) com cache `type=gha`.                             |
 | Push                   | Duas tags: **`:prod-<sha>`** (imutável, serve de rollback) e **`:latest`** (o que o Watchtower observa). |
-| `environment: production` | Permite exigir aprovação manual e restringir branches (ver [segurança](#segurança-do-pipeline)). |
+| Rastreabilidade        | Labels OCI `org.opencontainers.image.revision` e `version`: `docker inspect` mostra de qual commit saiu a imagem. |
 
-> O deploy **não roda os testes**. Ele confia que o `ci.yml` já passou na mesma ref. Antes de disparar,
-> confira que o último CI da `main` está verde. (Se quiser travar isso, dá para fazer o `deploy.yml`
-> chamar o `ci.yml` como workflow reutilizável.)
+> Antes, a tag usava o `GITHUB_SHA`, que é o commit do workflow e não o da `ref` escolhida. Isso foi corrigido:
+> agora a tag, o CI e o build usam o **mesmo SHA**.
+
+### Para que serve o `workflow_call` do `ci.yml`
+
+O `ci.yml` reage a `push`, `pull_request`, manual **e** `workflow_call`. Com o `workflow_call`, o `deploy.yml` o
+chama como uma função, passando `inputs.ref` com o SHA a validar. No `push` e no PR o `inputs.ref` é vazio e o
+checkout usa o commit do próprio evento. Sem isso, seria possível publicar uma imagem de um commit sem teste.
 
 ### O `Dockerfile`
 
 ```mermaid
 flowchart LR
-    A["Stage builder<br/>maven:3.9.4-temurin-21"] -->|"mvn dependency:go-offline<br/>(camada cacheada)"| B["mvn clean package -DskipTests"]
-    B -->|"app.jar"| C["Stage final<br/>amazoncorretto:21-alpine"]
-    C --> D["java -jar app.jar<br/>porta 8080"]
+    A["Stage build<br/>maven:3.9.12-temurin-21"] -->|"dependency:go-offline<br/>(camada cacheada)"| B["mvn package -DskipTests"]
+    B -->|"jarmode=tools extract --layers<br/>jar renomeado app.jar"| C["Stage final<br/>eclipse-temurin:21-jre-alpine"]
+    C --> D["USER app<br/>java -jar app.jar<br/>porta 8080"]
 ```
 
-O `pom.xml` é copiado e as dependências baixadas **antes** do código-fonte, para que mudar só o código
-reaproveite a camada de dependências. O `-DskipTests` aqui é intencional: os testes já rodaram no CI.
+- **Dependências antes do código:** o `pom.xml` é copiado e as dependências baixadas antes do `src`, com cache do
+  `.m2`, então mudar só o código reaproveita a camada de dependências.
+- **Jar em camadas:** dependências, loader, snapshots e aplicação em camadas separadas. No deploy normalmente só a
+  camada de código (centenas de kB) é enviada e baixada, não a imagem inteira.
+- **Só JRE e usuário sem privilégios:** a imagem final tem apenas o JRE e roda como o usuário `app` (uid 100),
+  não como root. Tamanho da imagem: cerca de 285 MB.
+- **Nome fixo `app.jar`:** mudar a versão no `pom.xml` não quebra mais o `ENTRYPOINT`.
+- **Memória:** `JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError"`. Sem memória, o processo
+  morre e o Docker reinicia. Em produção o compose usa `-XX:MaxRAMPercentage=60`.
+- **`HEALTHCHECK`:** consulta `/actuator/health/liveness` (início de 90 s para o Flyway e o Spring subirem).
+- **Desligamento gracioso:** `server.shutdown: graceful`, com até 25 s por fase. O compose dá `stop_grace_period: 40s`.
+- **`.dockerignore`:** mantém `target/`, `.git`, `.env`, docs e testes fora do contexto de build.
 
-⚠️ O `Dockerfile` referencia o jar pelo nome `projetoresgate-api-0.0.1-SNAPSHOT.jar`. **Se a versão no
-`pom.xml` mudar, o build da imagem quebra.**
+Testado com o Spring Boot 4.1.2: build, subida a partir de banco vazio (18 migrations), container `healthy`,
+processo como `app` e desligamento gracioso.
 
 ## Configuração necessária no GitHub
 
@@ -134,6 +164,10 @@ reaproveite a camada de dependências. O `-DskipTests` aqui é intencional: os t
 
 Os segredos da **aplicação** (banco, JWT, SMTP) **não** ficam no GitHub: ficam só no `.env` da VM.
 
+> **Sonar falhando com `You must define the following mandatory properties: sonar.projectKey, sonar.organization`:**
+> as variáveis `SONAR_PROJECT_KEY` e `SONAR_ORGANIZATION` não foram cadastradas (a aba **Variables**, não Secrets).
+> O passo do Sonar roda sempre que o `SONAR_TOKEN` existe e usa essas duas variáveis.
+
 ## Segurança do pipeline
 
 | Medida                                                             | Por quê                                                                                     |
@@ -146,10 +180,14 @@ Os segredos da **aplicação** (banco, JWT, SMTP) **não** ficam no GitHub: fica
 | Token do Docker Hub com escopo mínimo                              | Vazamento não expõe a conta inteira.                                                        |
 | Nunca usar `pull_request_target` com secrets                       | Executaria código de PR de fork com acesso aos secrets.                                     |
 
+## Dependabot
+
+Atualizações automáticas de dependências (Maven, GitHub Actions, Docker e Compose) via PRs semanais: ver [`dependabot.md`](dependabot.md).
+
 ## Como fazer um deploy
 
-1. Garanta que o CI da `main` está ✅.
-2. **Actions → Deploy → Run workflow** (deixe `ref = main`).
+1. **Actions → Deploy → Run workflow** (deixe `ref = main`). O CI roda sozinho dentro do deploy.
+2. Se o CI passar, aprove o ambiente `production` quando o GitHub pedir.
 3. Aguarde o job terminar (≈ 3–6 min).
 4. Aguarde até **5 minutos** (intervalo do Watchtower) e valide — ver [`runbook.md`](runbook.md#validar-um-deploy).
 
@@ -158,12 +196,17 @@ Os segredos da **aplicação** (banco, JWT, SMTP) **não** ficam no GitHub: fica
 A VM roda `:latest`. Para voltar a uma versão anterior, aponte o compose para uma tag `prod-<sha>` antiga —
 passo a passo em [`runbook.md`](runbook.md#rollback).
 
+## Actions fixadas por SHA
+
+Todas as actions de terceiros e do GitHub são referenciadas pelo **SHA completo do commit**, com a versão no
+comentário (`uses: docker/login-action@<sha> # v3.7.0`). Uma tag como `v3` pode ser movida para outro código;
+o SHA não. O Dependabot (`github-actions`) atualiza o SHA e o comentário juntos. Para trocar uma versão à mão,
+pegue o SHA da tag com `git ls-remote --tags https://github.com/<dono>/<action>.git` (use a linha `^{}` quando
+existir, que é o commit da tag anotada).
+
 ## Evoluções possíveis
 
 | Ideia                                                  | Ganho                                            |
 |--------------------------------------------------------|--------------------------------------------------|
-| `deploy.yml` reutilizar o `ci.yml` (`workflow_call`)   | Impossível publicar código que não passou nos testes |
-| Pinar as actions por SHA de commit                     | Proteção contra supply chain                     |
-| Dependabot para actions e Maven                        | Atualizações de segurança automáticas            |
 | Quality Gate do Sonar bloqueando o merge               | Impede regressão de qualidade/cobertura          |
 | Notificação (e-mail/Discord) ao fim do deploy          | Feedback — o job termina antes da VM atualizar   |

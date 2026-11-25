@@ -32,7 +32,7 @@ public class UpdateFamilyGroupService implements UpdateFamilyGroupUseCase {
         FamilyGroup existing = repository.findByIdOrThrow(command.id());
 
         if (nonNull(command.name()) && !command.name().isBlank()
-                && repository.existsByNameAndIdNot(command.name(), command.id())) {
+                && repository.existsByNameIgnoreCaseAndIdNot(command.name(), command.id())) {
             throw new InternalException("Já existe um grupo familiar cadastrado com este nome.");
         }
 
@@ -54,7 +54,7 @@ public class UpdateFamilyGroupService implements UpdateFamilyGroupUseCase {
 
     private Address toAddress(AddressCommand addressCommand, Address existingAddress) {
         if (isNull(addressCommand)) {
-            return existingAddress;
+            return null;
         }
         if (nonNull(existingAddress)) {
             existingAddress.update()

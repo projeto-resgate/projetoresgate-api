@@ -143,30 +143,6 @@ class FindAllLegalPersonsServiceTest {
     }
 
     @Test
-    @DisplayName("Deve construir a Specification normalizando o CNPJ formatado no filtro")
-    void handle_ShouldNormalizeFormattedCnpjInFilter() {
-        Pageable pageable = PageRequest.of(0, 10);
-        FindAllLegalPersonsQuery searchQuery = new FindAllLegalPersonsQuery(
-                null, "11.222.333/0001-81", null, null, null, pageable);
-
-        doReturn(path).when(root).get(anyString());
-
-        lenient().doReturn(String.class).when(path).getJavaType();
-        lenient().doReturn(mockPredicate).when(cb).like(any(), anyString(), anyChar());
-        lenient().doReturn(mockPredicate).when(cb).and(any(Predicate[].class));
-
-        service.handle(searchQuery);
-
-        verify(repository).findAll(specCaptor.capture(), eq(pageable));
-
-        Specification<LegalPerson> capturedSpec = specCaptor.getValue();
-        capturedSpec.toPredicate(root, query, cb);
-
-        verify(cb).equal(any(), eq("11222333000181"));
-        verify(cb, never()).equal(any(), eq("11.222.333/0001-81"));
-    }
-
-    @Test
     @DisplayName("Deve retornar pessoas jurídicas com todos os campos preenchidos")
     void handle_ShouldReturnPersonsWithAllFields() {
         Pageable pageable = PageRequest.of(0, 10);
@@ -189,7 +165,7 @@ class FindAllLegalPersonsServiceTest {
         assertEquals("Razão Social LTDA", found.getCorporateName());
         assertEquals("Nome Fantasia", found.getTradeName());
         assertEquals("Display Name", found.getDisplayName());
-        assertEquals("6201-5/00", found.getMainCnaeCode());
+        assertEquals("6201500", found.getMainCnaeCode());
         assertEquals(RegistrationStatus.ACTIVE, found.getRegistrationStatus());
         assertEquals(CompanyStatus.ACTIVE, found.getCompanyStatus());
         assertEquals("São Paulo", found.getAddress().getCity());

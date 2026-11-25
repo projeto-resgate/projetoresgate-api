@@ -79,8 +79,8 @@ class UpdateFamilyGroupServiceTest {
     }
 
     @Test
-    @DisplayName("Deve manter o endereço atual quando nenhum endereço for enviado")
-    void handle_ShouldKeepAddressWhenCommandAddressIsNull() {
+    @DisplayName("Endereço ausente deve deixar a família sem endereço, como no POST")
+    void handle_ShouldRemoveAddressWhenCommandAddressIsNull() {
         UUID id = UUID.randomUUID();
         Address address = Address.create(null, null, "01310-100", "1000", null, "Apto 101", "Bela Vista", "São Paulo", "SP");
         FamilyGroup familyGroup = FamilyGroup.create("FAM-1", "Família Silva", null, null, null, null, null, 4, address);
@@ -94,7 +94,7 @@ class UpdateFamilyGroupServiceTest {
         FamilyGroup result = service.handle(command);
 
         assertEquals("Família Souza", result.getName());
-        assertSame(address, result.getAddress());
+        assertNull(result.getAddress());
         assertEquals(2, result.getNumberOfResidents());
     }
 
@@ -108,7 +108,7 @@ class UpdateFamilyGroupServiceTest {
                 id, "Família Souza", null, null, null, null, null, null, null);
 
         when(repository.findByIdOrThrow(id)).thenReturn(familyGroup);
-        when(repository.existsByNameAndIdNot(anyString(), any(UUID.class))).thenReturn(true);
+        when(repository.existsByNameIgnoreCaseAndIdNot(anyString(), any(UUID.class))).thenReturn(true);
 
         InternalException exception = assertThrows(InternalException.class, () -> service.handle(command));
 

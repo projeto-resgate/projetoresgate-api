@@ -6,12 +6,14 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.reposit
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.RequestEmailConfirmationUseCase;
 import com.projetoresgate.projetoresgate_api.infrastructure.email.JavaMailEmailService;
+import com.projetoresgate.projetoresgate_api.infrastructure.security.EmailRateLimiter;
 import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
+import com.projetoresgate.projetoresgate_api.shared.util.UrlUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 public class RequestEmailConfirmationService implements RequestEmailConfirmationUseCase {
@@ -20,27 +22,42 @@ public class RequestEmailConfirmationService implements RequestEmailConfirmation
     private final EmailConfirmationTokenRepository emailConfirmationTokenRepository;
     private final JavaMailEmailService javaMailEmailService;
 
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
+
+    private final EmailRateLimiter emailRateLimiter;
+
     public RequestEmailConfirmationService(NaturalPersonRepository naturalPersonRepository,
                                            EmailConfirmationTokenRepository emailConfirmationTokenRepository,
-                                           JavaMailEmailService javaMailEmailService) {
+                                           JavaMailEmailService javaMailEmailService,
+                                           EmailRateLimiter emailRateLimiter) {
         this.naturalPersonRepository = naturalPersonRepository;
         this.emailConfirmationTokenRepository = emailConfirmationTokenRepository;
         this.javaMailEmailService = javaMailEmailService;
+        this.emailRateLimiter = emailRateLimiter;
     }
 
     @Override
     @Transactional
     public void handle(String email) {
-        Optional<NaturalPerson> personOptional = naturalPersonRepository.findByEmail(email);
-        if (personOptional.isEmpty()) {
+        if (!emailRateLimiter.tryAcquire(email)) {
             return;
         }
-        NaturalPerson person = personOptional.get();
+        naturalPersonRepository.findAllByEmailIgnoreCase(email).stream()
+                .filter(person -> !person.isEmailVerified())
+                .forEach(this::sendConfirmation);
+    }
 
-        if (person.isEmailVerified()) {
+    @Override
+    @Transactional
+    public void handle(NaturalPerson person) {
+        if (person.isEmailVerified() || !emailRateLimiter.tryAcquire(person.getEmail())) {
             return;
         }
+        sendConfirmation(person);
+    }
 
+    private void sendConfirmation(NaturalPerson person) {
         emailConfirmationTokenRepository.deleteByNaturalPerson(person);
 
         String plainTextToken = TokenUtils.generateSecureToken();
@@ -54,7 +71,7 @@ public class RequestEmailConfirmationService implements RequestEmailConfirmation
     }
 
     private String getConfirmationEmailHtml(String token) {
-        String confirmationUrl = "http://localhost:3000/confirm-email/" + token;
+        String confirmationUrl = UrlUtils.removeTrailingSlashes(frontendUrl) + "/confirm-email/" + token;
 
         return """
                 <html>

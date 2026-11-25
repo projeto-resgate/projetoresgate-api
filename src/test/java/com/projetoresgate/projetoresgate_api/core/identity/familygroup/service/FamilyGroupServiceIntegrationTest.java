@@ -1,5 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.identity.familygroup.service;
 
+import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import com.projetoresgate.projetoresgate_api.core.identity.address.usecase.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.api.dto.FamilyGroupNaturalPersonResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.api.dto.FamilyGroupResponse;
@@ -21,7 +22,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -226,6 +227,27 @@ class FamilyGroupServiceIntegrationTest extends PostgresIntegrationTest {
         entityManager.clear();
 
         assertTrue(familyGroupRepository.findById(saved.getId()).isEmpty());
+    }
+
+    @Test
+    @DisplayName("Excluir o grupo familiar deve manter os vínculos das pessoas e excluir o endereço")
+    void handle_ShouldKeepMembersAndDeleteAddressWhenSoftDeleting() {
+        NaturalPerson person = naturalPersonRepository.save(
+                NaturalPerson.create("Maria Silva", "maria@email.com", null, "52998224725", null,
+                        null, null, null, null));
+        FamilyGroup saved = createService.handle(buildCommand("Família Souza", "São Paulo"));
+        familyGroupRepository.flush();
+        familyGroupRepository.linkNaturalPerson(saved.getId(), person.getId());
+        UUID addressId = saved.getAddress().getId();
+
+        new SoftDeleteFamilyGroupService(familyGroupRepository)
+                .handle(new SoftDeleteFamilyGroupCommand(saved.getId()));
+        familyGroupRepository.flush();
+        entityManager.clear();
+
+        assertTrue(familyGroupRepository.findById(saved.getId()).isEmpty());
+        assertTrue(familyGroupRepository.existsNaturalPersonMember(saved.getId(), person.getId()));
+        assertNull(entityManager.find(Address.class, addressId));
     }
 
     @Test

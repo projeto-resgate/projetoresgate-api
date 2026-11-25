@@ -83,6 +83,11 @@ public class Program extends AuditableEntity {
             return this;
         }
 
+        public Updater institutionId(UUID institutionId) {
+            Program.this.institutionId = institutionId;
+            return this;
+        }
+
         public Program apply() {
             Program.this.validate();
             return Program.this;

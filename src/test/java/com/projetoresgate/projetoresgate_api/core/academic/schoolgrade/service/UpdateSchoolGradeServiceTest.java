@@ -41,7 +41,7 @@ class UpdateSchoolGradeServiceTest {
         SchoolGrade existing = SchoolGrade.create("Primeiro ano", null, 1);
         UUID id = existing.getId();
         when(repository.findByIdOrThrow(id)).thenReturn(existing);
-        when(repository.existsByNameAndIdNot("Segundo ano", id)).thenReturn(false);
+        when(repository.existsByNameIgnoreCaseAndIdNot("Segundo ano", id)).thenReturn(false);
         when(repository.save(any(SchoolGrade.class))).thenAnswer(i -> i.getArgument(0));
 
         SchoolGrade result = service.handle(new UpdateSchoolGradeCommand(id, "Segundo ano", null, 2));
@@ -96,7 +96,7 @@ class UpdateSchoolGradeServiceTest {
         SchoolGrade existing = SchoolGrade.create("Primeiro ano", null, 1);
         UUID id = existing.getId();
         when(repository.findByIdOrThrow(id)).thenReturn(existing);
-        when(repository.existsByNameAndIdNot("Segundo ano", id)).thenReturn(true);
+        when(repository.existsByNameIgnoreCaseAndIdNot("Segundo ano", id)).thenReturn(true);
 
         InternalException exception = assertThrows(InternalException.class,
                 () -> service.handle(new UpdateSchoolGradeCommand(id, "Segundo ano", null, 2)));
@@ -111,7 +111,7 @@ class UpdateSchoolGradeServiceTest {
         SchoolGrade existing = SchoolGrade.create("Primeiro ano", null, 1);
         UUID id = existing.getId();
         when(repository.findByIdOrThrow(id)).thenReturn(existing);
-        when(repository.existsByNameAndIdNot("Primeiro ano", id)).thenReturn(false);
+        when(repository.existsByNameIgnoreCaseAndIdNot("Primeiro ano", id)).thenReturn(false);
         when(repository.save(any(SchoolGrade.class))).thenAnswer(i -> i.getArgument(0));
 
         SchoolGrade result = service.handle(new UpdateSchoolGradeCommand(id, "Primeiro ano", null, 5));
@@ -131,7 +131,7 @@ class UpdateSchoolGradeServiceTest {
                 () -> service.handle(new UpdateSchoolGradeCommand(id, "   ", null, 2)));
 
         assertEquals("O nome da série escolar não pode ser vazio.", exception.getMessage());
-        verify(repository, never()).existsByNameAndIdNot(any(), any());
+        verify(repository, never()).existsByNameIgnoreCaseAndIdNot(any(), any());
         verify(repository, never()).save(any());
     }
 

@@ -1,6 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.projetoresgate.projetoresgate_api.config.security.WithMockCustomUser;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.api.dto.SchoolGradeNameResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.api.dto.SchoolGradeResponse;
@@ -17,7 +17,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -324,5 +324,62 @@ class SchoolGradeControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(command)))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("JSON mal formatado deve retornar 400")
+    void create_ShouldReturn400WhenJsonIsMalformed() throws Exception {
+        mockMvc.perform(post("/school-grade")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{lixo"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("O corpo da requisição está ausente ou mal formatado."));
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("Tipo inválido em campo do JSON deve retornar 400 indicando o campo")
+    void create_ShouldReturn400WithFieldWhenValueHasWrongType() throws Exception {
+        mockMvc.perform(post("/school-grade")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Série\",\"gradeOrder\":\"abc\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("gradeOrder"));
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("UUID inválido no caminho deve retornar 400")
+    void findById_ShouldReturn400WhenIdIsNotUuid() throws Exception {
+        mockMvc.perform(get("/school-grade/abc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("O parâmetro 'id' tem um valor inválido: 'abc'."));
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("Parâmetro numérico inválido deve retornar 400")
+    void findAll_ShouldReturn400WhenPageIsNotNumber() throws Exception {
+        mockMvc.perform(get("/school-grade").param("page", "abc"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("Método não suportado deve retornar 405")
+    void patch_ShouldReturn405() throws Exception {
+        mockMvc.perform(patch("/school-grade/" + UUID.randomUUID()))
+                .andExpect(status().isMethodNotAllowed());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("Content-Type diferente de JSON deve retornar 415")
+    void create_ShouldReturn415WhenContentTypeIsText() throws Exception {
+        mockMvc.perform(post("/school-grade")
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content("x"))
+                .andExpect(status().isUnsupportedMediaType());
     }
 }

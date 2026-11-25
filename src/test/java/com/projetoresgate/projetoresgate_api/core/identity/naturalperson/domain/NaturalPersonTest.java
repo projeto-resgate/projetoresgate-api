@@ -133,4 +133,21 @@ class NaturalPersonTest {
 
         assertTrue(person.isEmailVerified());
     }
+
+    @Test
+    @DisplayName("Deve guardar CPF, RG e telefones sem máscara, inclusive ao editar")
+    void createAndUpdate_ShouldRemoveMasks() {
+        NaturalPerson person = NaturalPerson.create("Ana", "ana@test.com", null, "123.456.789-09", "mg-12.345.678",
+                null, null, "(47) 3333-4444", "(47) 99999-0000");
+
+        assertEquals("12345678909", person.getCpf());
+        assertEquals("MG12345678", person.getRg());
+        assertEquals("4733334444", person.getPhone());
+        assertEquals("47999990000", person.getCellphone());
+
+        person.update().rg("123.456.789-09").cellphone("(11) 98888-7777").apply();
+
+        assertEquals("12345678909", person.getRg());
+        assertEquals("11988887777", person.getCellphone());
+    }
 }

@@ -1,6 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.academic.classgroup.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.projetoresgate.projetoresgate_api.config.security.WithMockCustomUser;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.api.dto.ClassGroupResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.api.dto.ClassGroupSummaryResponse;
@@ -18,7 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -148,7 +148,7 @@ class ClassGroupControllerTest {
         when(updateUseCase.handle(any(UpdateClassGroupCommand.class))).thenReturn(givenResponse());
 
         UpdateClassGroupCommand body = new UpdateClassGroupCommand(
-                null, null, null, null, 40, null, null, null, true);
+                null, PROGRAM_ID, INSTITUTION_ID, null, 40, LocalDateTime.of(2026, 2, 1, 8, 0), 6, null, true);
 
         mockMvc.perform(put("/class-group/{id}", CLASS_GROUP_ID)
                         .with(csrf())
@@ -159,6 +159,22 @@ class ClassGroupControllerTest {
         ArgumentCaptor<UpdateClassGroupCommand> captor = ArgumentCaptor.forClass(UpdateClassGroupCommand.class);
         verify(updateUseCase).handle(captor.capture());
         assertEquals(CLASS_GROUP_ID, captor.getValue().id());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("PUT /class-group/{id} - Deve exigir os mesmos campos obrigatórios do POST")
+    void update_ShouldReturn400WhenRequiredFieldIsMissing() throws Exception {
+        UpdateClassGroupCommand body = new UpdateClassGroupCommand(
+                null, null, INSTITUTION_ID, null, 40, null, 6, null, true);
+
+        mockMvc.perform(put("/class-group/{id}", CLASS_GROUP_ID)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isBadRequest());
+
+        verify(updateUseCase, never()).handle(any());
     }
 
     @Test

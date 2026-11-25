@@ -29,7 +29,7 @@ public class CreateFamilyGroupService implements CreateFamilyGroupUseCase {
             throw new InternalException("O comando não pode ser nulo.");
         }
 
-        if (nonNull(command.name()) && !command.name().isBlank() && repository.existsByName(command.name())) {
+        if (nonNull(command.name()) && !command.name().isBlank() && repository.existsByNameIgnoreCase(command.name())) {
             throw new InternalException("Já existe um grupo familiar cadastrado com este nome.");
         }
 

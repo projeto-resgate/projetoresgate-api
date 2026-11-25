@@ -1,0 +1,15 @@
+.git
+.github
+.idea
+.vscode
+.mvn/wrapper/maven-wrapper.jar
+target
+docs
+deploy
+docker
+docker-compose*.yml
+*.md
+.env
+.env.*
+*.log
+*.iml

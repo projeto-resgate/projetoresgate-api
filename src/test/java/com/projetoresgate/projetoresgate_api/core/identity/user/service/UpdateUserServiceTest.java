@@ -5,6 +5,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.user.domain.enums.Use
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.command.UpdateUserCommand;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
+import com.projetoresgate.projetoresgate_api.infrastructure.services.IRefreshTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -31,6 +33,9 @@ class UpdateUserServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private IRefreshTokenService refreshTokenService;
 
     @InjectMocks
     private UpdateUserService service;
@@ -61,12 +66,13 @@ class UpdateUserServiceTest {
         assertEquals(Set.of(UserRole.ADMIN), user.getRoles());
         assertEquals(0L, user.getTokenVersion());
         verify(repository).save(user);
+        verifyNoInteractions(refreshTokenService);
     }
 
     @Test
     @DisplayName("Deve alterar a senha quando a senha atual estiver correta")
     void handle_ShouldChangePasswordWhenCurrentPasswordIsCorrect() {
-        UpdateUserCommand command = new UpdateUserCommand(userId, null, null, "new-password", "old-password");
+        UpdateUserCommand command = new UpdateUserCommand(userId, "Old Name", "oldnick", "new-password", "old-password");
 
         when(repository.findById(userId)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("old-password", "encoded-old-password")).thenReturn(true);
@@ -78,12 +84,14 @@ class UpdateUserServiceTest {
         assertEquals("encoded-new-password", user.getPassword());
         verify(passwordEncoder).encode("new-password");
         verify(repository).save(user);
+        verify(refreshTokenService).revokeAllUserTokens(user);
+        assertEquals(1L, user.getTokenVersion(), "trocar a senha invalida os access tokens");
     }
 
     @Test
     @DisplayName("Deve lançar exceção ao alterar senha sem informar a senha atual")
     void handle_ShouldFailWhenChangingPasswordWithoutCurrentPassword() {
-        UpdateUserCommand command = new UpdateUserCommand(userId, null, null, "new-password", null);
+        UpdateUserCommand command = new UpdateUserCommand(userId, "Old Name", "oldnick", "new-password", null);
 
         when(repository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -96,7 +104,7 @@ class UpdateUserServiceTest {
     @Test
     @DisplayName("Deve lançar exceção quando a senha atual estiver incorreta")
     void handle_ShouldFailWhenCurrentPasswordIsWrong() {
-        UpdateUserCommand command = new UpdateUserCommand(userId, null, null, "new-password", "wrong-password");
+        UpdateUserCommand command = new UpdateUserCommand(userId, "Old Name", "oldnick", "new-password", "wrong-password");
 
         when(repository.findById(userId)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrong-password", "encoded-old-password")).thenReturn(false);
@@ -118,5 +126,15 @@ class UpdateUserServiceTest {
         assertEquals("Usuário não encontrado.", exception.getMessage());
 
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Apelido ausente no PUT deve ficar vazio, como no cadastro")
+    void handle_ShouldClearNicknameWhenMissing() {
+        when(repository.findById(userId)).thenReturn(Optional.of(user));
+
+        service.handle(new UpdateUserCommand(userId, "Old Name", null, null, null));
+
+        assertNull(user.getNickname());
     }
 }

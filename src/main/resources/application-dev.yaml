@@ -1,0 +1,82 @@
+spring:
+  application:
+    name: projetoresgate-api
+  lifecycle:
+    timeout-per-shutdown-phase: 25s
+  datasource:
+    url: jdbc:postgresql://localhost:5432/projetoresgatedb
+    username: admin
+    password: admin
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  messages:
+    encoding: UTF-8
+  mail:
+    host: localhost
+    port: 1025
+    username: no-reply@projetoresgate.local
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+          connectiontimeout: 5000
+          timeout: 10000
+          writetimeout: 10000
+
+api:
+  security:
+    token:
+      secret: development
+  cookie:
+    secure: false
+    same-site: Lax
+  rate-limit:
+    max-requests: 20
+    window-seconds: 60
+    public:
+      max-requests: 100
+    general:
+      max-requests: 1000
+    email:
+      max-requests: 50
+  user-registration:
+    public: true
+
+cors:
+  allowed-origins: "http://localhost:*"
+
+app:
+  frontend-url: "http://localhost:5173"
+
+management:
+  health:
+    mail:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,prometheus"
+  endpoint:
+    health:
+      probes:
+        enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+server:
+  shutdown: graceful
+  error:
+    include-stacktrace: never
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

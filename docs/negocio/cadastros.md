@@ -39,7 +39,7 @@ Tela única de **cadastro e listagem** de pessoas físicas: responsáveis, aluno
 | Data de nascimento                | Não pode ser no futuro                                           |
 | CPF e RG                          | CPF **não se repete** entre pessoas                              |
 | Telefone, celular, e-mail         | Pedidos para **todos** (não só para o responsável)               |
-| Local de trabalho                 | Aparece na tela atual do Access (campo "Trabalho")               |
+| Local de trabalho                 | Empresa ou instituição **já cadastrada** onde a pessoa trabalha. Opcional; pode ser trocado ou removido a qualquer momento (campo "Trabalho" da tela atual do Access) |
 
 - Na tela da pessoa devem aparecer **as informações do grupo familiar dela** (ex.: no cadastro da mãe, o grupo
   familiar da mãe).

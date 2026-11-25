@@ -1,6 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.identity.user.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.projetoresgate.projetoresgate_api.config.security.WithMockCustomUser;
 import com.projetoresgate.projetoresgate_api.core.identity.user.api.dto.AuthenticationResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.user.api.dto.RefreshTokenResponse;
@@ -21,7 +21,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -40,7 +40,8 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = UserController.class)
+@WebMvcTest(controllers = UserController.class, properties = {"api.user-registration.public=true", "api.rate-limit.max-requests=1000",
+        "springdoc.swagger-ui.enabled=true"})
 @Import(SecurityConfigurations.class)
 @DisplayName("UserController - Test")
 class UserControllerTest {
@@ -116,6 +117,7 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(query)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value("mock.jwt.token"))
+                .andExpect(jsonPath("$.refreshToken").doesNotExist())
                 .andExpect(jsonPath("$.name").value("Test User"));
     }
 
@@ -152,6 +154,12 @@ class UserControllerTest {
         mockMvc.perform(delete("/user")
                         .with(csrf()))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Swagger ligado (dev): a documentação da API é acessível sem login (não é barrada pela segurança)")
+    void swagger_shouldNotRequireAuthentication_whenEnabled() throws Exception {
+        mockMvc.perform(get("/v3/api-docs")).andExpect(status().isNotFound());
     }
 
     @Test
@@ -230,6 +238,36 @@ class UserControllerTest {
                 .andExpect(status().isOk());
 
         verify(updateUserUseCase).handle(any(UpdateUserCommand.class));
+        verify(cookieService, never()).removeRefreshTokenCookie(any(HttpServletResponse.class));
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("PUT /user - Ao trocar a senha deve apagar o cookie de refresh (as sessões foram encerradas)")
+    void updateUser_shouldRemoveRefreshCookie_whenPasswordChanged() throws Exception {
+        UpdateUserCommand command = new UpdateUserCommand(null, "Nome", null, "new-password", "old-password");
+
+        mockMvc.perform(put("/user")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(command)))
+                .andExpect(status().isOk());
+
+        verify(updateUserUseCase).handle(any(UpdateUserCommand.class));
+        verify(cookieService).removeRefreshTokenCookie(any(HttpServletResponse.class));
+    }
+
+    @Test
+    @DisplayName("PUT /user - Deve retornar 400 sem o nome, como no cadastro")
+    @WithMockCustomUser
+    void updateUser_shouldReturn400WhenNameIsMissing() throws Exception {
+        mockMvc.perform(put("/user")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nickname\":\"x\"}"))
+                .andExpect(status().isBadRequest());
+
+        verify(updateUserUseCase, never()).handle(any());
     }
 
     @Test
@@ -333,11 +371,11 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("POST /user/refresh - Deve retornar 400 se o cookie não for enviado")
-    void refresh_shouldReturn400WhenCookieIsMissing() throws Exception {
+    @DisplayName("POST /user/refresh - Deve retornar 401 se o cookie não for enviado")
+    void refresh_shouldReturn401WhenCookieIsMissing() throws Exception {
         mockMvc.perform(post("/user/refresh")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isUnauthorized());
 
         verify(refreshTokenUseCase, never()).handle(any());
     }

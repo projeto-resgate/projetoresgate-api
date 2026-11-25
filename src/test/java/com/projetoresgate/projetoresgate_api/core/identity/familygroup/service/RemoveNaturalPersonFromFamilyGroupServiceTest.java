@@ -86,4 +86,36 @@ class RemoveNaturalPersonFromFamilyGroupServiceTest {
         assertEquals(groupId, command.familyGroupId());
         assertEquals(personId, command.naturalPersonId());
     }
+
+    @Test
+    @DisplayName("Não deve desvincular o educando do seu único grupo familiar")
+    void handle_ShouldRejectLearnerWithoutOtherFamily() {
+        UUID groupId = UUID.randomUUID();
+        UUID personId = UUID.randomUUID();
+
+        when(familyGroupRepository.findByIdOrThrow(groupId))
+                .thenReturn(FamilyGroup.create("FAM-1", "Família Silva", null, null, null, null, null, 4, null));
+        when(familyGroupRepository.isLearnerOnlyInFamilyGroup(groupId, personId)).thenReturn(true);
+
+        assertThrows(IllegalStateException.class,
+                () -> service.handle(new RemoveNaturalPersonFromFamilyGroupCommand(groupId, personId)));
+
+        verify(familyGroupRepository, never()).unlinkNaturalPerson(any(), any());
+    }
+
+    @Test
+    @DisplayName("Não deve desvincular quem é responsável por educando do grupo familiar")
+    void handle_ShouldRejectResponsibleOfLearnerInFamily() {
+        UUID groupId = UUID.randomUUID();
+        UUID personId = UUID.randomUUID();
+
+        when(familyGroupRepository.findByIdOrThrow(groupId))
+                .thenReturn(FamilyGroup.create("FAM-1", "Família Silva", null, null, null, null, null, 4, null));
+        when(familyGroupRepository.isResponsibleForLearnerInFamilyGroup(groupId, personId)).thenReturn(true);
+
+        assertThrows(IllegalStateException.class,
+                () -> service.handle(new RemoveNaturalPersonFromFamilyGroupCommand(groupId, personId)));
+
+        verify(familyGroupRepository, never()).unlinkNaturalPerson(any(), any());
+    }
 }

@@ -7,6 +7,8 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import static java.util.Objects.isNull;
+
 public record CollaboratorResponse(
         UUID id,
         UUID naturalPersonId,
@@ -22,10 +24,10 @@ public record CollaboratorResponse(
         return new CollaboratorResponse(
                 entity.getId(),
                 entity.getNaturalPersonId(),
-                naturalPerson == null ? null : naturalPerson.getName(),
-                naturalPerson == null ? null : naturalPerson.getCpf(),
+                isNull(naturalPerson) ? null : naturalPerson.getName(),
+                isNull(naturalPerson) ? null : naturalPerson.getCpf(),
                 entity.getLegalPersonId(),
-                legalPerson == null ? null : legalPerson.getDisplayName(),
+                isNull(legalPerson) ? null : legalPerson.getName(),
                 entity.isVoluntary(),
                 entity.getDateCreated()
         );

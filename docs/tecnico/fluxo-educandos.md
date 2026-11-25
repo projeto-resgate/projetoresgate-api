@@ -30,8 +30,8 @@ resultados, ordenados por nome). O termo é comparado, com busca **parcial** (co
 |-----------|---------------------------------------------------------------------|
 | Nome      | Sem diferenciar maiúsculas/minúsculas                               |
 | Apelido   | Sem diferenciar maiúsculas/minúsculas                               |
-| CPF       | Só os **dígitos** do termo (pontuação é ignorada)                   |
-| RG        | Só **letras e números** do termo, sem diferenciar maiúsculas        |
+| CPF       | Contém o termo (enviar **sem máscara**: o CPF é gravado só com dígitos) |
+| RG        | Contém o termo, sem diferenciar maiúsculas (enviar sem máscara)     |
 
 Os critérios são combinados com **OU**: basta um bater. Sem termo, devolve as primeiras pessoas por nome.
 
@@ -116,18 +116,33 @@ stateDiagram-v2
     direction LR
     [*] --> ACTIVE
     ACTIVE --> DROPPED_OUT : POST /learner/id/dropout<br/>{reason*, eventDate?}
-    DROPPED_OUT --> ACTIVE : POST /learner/id/reactivate<br/>{note?}
+    DROPPED_OUT --> ACTIVE : POST /learner/id/reactivate<br/>{note?, classGroupId?}
     note right of DROPPED_OUT
         Vínculos com turmas
         ficam active = false
     end note
 ```
 
+O educando **não é excluído**: não existe `DELETE /learner/{id}`. O ciclo de vida é só desistência e reativação.
+
+### Situação exibida na listagem (`status`)
+
+`GET /learner` devolve em cada item o campo `status`, **calculado** (não é gravado) a partir do cadastro e das turmas:
+
+| `status`      | Regra                                                                                                    |
+|---------------|----------------------------------------------------------------------------------------------------------|
+| `ACTIVE`      | Cadastro ativo **e** vínculo ativo em pelo menos uma turma **ativa e em andamento agora** (hoje entre início e fim) |
+| `NO_CLASS`    | Cadastro ativo, mas sem turma em andamento: turma futura, encerrada, suspensa ou vínculo inativo         |
+| `DROPPED_OUT` | Desistiu e não foi reativado, mesmo que ainda tenha vínculo com turma                                    |
+
+O filtro `?status=` aceita os mesmos três valores. Quem aparece em duas turmas em andamento aparece **uma só vez**.
+O status gravado no cadastro (`Learner.status`) continua tendo só `ACTIVE` e `DROPPED_OUT`.
+
 ### Desistir (`dropout`)
 
 1. Falha com **409** se já estiver `DROPPED_OUT`.
-2. Registra `LearnerStatusHistory(DROPOUT)` — o **motivo é obrigatório** (400 se vazio). O histórico é gravado, mas hoje **nenhum endpoint o expõe**.
-3. A data do evento é a informada ou **hoje**.
+2. Registra `LearnerStatusHistory(DROPOUT)` — o **motivo é obrigatório** (400 se vazio). O histórico é consultável em `GET /learner/{id}/status-history`.
+3. A data do evento é a informada ou **hoje**; data futura dá **400**.
 4. Muda o status para `DROPPED_OUT`.
 5. **Desativa todos os vínculos do educando com turmas** (`ClassLearner.active = false`) e devolve na
    resposta **quantos vínculos foram desativados** (`deactivatedClassLinks`).
@@ -136,19 +151,41 @@ Tudo numa só transação: se qualquer etapa falhar, nada é gravado.
 
 ### Reativar (`reactivate`)
 
-1. Falha com **409** se o educando já está `ACTIVE`.
-2. Registra `LearnerStatusHistory(REACTIVATION)`, data de **hoje** (não é parametrizável).
-3. Muda o status para `ACTIVE`.
-4. ⚠️ **Não reativa os vínculos com turmas.** Eles continuam `active = false`; a pessoa precisa ser
-   revinculada/reativada manualmente em cada turma. Decisão intencional por ora (a turma pode já ter
-   mudado), mas fácil de esquecer.
+`POST /learner/{id}/reactivate {note?, classGroupId?}`
+
+| Situação do educando | `classGroupId` | Efeito                                                                                          |
+|----------------------|----------------|-------------------------------------------------------------------------------------------------|
+| `DROPPED_OUT`        | ausente        | Cadastro volta a `ACTIVE`, com `LearnerStatusHistory(REACTIVATION)` (data de **hoje**). **Nenhum vínculo é reativado** |
+| `DROPPED_OUT`        | informado      | Cadastro volta a `ACTIVE` **e** o vínculo **só daquela turma** é criado ou ativado               |
+| `ACTIVE`             | informado      | Só o vínculo daquela turma é criado ou ativado. **Sem erro e sem novo histórico**                |
+| `ACTIVE`             | ausente        | **409** (o educando não está desistente)                                                        |
+
+- Se já existe vínculo com a turma, mesmo inativo, ele é **reativado** (não se cria outro: há índice único por turma e educando). Vínculo já ativo não gera erro.
+- Os vínculos das **outras** turmas continuam inativos.
+- Turma inexistente ou excluída: **404**, e a reativação inteira é desfeita.
+- Educando cuja **pessoa física foi excluída**: **404** ao vincular (a pessoa precisa existir).
+- Tudo numa só transação.
+
+### Histórico (`status-history`)
+
+`GET /learner/{id}/status-history` lista os eventos do **mais recente para o mais antigo**:
+
+| Campo          | Conteúdo                                                        |
+|----------------|-----------------------------------------------------------------|
+| `id`           | Id do evento                                                    |
+| `type`         | `DROPOUT` ou `REACTIVATION`                                     |
+| `reason`       | Motivo da desistência ou observação da reativação               |
+| `eventDate`    | Data do evento (informada ou a de hoje)                         |
+| `registeredAt` | Data e hora em que o registro foi feito                         |
+
+Lista vazia se nunca houve evento; **404** se o educando não existir.
 
 ## Excluir
 
 | Operação                       | Efeito                                                                                          |
 |--------------------------------|-------------------------------------------------------------------------------------------------|
-| `DELETE /family-group/{id}`    | Soft delete só do grupo. Pessoas e educandos **não** são afetados.                               |
-| `DELETE .../natural-person/{id}` (da família) | Só **desvincula** a pessoa da família (409 se não estava vinculada). Não exclui a pessoa. |
+| `DELETE /family-group/{id}`    | Soft delete do grupo e do endereço dele. Pessoas, educandos e os **vínculos** das pessoas com o grupo continuam: o educando segue editável informando o `familyGroupId` excluído. Novos cadastros com essa família dão 404. |
+| `DELETE .../natural-person/{id}` (da família) | Só **desvincula** a pessoa da família. Não exclui a pessoa. **409** se: não estava vinculada; é educando e esta é a única família ativa dela; ou é responsável por um educando desta família. |
 
 Ver [tabela completa de cascatas](regras-implementadas.md#exclusão-e-cascatas).
 

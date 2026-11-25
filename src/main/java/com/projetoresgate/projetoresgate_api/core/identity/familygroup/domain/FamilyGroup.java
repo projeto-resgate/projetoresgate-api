@@ -52,7 +52,7 @@ public class FamilyGroup extends AuditableEntity {
     @Column(name = "number_of_residents")
     private Integer numberOfResidents;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "address_id")
     private Address address;
 

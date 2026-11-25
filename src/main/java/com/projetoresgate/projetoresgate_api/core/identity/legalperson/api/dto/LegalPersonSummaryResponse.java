@@ -12,7 +12,7 @@ public record LegalPersonSummaryResponse(
     public static LegalPersonSummaryResponse fromEntity(LegalPerson entity) {
         return new LegalPersonSummaryResponse(
                 entity.getId(),
-                entity.getDisplayName(),
+                entity.getName(),
                 entity.getCnpj()
         );
     }

@@ -77,6 +77,8 @@ graph LR
 | **Papel** (`NaturalPersonRole`) | Marca derivada: `LEARNER` ou `RESPONSIBLE`. Mantida automaticamente (ver [educandos](fluxo-educandos.md)).       |
 | **Soft delete**          | Exclusão lógica: a linha ganha `deleted_at` e some das consultas. Nada é apagado fisicamente.                   |
 | **Desistência** (`DROPOUT`) | Educando que sai da ONG. Fica registrada no histórico, com motivo obrigatório.                               |
+| **Situação do educando** (`status`) | Calculada na listagem: `ACTIVE` (cursando turma em andamento), `NO_CLASS` (ativo sem turma em andamento) ou `DROPPED_OUT`. |
+| **Local de trabalho** (`workplaceId`) | Pessoa física pode apontar para uma pessoa jurídica cadastrada onde trabalha. |
 
 ## Princípios que atravessam o sistema
 

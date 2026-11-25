@@ -26,7 +26,6 @@ public record UpdateLearnerCommand(
         @Size(max = 255, message = "A matrícula escolar não pode exceder 255 caracteres")
         String schoolEnrollment,
         @Valid
-        @NotNull(message = "A lista de responsáveis é obrigatória")
         List<ResponsibleCommand> responsibleList
 ) {
     public UpdateLearnerCommand withId(UUID id) {

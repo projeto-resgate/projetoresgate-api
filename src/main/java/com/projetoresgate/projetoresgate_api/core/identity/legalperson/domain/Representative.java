@@ -1,6 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain;
 
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
+import com.projetoresgate.projetoresgate_api.shared.util.MaskUtils;
 import jakarta.persistence.Embeddable;
 import org.springframework.util.StringUtils;
 
@@ -33,6 +34,8 @@ public class Representative implements Serializable {
     }
 
     public void validate() {
+        this.cellphone = MaskUtils.unmask(this.cellphone);
+        this.phone = MaskUtils.unmask(this.phone);
         if (!StringUtils.hasText(this.name)) {
             throw new InternalException("O nome do representante não pode ser vazio.");
         }

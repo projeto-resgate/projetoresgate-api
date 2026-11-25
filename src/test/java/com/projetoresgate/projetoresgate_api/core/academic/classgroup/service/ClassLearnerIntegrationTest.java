@@ -4,6 +4,7 @@ import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.Cla
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.ClassLearner;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassGroupRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassLearnerRepository;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassLearnerRow;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Learner;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.repository.LearnerRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.Program;
@@ -22,14 +23,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -102,12 +102,12 @@ class ClassLearnerIntegrationTest extends PostgresIntegrationTest {
         repository.flush();
         entityManager.clear();
 
-        Page<ClassLearner> result = repository.findAllByClassGroupId(
+        Page<ClassLearnerRow> result = repository.findRowsByClassGroupId(
                 classGroup.getId(), null, null, PageRequest.of(0, 10));
 
         assertEquals(2, result.getTotalElements());
         assertEquals(List.of(bruno.getId(), ana.getId()),
-                result.getContent().stream().map(ClassLearner::getLearnerId).toList());
+                result.getContent().stream().map(ClassLearnerRow::getLearnerId).toList());
     }
 
     @Test
@@ -124,7 +124,7 @@ class ClassLearnerIntegrationTest extends PostgresIntegrationTest {
         entityManager.flush();
         entityManager.clear();
 
-        Page<ClassLearner> result = repository.findAllByClassGroupId(
+        Page<ClassLearnerRow> result = repository.findRowsByClassGroupId(
                 classGroup.getId(), null, "bruno", PageRequest.of(0, 10));
 
         assertEquals(1, result.getTotalElements());
@@ -151,8 +151,8 @@ class ClassLearnerIntegrationTest extends PostgresIntegrationTest {
         assertEquals(2, deactivated);
 
         Pageable pageable = PageRequest.of(0, 10);
-        assertFalse(repository.findAllByClassGroupId(classGroup.getId(), true, null, pageable).hasContent());
-        assertFalse(repository.findAllByClassGroupId(other.getId(), true, null, pageable).hasContent());
+        assertFalse(repository.findRowsByClassGroupId(classGroup.getId(), true, null, pageable).hasContent());
+        assertFalse(repository.findRowsByClassGroupId(other.getId(), true, null, pageable).hasContent());
     }
 
     @Test
@@ -165,7 +165,7 @@ class ClassLearnerIntegrationTest extends PostgresIntegrationTest {
         repository.softDeleteByClassGroupId(classGroup.getId());
         entityManager.clear();
 
-        assertFalse(repository.findAllByClassGroupId(
+        assertFalse(repository.findRowsByClassGroupId(
                 classGroup.getId(), null, null, PageRequest.of(0, 10)).hasContent());
     }
 }

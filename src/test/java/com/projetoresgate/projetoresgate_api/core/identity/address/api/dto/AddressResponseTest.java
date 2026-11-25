@@ -21,7 +21,7 @@ class AddressResponseTest {
         assertEquals(address.getId(), response.id());
         assertEquals("Rua", response.streetType());
         assertEquals("das Palmeiras", response.streetName());
-        assertEquals("01310-100", response.zipCode());
+        assertEquals("01310100", response.zipCode());
         assertEquals("1000", response.number());
         assertEquals("Próximo à praça", response.referencePoint());
         assertEquals("Apto 101", response.complement());

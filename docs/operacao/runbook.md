@@ -32,7 +32,7 @@ flowchart TD
     C -- não --> L[Veja os logs da API]
     C -- sim --> D{"Imagem é a esperada?<br/>docker inspect"}
     D -- não --> W[Veja logs do Watchtower]
-    D -- sim --> E{"curl -s -o /dev/null -w '%{http_code}'<br/>localhost:8080/actuator/health<br/>responde 401/403/200?"}
+    D -- sim --> E{"curl -s -o /dev/null -w '%{http_code}'<br/>localhost:8080/actuator/health<br/>responde 200?"}
     E -- "000 ou 5xx" --> L
     E -- ok --> F[Teste um login e uma listagem pelo front]
     F --> G[✅ Deploy validado]
@@ -46,8 +46,8 @@ docker inspect -f '{{.Config.Image}}' projetoresgate_api
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080/actuator/health
 ```
 
-> `/actuator/health` **exige autenticação** na configuração atual, então `401` ou `403` significa
-> *"a aplicação está de pé"*. `000` (sem conexão) ou `5xx` indicam problema.
+> `/actuator/health` é **público** e responde `200` com `{"status":"UP"}` quando a aplicação está de pé.
+> `000` (sem conexão), `503` (`DOWN`) ou outro `5xx` indicam problema.
 
 ## Rollback
 
@@ -84,8 +84,10 @@ A VM roda a tag `:latest`. Para voltar a uma versão específica, **fixe uma tag
 | `Connection refused` ao banco                      | `db` ainda iniciando ou parado                              | `dc ps`; a API aguarda o healthcheck do `db`                      |
 | Login funciona no Swagger mas **não no navegador** | Cookie `Secure` sem HTTPS, ou CORS/SameSite                 | Servir por HTTPS; conferir `CORS-ALLOWED-ORIGINS` e `API_COOKIE_*` |
 | `401` em tudo após o deploy                        | `API_SECURITY_TOKEN_SECRET` mudou                           | Esperado: sessões antigas caem. Usuários fazem login de novo.     |
-| `429 Too Many Requests` no login                   | Rate limit (5 por 60 s por IP)                              | Aguarde 1 min. Atrás de proxy, todos podem parecer o mesmo IP |
+| `429 Too Many Requests`                            | Limite de requisições por IP (login/senha 5/min; público 20/min; geral 300/min) | Veja o `Retry-After` da resposta. Se **todos** os usuários recebem 429 ao mesmo tempo, há proxy na frente e falta `API_RATE_LIMIT_TRUSTED_PROXIES=1` |
+| Usuário diz que "não chegou o e-mail" de reset/confirmação | Limite de **3 e-mails/hora** por destinatário (ignora em silêncio) | Aguarde 1 hora ou reinicie a API (zera os baldes). Confira também `API_RATE_LIMIT_EMAIL_*` |
 | E-mail de reset/confirmação não chega              | Credencial Gmail/senha de app, ou link com `localhost`      | `dc logs api \| grep -i mail` |
+| Backup gerado mas não chega ao Google Drive       | `rclone` sem configurar na VM, ou token expirado/revogado    | Veja o erro em `~/backups/backup.log`; refaça o [rclone config](infraestrutura-deploy.md#enviar-o-backup-para-o-google-drive-rclone) ou `rclone config reconnect remoto:` |
 | Atualização não aconteceu                          | Watchtower parado, imagem privada sem credencial, tag errada| `dc logs watchtower`; confira `docker login` / `REPO_USER`        |
 | Disco cheio                                        | Imagens antigas ou logs                                     | `docker system prune -af` (cuidado: remove imagens não usadas); `WATCHTOWER_CLEANUP` já ajuda |
 | Banco lento / VM sem memória                       | JVM + Postgres competindo                                   | `docker stats`; ajuste `MaxRAMPercentage` e `shared_buffers`      |
@@ -96,7 +98,7 @@ Em produção `POST /user` **não é público** (`API_USER_REGISTRATION_PUBLIC=f
 criado direto no banco. Na VM, em `~/projetoresgate`:
 
 ```bash
-set -a; . ./.env; set +a
+DB_USERNAME=$(grep '^DB_USERNAME=' .env | cut -d= -f2-)
 read -rsp 'E-mail do admin: ' ADMIN_EMAIL; echo
 read -rsp 'Senha do admin: ' ADMIN_PASS; echo        # `read -s` evita que apareça no histórico
 
@@ -122,7 +124,7 @@ volta a aceitar chamadas sem login: confira com
 
 | Frequência | Tarefa                                                                                   |
 |------------|------------------------------------------------------------------------------------------|
-| Diária     | Backup automático ([cron](infraestrutura-deploy.md#backup)) — confira que o arquivo apareceu |
+| Diária     | Backup automático ([cron](infraestrutura-deploy.md#backup), 1 vez por dia, às 3h) — confira em `~/backups/backup.log` que o arquivo apareceu |
 | Semanal    | `dc ps` e olhar `docker stats`/`df -h` (sinal precoce de disco/memória)                  |
 | Mensal     | `sudo apt update && sudo apt upgrade` (e reiniciar se pedir kernel novo)                 |
 | Trimestral | **Testar restauração do backup** num ambiente local                                      |

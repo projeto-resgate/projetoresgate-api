@@ -1,6 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.academic.classgroup.api.dto;
 
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.ClassCollaborator;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassCollaboratorRow;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -26,6 +27,19 @@ public record ClassCollaboratorResponse(
                 educatorCategoryItemName,
                 entity.isActive(),
                 entity.getDateCreated()
+        );
+    }
+
+    public static ClassCollaboratorResponse fromRow(ClassCollaboratorRow row) {
+        return new ClassCollaboratorResponse(
+                row.getId(),
+                row.getClassGroupId(),
+                row.getCollaboratorId(),
+                row.getCollaboratorName(),
+                row.getEducatorCategoryItemId(),
+                row.getEducatorCategoryItemName(),
+                row.getActive(),
+                row.getDateCreated()
         );
     }
 }

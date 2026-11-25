@@ -37,7 +37,9 @@ dois estão indicados.
 | **Lista de presença**         | Folha assinada pelos alunos em cada aula                                                             | ⬜ |
 | **Feedback**                  | Formulário de avaliação enviado aos pais ao fim do semestre                                          | ⬜ |
 | **Desistência / Desligamento**| Aluno que sai do projeto, **com motivo**                                                             | Desistência |
-| **Reativação / Retorno**      | Aluno que volta depois de desistir                                                                   | Reativação |
+| **Reativação / Retorno**      | Aluno que volta depois de desistir; pode voltar já a uma turma indicada                              | Reativação |
+| **Cursando**                  | Aluno ativo com pelo menos uma turma **em andamento hoje**                                           | — |
+| **Sem turma**                 | Aluno ativo no projeto, mas sem turma em andamento hoje (pausado, entre turmas ou aguardando)        | — |
 | **Renovação**                 | Direito de receber materiais de novo no ano seguinte; exige participação nas formações               | ⬜ |
 | **Drive interno**             | Espaço do próprio sistema para guardar documentos do aluno, termos e a documentação do projeto          | ⬜ |
 | **Termo de compromisso**      | Documento assinado pelo aluno/família ao entrar                                                      | ⬜ |

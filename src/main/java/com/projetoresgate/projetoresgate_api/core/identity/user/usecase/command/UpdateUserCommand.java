@@ -1,6 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.identity.user.usecase.command;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import java.util.UUID;
@@ -9,6 +10,7 @@ public record UpdateUserCommand(
         @JsonIgnore
         UUID id,
 
+        @NotBlank(message = "O nome não pode ser vazio.")
         String name,
 
         String nickname,

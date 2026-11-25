@@ -19,9 +19,9 @@ import java.util.UUID;
 @Repository
 public interface FamilyGroupRepository extends JpaRepository<FamilyGroup, UUID>, JpaSpecificationExecutor<FamilyGroup> {
 
-    boolean existsByName(String name);
+    boolean existsByNameIgnoreCase(String name);
 
-    boolean existsByNameAndIdNot(String name, UUID id);
+    boolean existsByNameIgnoreCaseAndIdNot(String name, UUID id);
 
     @Query("""
             select fg.id as familyGroupId, count(np.id) as registeredPeopleCount
@@ -79,6 +79,47 @@ public interface FamilyGroupRepository extends JpaRepository<FamilyGroup, UUID>,
             """, nativeQuery = true)
     boolean existsNaturalPersonMember(@Param("familyGroupId") UUID familyGroupId,
                                       @Param("naturalPersonId") UUID naturalPersonId);
+
+    @Modifying
+    @Query(value = """
+            update address set deleted_at = now()
+            where id = (select address_id from family_group where id = :id) and deleted_at is null
+            """, nativeQuery = true)
+    void softDeleteAddressOf(@Param("id") UUID id);
+
+    @Modifying
+    @Query(value = "update family_group set deleted_at = now() where id = :id and deleted_at is null", nativeQuery = true)
+    void softDeleteKeepingMembers(@Param("id") UUID id);
+
+    @Query(value = "select exists (select 1 from family_group where id = :id)", nativeQuery = true)
+    boolean existsByIdIncludingDeleted(@Param("id") UUID id);
+
+    @Query(value = """
+            select exists (
+                select 1 from learner l
+                where l.natural_person_id = :naturalPersonId and l.deleted_at is null
+            )
+            and not exists (
+                select 1 from family_group_natural_person m
+                join family_group fg on fg.id = m.family_group_id and fg.deleted_at is null
+                where m.natural_person_id = :naturalPersonId and m.family_group_id <> :familyGroupId
+            )
+            """, nativeQuery = true)
+    boolean isLearnerOnlyInFamilyGroup(@Param("familyGroupId") UUID familyGroupId,
+                                       @Param("naturalPersonId") UUID naturalPersonId);
+
+    @Query(value = """
+            select exists (
+                select 1 from learner_responsible r
+                join learner l on l.id = r.learner_id and l.deleted_at is null
+                join family_group_natural_person m on m.natural_person_id = l.natural_person_id
+                where r.natural_person_id = :naturalPersonId
+                  and r.deleted_at is null
+                  and m.family_group_id = :familyGroupId
+            )
+            """, nativeQuery = true)
+    boolean isResponsibleForLearnerInFamilyGroup(@Param("familyGroupId") UUID familyGroupId,
+                                                 @Param("naturalPersonId") UUID naturalPersonId);
 
     @Modifying
     @Query(value = """

@@ -6,6 +6,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.user.repository.Passw
 import com.projetoresgate.projetoresgate_api.core.identity.user.repository.UserRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.user.usecase.ResetPasswordUseCase;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
+import com.projetoresgate.projetoresgate_api.infrastructure.services.IRefreshTokenService;
 import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,13 +19,16 @@ public class ResetPasswordService implements ResetPasswordUseCase {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final IRefreshTokenService refreshTokenService;
 
     public ResetPasswordService(PasswordResetTokenRepository passwordResetTokenRepository,
                                 UserRepository userRepository,
-                                PasswordEncoder passwordEncoder) {
+                                PasswordEncoder passwordEncoder,
+                                IRefreshTokenService refreshTokenService) {
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @Override
@@ -46,6 +50,7 @@ public class ResetPasswordService implements ResetPasswordUseCase {
         User user = resetToken.getUser();
         user.changePassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+        refreshTokenService.revokeAllUserTokens(user);
 
         passwordResetTokenRepository.delete(resetToken);
     }

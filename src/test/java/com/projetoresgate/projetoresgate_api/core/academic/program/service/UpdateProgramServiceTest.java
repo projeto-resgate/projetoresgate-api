@@ -1,5 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.academic.program.service;
 
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassCollaboratorRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.RefreshClassGroupTitlesUseCase;
 import com.projetoresgate.projetoresgate_api.core.academic.program.api.dto.ProgramResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.EducatorCategoryItem;
@@ -8,6 +9,7 @@ import com.projetoresgate.projetoresgate_api.core.academic.program.domain.enums.
 import com.projetoresgate.projetoresgate_api.core.academic.program.repository.EducatorCategoryItemRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.program.repository.ProgramRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.command.UpdateProgramCommand;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.FindLegalPersonSummariesUseCase;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +43,12 @@ class UpdateProgramServiceTest {
     @Mock
     private RefreshClassGroupTitlesUseCase refreshClassGroupTitlesUseCase;
 
+    @Mock
+    private ClassCollaboratorRepository classCollaboratorRepository;
+
+    @Mock
+    private LegalPersonRepository legalPersonRepository;
+
     @InjectMocks
     private UpdateProgramService service;
 
@@ -60,10 +68,10 @@ class UpdateProgramServiceTest {
     @DisplayName("Deve atualizar nome, site e status do programa com sucesso")
     void handle_ShouldUpdateBasicFields() {
         UpdateProgramCommand command = new UpdateProgramCommand(
-                programId, "Programa B", "https://novo-site.com", ProgramStatus.INACTIVE, null);
+                programId, "Programa B", "https://novo-site.com", ProgramStatus.INACTIVE, null, null);
 
         when(repository.findByIdOrThrow(programId)).thenReturn(program);
-        when(repository.existsByNameAndIdNot("Programa B", programId)).thenReturn(false);
+        when(repository.existsByNameIgnoreCaseAndIdNot("Programa B", programId)).thenReturn(false);
         when(repository.save(any(Program.class))).thenAnswer(i -> i.getArgument(0));
 
         ProgramResponse response = service.handle(command);
@@ -79,10 +87,10 @@ class UpdateProgramServiceTest {
     @DisplayName("Deve lançar exceção quando o nome já pertence a outro programa")
     void handle_ShouldFailWhenNameAlreadyExistsInAnotherProgram() {
         UpdateProgramCommand command = new UpdateProgramCommand(
-                programId, "Programa B", null, ProgramStatus.ACTIVE, null);
+                programId, "Programa B", null, ProgramStatus.ACTIVE, null, null);
 
         when(repository.findByIdOrThrow(programId)).thenReturn(program);
-        when(repository.existsByNameAndIdNot("Programa B", programId)).thenReturn(true);
+        when(repository.existsByNameIgnoreCaseAndIdNot("Programa B", programId)).thenReturn(true);
 
         InternalException exception = assertThrows(InternalException.class, () -> service.handle(command));
         assertEquals("Já existe um programa cadastrado com este nome.", exception.getMessage());
@@ -96,7 +104,7 @@ class UpdateProgramServiceTest {
         UpdateProgramCommand.UpdateEducatorCategoryItemCommand newItem =
                 new UpdateProgramCommand.UpdateEducatorCategoryItemCommand(null, "Psicopedagogo");
         UpdateProgramCommand command = new UpdateProgramCommand(
-                programId, "Programa A", null, ProgramStatus.ACTIVE, List.of(newItem));
+                programId, "Programa A", null, ProgramStatus.ACTIVE, null, List.of(newItem));
 
         when(repository.findByIdOrThrow(programId)).thenReturn(program);
         when(repository.save(any(Program.class))).thenAnswer(i -> i.getArgument(0));
@@ -115,7 +123,7 @@ class UpdateProgramServiceTest {
         UpdateProgramCommand.UpdateEducatorCategoryItemCommand keptItem =
                 new UpdateProgramCommand.UpdateEducatorCategoryItemCommand(existingItem.getId(), "Fonoaudiólogo");
         UpdateProgramCommand command = new UpdateProgramCommand(
-                programId, "Programa A", null, ProgramStatus.ACTIVE, List.of(keptItem));
+                programId, "Programa A", null, ProgramStatus.ACTIVE, null, List.of(keptItem));
 
         when(repository.findByIdOrThrow(programId)).thenReturn(program);
         when(repository.save(any(Program.class))).thenAnswer(i -> i.getArgument(0));
@@ -134,7 +142,7 @@ class UpdateProgramServiceTest {
         UpdateProgramCommand.UpdateEducatorCategoryItemCommand renamedItem =
                 new UpdateProgramCommand.UpdateEducatorCategoryItemCommand(existingItem.getId(), "Novo Nome");
         UpdateProgramCommand command = new UpdateProgramCommand(
-                programId, "Programa A", null, ProgramStatus.ACTIVE, List.of(renamedItem));
+                programId, "Programa A", null, ProgramStatus.ACTIVE, null, List.of(renamedItem));
 
         when(repository.findByIdOrThrow(programId)).thenReturn(program);
         when(repository.save(any(Program.class))).thenAnswer(i -> i.getArgument(0));
@@ -155,7 +163,7 @@ class UpdateProgramServiceTest {
         UpdateProgramCommand.UpdateEducatorCategoryItemCommand keptItem =
                 new UpdateProgramCommand.UpdateEducatorCategoryItemCommand(existingItem.getId(), "Fonoaudiólogo");
         UpdateProgramCommand command = new UpdateProgramCommand(
-                programId, "Programa A", null, ProgramStatus.ACTIVE, List.of(keptItem));
+                programId, "Programa A", null, ProgramStatus.ACTIVE, null, List.of(keptItem));
 
         when(repository.findByIdOrThrow(programId)).thenReturn(program);
         when(repository.save(any(Program.class))).thenAnswer(i -> i.getArgument(0));
@@ -173,7 +181,7 @@ class UpdateProgramServiceTest {
     @DisplayName("Deve remover todas as categorias quando a lista da requisição for nula ou vazia")
     void reconcile_ShouldRemoveAllWhenRequestEmpty() {
         UpdateProgramCommand command = new UpdateProgramCommand(
-                programId, "Programa A", null, ProgramStatus.ACTIVE, null);
+                programId, "Programa A", null, ProgramStatus.ACTIVE, null, List.of());
 
         when(repository.findByIdOrThrow(programId)).thenReturn(program);
         when(repository.save(any(Program.class))).thenAnswer(i -> i.getArgument(0));
@@ -192,13 +200,76 @@ class UpdateProgramServiceTest {
         UpdateProgramCommand.UpdateEducatorCategoryItemCommand foreignItem =
                 new UpdateProgramCommand.UpdateEducatorCategoryItemCommand(foreignId, "Estrangeira");
         UpdateProgramCommand command = new UpdateProgramCommand(
-                programId, "Programa A", null, ProgramStatus.ACTIVE, List.of(foreignItem));
+                programId, "Programa A", null, ProgramStatus.ACTIVE, null, List.of(foreignItem));
 
         when(repository.findByIdOrThrow(programId)).thenReturn(program);
 
         InternalException exception = assertThrows(InternalException.class, () -> service.handle(command));
         assertTrue(exception.getMessage().contains("não pertence ao programa"));
         verify(itemRepository, never()).delete(any(EducatorCategoryItem.class));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Lista de categorias ausente deve remover as categorias, como se não tivessem sido enviadas no POST")
+    void reconcile_ShouldRemoveItemsWhenListIsNull() {
+        UpdateProgramCommand command = new UpdateProgramCommand(
+                programId, "Programa A", null, ProgramStatus.INACTIVE, null, null);
+
+        when(repository.findByIdOrThrow(programId)).thenReturn(program);
+        when(repository.save(any(Program.class))).thenAnswer(i -> i.getArgument(0));
+
+        service.handle(command);
+
+        assertTrue(program.getEducatorCategoryItemList().isEmpty());
+        verify(itemRepository).delete(existingItem);
+    }
+
+    @Test
+    @DisplayName("Deve trocar e remover a instituição conforme o corpo")
+    void handle_ShouldReplaceInstitution() {
+        UUID institutionId = UUID.randomUUID();
+        when(repository.findByIdOrThrow(programId)).thenReturn(program);
+        when(repository.save(any(Program.class))).thenAnswer(i -> i.getArgument(0));
+
+        service.handle(new UpdateProgramCommand(programId, "Programa A", null, ProgramStatus.ACTIVE, institutionId,
+                List.of(new UpdateProgramCommand.UpdateEducatorCategoryItemCommand(existingItem.getId(), "Fonoaudiólogo"))));
+        assertEquals(institutionId, program.getInstitutionId());
+        verify(legalPersonRepository).findByIdOrThrow(institutionId);
+
+        service.handle(new UpdateProgramCommand(programId, "Programa A", null, ProgramStatus.ACTIVE, null,
+                List.of(new UpdateProgramCommand.UpdateEducatorCategoryItemCommand(existingItem.getId(), "Fonoaudiólogo"))));
+        assertNull(program.getInstitutionId());
+    }
+
+    @Test
+    @DisplayName("Não deve remover categoria vinculada a educadores de turmas")
+    void reconcile_ShouldRejectRemovalOfItemInUse() {
+        UpdateProgramCommand command = new UpdateProgramCommand(
+                programId, "Programa A", null, ProgramStatus.ACTIVE, null, List.of());
+
+        when(repository.findByIdOrThrow(programId)).thenReturn(program);
+        when(classCollaboratorRepository.existsByEducatorCategoryItemId(existingItem.getId())).thenReturn(true);
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> service.handle(command));
+
+        assertTrue(exception.getMessage().contains("Fonoaudiólogo"));
+        assertEquals(List.of(existingItem), program.getEducatorCategoryItemList());
+        verify(itemRepository, never()).delete(any(EducatorCategoryItem.class));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Não deve aceitar categorias com o mesmo nome")
+    void reconcile_ShouldRejectDuplicatedNames() {
+        UpdateProgramCommand command = new UpdateProgramCommand(
+                programId, "Programa A", null, ProgramStatus.ACTIVE, null, List.of(
+                        new UpdateProgramCommand.UpdateEducatorCategoryItemCommand(null, "Professor"),
+                        new UpdateProgramCommand.UpdateEducatorCategoryItemCommand(null, " professor ")));
+
+        when(repository.findByIdOrThrow(programId)).thenReturn(program);
+
+        assertThrows(InternalException.class, () -> service.handle(command));
         verify(repository, never()).save(any());
     }
 }

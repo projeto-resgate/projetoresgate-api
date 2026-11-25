@@ -12,6 +12,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.reposit
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @Service
@@ -34,11 +35,14 @@ public class UpdateCollaboratorService implements UpdateCollaboratorUseCase {
     public CollaboratorResponse handle(UpdateCollaboratorCommand command) {
         Collaborator collaborator = repository.findByIdOrThrow(command.id());
 
-        NaturalPerson naturalPerson = naturalPersonRepository.findByIdOrThrow(command.naturalPersonId());
+        NaturalPerson naturalPerson = command.naturalPersonId().equals(collaborator.getNaturalPersonId())
+                ? naturalPersonRepository.findByIdIncludingDeletedOrThrow(command.naturalPersonId())
+                : naturalPersonRepository.findByIdOrThrow(command.naturalPersonId());
 
-        LegalPerson legalPerson = nonNull(command.legalPersonId())
-                ? legalPersonRepository.findByIdOrThrow(command.legalPersonId())
-                : null;
+        LegalPerson legalPerson = isNull(command.legalPersonId()) ? null
+                : command.legalPersonId().equals(collaborator.getLegalPersonId())
+                ? legalPersonRepository.findByIdIncludingDeletedOrThrow(command.legalPersonId())
+                : legalPersonRepository.findByIdOrThrow(command.legalPersonId());
 
         if (!command.naturalPersonId().equals(collaborator.getNaturalPersonId())
                 && repository.existsByNaturalPersonIdAndIdNot(command.naturalPersonId(), collaborator.getId())) {

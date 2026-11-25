@@ -37,8 +37,12 @@ por papel como escopo novo.
 
 ### 3. Proteção de Endpoints
 
-* **Públicos:** Login, cadastro, recuperação de senha, confirmação de e-mail e documentação (Swagger) são liberados
-  explicitamente em `SecurityConfigurations`.
+* **Públicos:** Login, renovação de token, recuperação de senha, confirmação de e-mail e `/actuator/health` são
+  liberados explicitamente em `SecurityConfigurations`. `POST /user` só é público com `api.user-registration.public=true`
+  (desenvolvimento). A documentação (Swagger/OpenAPI) só é pública quando `springdoc.swagger-ui.enabled=true` (dev);
+  em produção ela fica **desligada** (`API_DOCS_ENABLED=false`) e as rotas exigem autenticação.
+* **Limite de requisições:** `RateLimitingFilter` por IP, em camadas, e limite de e-mails por destinatário (ver
+  [`tecnico/autenticacao.md`](../tecnico/autenticacao.md#limite-de-requisições)).
 * **Privados:** Todos os outros endpoints exigem autenticação por padrão (`anyRequest().authenticated()`).
 
 ### 4. Senhas

@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: projetoresgate_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: projetoresgatedb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d projetoresgatedb" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    image: ${DOCKER_IMAGE_REPO}:latest
+    container_name: projetoresgate_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+
+    stop_grace_period: 40s
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/projetoresgatedb
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60
+    ports:
+      - "8080:8080"
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+
+  watchtower:
+    image: nickfedor/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      WATCHTOWER_LABEL_ENABLE: "true"
+      WATCHTOWER_POLL_INTERVAL: "300"
+      WATCHTOWER_CLEANUP: "true"
+      REPO_USER: ${DOCKERHUB_USERNAME}
+      REPO_PASS: ${DOCKERHUB_TOKEN}
+
+volumes:
+  postgres_data:

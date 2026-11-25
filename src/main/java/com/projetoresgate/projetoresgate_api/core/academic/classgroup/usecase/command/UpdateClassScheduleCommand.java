@@ -2,6 +2,7 @@ package com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.c
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.enums.WeekDay;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalTime;
 import java.util.UUID;
@@ -11,8 +12,11 @@ public record UpdateClassScheduleCommand(
         UUID id,
         @JsonIgnore
         UUID classGroupId,
+        @NotNull(message = "O dia da semana é obrigatório")
         WeekDay weekDay,
+        @NotNull(message = "O horário de início é obrigatório")
         LocalTime startTime,
+        @NotNull(message = "O horário de término é obrigatório")
         LocalTime endTime,
         Boolean active
 ) {

@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static java.util.Objects.nonNull;
+import static java.util.Objects.isNull;
 
 @Service
 public class UpdateClassScheduleService implements UpdateClassScheduleUseCase {
@@ -39,12 +39,10 @@ public class UpdateClassScheduleService implements UpdateClassScheduleUseCase {
                 .endTime(command.endTime())
                 .apply();
 
-        if (nonNull(command.active())) {
-            if (command.active()) {
-                schedule.activate();
-            } else {
-                schedule.deactivate();
-            }
+        if (isNull(command.active()) || command.active()) {
+            schedule.activate();
+        } else {
+            schedule.deactivate();
         }
 
         ClassSchedule saved = repository.save(schedule);
@@ -55,7 +53,7 @@ public class UpdateClassScheduleService implements UpdateClassScheduleUseCase {
     }
 
     private void refreshTitle(ClassGroup classGroup) {
-        Program program = programRepository.findByIdOrThrow(classGroup.getProgramId());
+        Program program = programRepository.findByIdIncludingDeletedOrThrow(classGroup.getProgramId());
         List<WeekDay> weekDays = repository.findActiveWeekDaysByClassGroupId(classGroup.getId());
         classGroup.refreshTitle(program.getName(), weekDays);
     }

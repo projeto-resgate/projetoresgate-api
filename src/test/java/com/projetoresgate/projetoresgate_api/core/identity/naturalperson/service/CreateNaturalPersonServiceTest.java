@@ -56,7 +56,7 @@ class CreateNaturalPersonServiceTest {
         assertEquals("51086174968", created.getCpf());
 
         verify(naturalPersonRepository).save(any(NaturalPerson.class));
-        verify(requestEmailConfirmationUseCase).handle("test@test.com");
+        verify(requestEmailConfirmationUseCase).handle(created);
     }
 
     @Test
@@ -70,7 +70,7 @@ class CreateNaturalPersonServiceTest {
         assertThrows(InternalException.class, () -> service.handle(command));
 
         verify(naturalPersonRepository, never()).save(any());
-        verify(requestEmailConfirmationUseCase, never()).handle(anyString());
+        verify(requestEmailConfirmationUseCase, never()).handle(any(NaturalPerson.class));
     }
 
     @Test
@@ -117,5 +117,19 @@ class CreateNaturalPersonServiceTest {
 
         assertNull(created.getWorkplaceId());
         verifyNoInteractions(legalPersonRepository);
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando o RG já estiver cadastrado")
+    void handle_ShouldFailWhenRgAlreadyInUse() {
+        CreateNaturalPersonCommand command = new CreateNaturalPersonCommand(
+                "Test Name", "test@test.com", null, "1234567", null, null, null, null, null, null);
+
+        when(naturalPersonRepository.existsByRg("1234567")).thenReturn(true);
+
+        InternalException exception = assertThrows(InternalException.class, () -> service.handle(command));
+
+        assertEquals("Já existe uma pessoa cadastrada com este RG.", exception.getMessage());
+        verify(naturalPersonRepository, never()).save(any());
     }
 }

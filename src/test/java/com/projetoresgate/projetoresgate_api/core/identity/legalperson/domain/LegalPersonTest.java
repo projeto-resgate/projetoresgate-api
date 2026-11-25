@@ -30,7 +30,7 @@ class LegalPersonTest {
         assertEquals("Razão Social LTDA", person.getCorporateName());
         assertEquals("Nome Fantasia", person.getTradeName());
         assertEquals("Display Name", person.getDisplayName());
-        assertEquals("6201-5/00", person.getMainCnaeCode());
+        assertEquals("6201500", person.getMainCnaeCode());
         assertEquals(RegistrationStatus.ACTIVE, person.getRegistrationStatus());
         assertEquals(CompanyStatus.ACTIVE, person.getCompanyStatus());
         assertNotNull(person.getAddress());
@@ -154,10 +154,41 @@ class LegalPersonTest {
         assertEquals("Nova Razão Social LTDA", person.getCorporateName());
         assertEquals("Novo Nome Fantasia", person.getTradeName());
         assertEquals("Novo Display Name", person.getDisplayName());
-        assertEquals("8599-6/04", person.getMainCnaeCode());
+        assertEquals("8599604", person.getMainCnaeCode());
         assertEquals(RegistrationStatus.SUSPENDED, person.getRegistrationStatus());
         assertEquals(CompanyStatus.INACTIVE, person.getCompanyStatus());
         assertEquals("Rio de Janeiro", person.getAddress().getCity());
         assertEquals("Jane Doe", person.getRepresentative().getName());
+    }
+
+    @Test
+    @DisplayName("O nome exibido deve cair para o nome fantasia e depois para a razão social")
+    void getName_ShouldFallBackToTradeNameAndCorporateName() {
+        LegalPerson withDisplay = LegalPerson.create("12345678000195", "Razão LTDA", "Fantasia", "Exibição", null,
+                RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, buildAddress(), null);
+        LegalPerson withTrade = LegalPerson.create("12345678000195", "Razão LTDA", "Fantasia", " ", null,
+                RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, buildAddress(), null);
+        LegalPerson onlyCorporate = LegalPerson.create("12345678000195", "Razão LTDA", null, null, null,
+                RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, buildAddress(), null);
+
+        assertEquals("Exibição", withDisplay.getName());
+        assertEquals("Fantasia", withTrade.getName());
+        assertEquals("Razão LTDA", onlyCorporate.getName());
+    }
+
+    @Test
+    @DisplayName("Deve guardar CNPJ, CNAE, CEP e telefones do representante sem máscara")
+    void create_ShouldRemoveMasks() {
+        Address address = Address.create(null, null, "89010-000", null, null, null, null, "Blumenau", "SC");
+        Representative representative = Representative.create("Rep", "(47) 99999-0000", "(47) 3333-4444", null);
+
+        LegalPerson person = LegalPerson.create("11.222.333/0001-81", "Razão LTDA", null, null, "6201-5/00",
+                RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, address, representative);
+
+        assertEquals("11222333000181", person.getCnpj());
+        assertEquals("6201500", person.getMainCnaeCode());
+        assertEquals("89010000", person.getAddress().getZipCode());
+        assertEquals("47999990000", person.getRepresentative().getCellphone());
+        assertEquals("4733334444", person.getRepresentative().getPhone());
     }
 }

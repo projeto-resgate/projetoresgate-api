@@ -75,7 +75,7 @@ public class RefreshClassGroupTitlesService implements RefreshClassGroupTitlesUs
             return Collections.emptyMap();
         }
 
-        return programRepository.findAllById(ids).stream()
+        return programRepository.findAllByIdIncludingDeleted(ids).stream()
                 .collect(Collectors.toMap(Program::getId, Program::getName));
     }
 

@@ -7,6 +7,7 @@ import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.CreateClassLearnerCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Learner;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.repository.LearnerRepository;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.DisplayName;
@@ -60,7 +61,11 @@ class CreateClassLearnerServiceTest {
         UUID learnerId = UUID.randomUUID();
 
         when(classGroupRepository.findByIdOrThrow(classGroup.getId())).thenReturn(classGroup);
-        when(learnerRepository.findByIdOrThrow(learnerId)).thenReturn(mock(Learner.class));
+        Learner learner = Learner.create(UUID.randomUUID(), null, null, false, null, 2026, null, null);
+        NaturalPerson person = NaturalPerson.create("Ana Souza", "ana@example.com", null, "52998224725",
+                null, null, null, null, null);
+        when(learnerRepository.findByIdOrThrow(learnerId)).thenReturn(learner);
+        when(naturalPersonRepository.findByIdOrThrow(learner.getNaturalPersonId())).thenReturn(person);
         when(repository.existsByClassGroupIdAndLearnerId(classGroup.getId(), learnerId)).thenReturn(false);
         when(repository.save(any(ClassLearner.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -98,6 +103,25 @@ class CreateClassLearnerServiceTest {
         when(classGroupRepository.findByIdOrThrow(classGroup.getId())).thenReturn(classGroup);
         when(learnerRepository.findByIdOrThrow(learnerId))
                 .thenThrow(new ResourceNotFoundException("Educando não encontrado com ID: " + learnerId));
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.handle(new CreateClassLearnerCommand(classGroup.getId(), learnerId)));
+
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Não deve vincular educando cuja pessoa física foi excluída")
+    void handle_ShouldRejectLearnerWithDeletedPerson() {
+        ClassGroup classGroup = givenClassGroup();
+        UUID learnerId = UUID.randomUUID();
+        Learner learner = Learner.create(UUID.randomUUID(), null, null, false, null, 2026, null, null);
+
+        when(classGroupRepository.findByIdOrThrow(classGroup.getId())).thenReturn(classGroup);
+        when(learnerRepository.findByIdOrThrow(learnerId)).thenReturn(learner);
+        when(repository.existsByClassGroupIdAndLearnerId(classGroup.getId(), learnerId)).thenReturn(false);
+        when(naturalPersonRepository.findByIdOrThrow(learner.getNaturalPersonId()))
+                .thenThrow(new ResourceNotFoundException("Pessoa física não encontrada"));
 
         assertThrows(ResourceNotFoundException.class,
                 () -> service.handle(new CreateClassLearnerCommand(classGroup.getId(), learnerId)));

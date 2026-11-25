@@ -28,34 +28,49 @@ public interface ClassCollaboratorRepository extends JpaRepository<ClassCollabor
 
     boolean existsByClassGroupIdAndCollaboratorId(UUID classGroupId, UUID collaboratorId);
 
+    boolean existsByEducatorCategoryItemId(UUID educatorCategoryItemId);
+
     @Query(value = """
-            select c from ClassCollaborator c
-            join Collaborator col on col.id = c.collaboratorId
-            join NaturalPerson np on np.id = col.naturalPersonId
-            where c.classGroup.id = :classGroupId
-              and (:active is null or c.active = :active)
-              and (:educatorCategoryItemId is null or c.educatorCategoryItemId = :educatorCategoryItemId)
-              and (:searchTerm is null
-                   or lower(np.name) like lower(concat('%', cast(:searchTerm as String), '%'))
-                   or lower(np.nickname) like lower(concat('%', cast(:searchTerm as String), '%')))
-            order by c.active desc, np.name asc
+            select c.id as "id",
+                   c.class_group_id as "classGroupId",
+                   c.collaborator_id as "collaboratorId",
+                   np.name as "collaboratorName",
+                   c.educator_category_item_id as "educatorCategoryItemId",
+                   eci.name as "educatorCategoryItemName",
+                   c.active as "active",
+                   c.date_created as "dateCreated"
+            from class_collaborator c
+            join collaborator col on col.id = c.collaborator_id
+            join natural_person np on np.id = col.natural_person_id
+            left join educator_category_item eci on eci.id = c.educator_category_item_id
+            where c.class_group_id = :classGroupId
+              and c.deleted_at is null
+              and (cast(:active as boolean) is null or c.active = cast(:active as boolean))
+              and (cast(:educatorCategoryItemId as uuid) is null or c.educator_category_item_id = cast(:educatorCategoryItemId as uuid))
+              and (cast(:searchTerm as text) is null
+                   or strpos(lower(np.name), lower(cast(:searchTerm as text))) > 0
+                   or strpos(lower(coalesce(np.nickname, '')), lower(cast(:searchTerm as text))) > 0)
+            order by c.active desc, np.name asc, c.id asc
             """,
             countQuery = """
-                    select count(c) from ClassCollaborator c
-                    join Collaborator col on col.id = c.collaboratorId
-                    join NaturalPerson np on np.id = col.naturalPersonId
-                    where c.classGroup.id = :classGroupId
-                      and (:active is null or c.active = :active)
-                      and (:educatorCategoryItemId is null or c.educatorCategoryItemId = :educatorCategoryItemId)
-                      and (:searchTerm is null
-                           or lower(np.name) like lower(concat('%', cast(:searchTerm as String), '%'))
-                           or lower(np.nickname) like lower(concat('%', cast(:searchTerm as String), '%')))
-                    """)
-    Page<ClassCollaborator> findAllByClassGroupId(@Param("classGroupId") UUID classGroupId,
-                                                  @Param("active") Boolean active,
-                                                  @Param("educatorCategoryItemId") UUID educatorCategoryItemId,
-                                                  @Param("searchTerm") String searchTerm,
-                                                  Pageable pageable);
+            select count(*)
+            from class_collaborator c
+            join collaborator col on col.id = c.collaborator_id
+            join natural_person np on np.id = col.natural_person_id
+            where c.class_group_id = :classGroupId
+              and c.deleted_at is null
+              and (cast(:active as boolean) is null or c.active = cast(:active as boolean))
+              and (cast(:educatorCategoryItemId as uuid) is null or c.educator_category_item_id = cast(:educatorCategoryItemId as uuid))
+              and (cast(:searchTerm as text) is null
+                   or strpos(lower(np.name), lower(cast(:searchTerm as text))) > 0
+                   or strpos(lower(coalesce(np.nickname, '')), lower(cast(:searchTerm as text))) > 0)
+            """,
+            nativeQuery = true)
+    Page<ClassCollaboratorRow> findRowsByClassGroupId(@Param("classGroupId") UUID classGroupId,
+                                                      @Param("active") Boolean active,
+                                                      @Param("educatorCategoryItemId") UUID educatorCategoryItemId,
+                                                      @Param("searchTerm") String searchTerm,
+                                                      Pageable pageable);
 
     @Modifying
     @Query(value = """

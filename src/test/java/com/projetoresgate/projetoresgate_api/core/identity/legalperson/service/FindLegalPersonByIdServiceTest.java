@@ -56,11 +56,11 @@ class FindLegalPersonByIdServiceTest {
         assertEquals("Razão Social LTDA", found.getCorporateName());
         assertEquals("Nome Fantasia", found.getTradeName());
         assertEquals("Display Name", found.getDisplayName());
-        assertEquals("6201-5/00", found.getMainCnaeCode());
+        assertEquals("6201500", found.getMainCnaeCode());
         assertEquals(RegistrationStatus.ACTIVE, found.getRegistrationStatus());
         assertEquals(CompanyStatus.ACTIVE, found.getCompanyStatus());
         assertEquals("São Paulo", found.getAddress().getCity());
-        assertEquals("01310-100", found.getAddress().getZipCode());
+        assertEquals("01310100", found.getAddress().getZipCode());
         assertEquals("John Doe", found.getRepresentative().getName());
         assertEquals("john@doe.com", found.getRepresentative().getEmail());
         assertEquals(dateCreated, found.getDateCreated());

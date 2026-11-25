@@ -147,6 +147,7 @@ classDiagram
         -Gender gender
         -String phone
         -String cellphone
+        -UUID workplaceId
         -boolean isEmailVerified
         +confirmEmail()
     }
@@ -468,3 +469,12 @@ Regras que moram aqui:
 - `Collaborator`: `isVoluntary` e `legalPersonId` (empresa) são opcionais; a pessoa física é obrigatória.
 - A categoria de um `ClassCollaborator` precisa pertencer ao **programa da turma**; essa checagem está na
   service (`findByIdAndProgramIdOrThrow`), não na entidade.
+## Notas das últimas mudanças
+
+- `ClassGroup.schoolGradeList` referencia `SchoolGradeRef`, uma entidade somente leitura (`@Immutable`) mapeada na
+  mesma tabela `school_grade`, **sem** o filtro de exclusão. Assim a turma e o título continuam mostrando uma
+  série que foi excluída. Ver [política de exclusão](regras-implementadas.md#política-com-registros-excluídos-decidida-com-a-ong).
+- `NaturalPerson.workplaceId` aponta para `LegalPerson` (local de trabalho), por id, sem associação JPA.
+- `LearnerParticipationStatus` (`ACTIVE`, `NO_CLASS`, `DROPPED_OUT`) é um enum de resposta, **calculado** na
+  listagem de educandos. O que é gravado no `Learner` continua sendo `LearnerStatus` (`ACTIVE`, `DROPPED_OUT`).
+- `LearnerStatusHistory` (`DROPOUT` e `REACTIVATION`) é exposto por `GET /learner/{id}/status-history`.

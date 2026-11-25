@@ -19,6 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import java.util.List;
 
@@ -29,10 +30,18 @@ public class SecurityConfigurations {
     @Value("${cors.allowed-origins:*}")
     private List<String> allowedOrigins;
 
-    private final SecurityFilter securityFilter;
+    @Value("${api.user-registration.public:false}")
+    private boolean publicUserRegistration;
 
-    public SecurityConfigurations(SecurityFilter securityFilter) {
+    @Value("${springdoc.swagger-ui.enabled:true}")
+    private boolean swaggerEnabled;
+
+    private final SecurityFilter securityFilter;
+    private final RateLimitingFilter rateLimitingFilter;
+
+    public SecurityConfigurations(SecurityFilter securityFilter, RateLimitingFilter rateLimitingFilter) {
         this.securityFilter = securityFilter;
+        this.rateLimitingFilter = rateLimitingFilter;
     }
 
     @Bean
@@ -41,26 +50,32 @@ public class SecurityConfigurations {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/user").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/user/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/user/refresh").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/user/forgot-password").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/user/reset-password").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/natural-person").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/natural-person/request-email-confirmation").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/natural-person/confirm-email/**").permitAll()
-
-                        .requestMatchers(
+                .authorizeHttpRequests(auth -> {
+                    if (publicUserRegistration) {
+                        auth.requestMatchers(HttpMethod.POST, "/user").permitAll();
+                    }
+                    if (swaggerEnabled) {
+                        auth.requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
                                 "/webjars/**"
-                        ).permitAll()
-
-                        .anyRequest().authenticated()
-                )
+                        ).permitAll();
+                    }
+                    auth
+                            .requestMatchers(HttpMethod.POST, "/user/login").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/user/refresh").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/user/forgot-password").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/user/reset-password").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/natural-person").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/natural-person/request-email-confirmation").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/natural-person/confirm-email/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
+                            .requestMatchers("/error").permitAll()
+                            .anyRequest().authenticated();
+                })
+                .addFilterAfter(rateLimitingFilter, CorsFilter.class)
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exception -> exception.authenticationEntryPoint((request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")))
                 .build();

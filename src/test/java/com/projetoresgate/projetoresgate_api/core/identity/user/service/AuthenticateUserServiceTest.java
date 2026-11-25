@@ -53,7 +53,7 @@ class AuthenticateUserServiceTest {
     @Test
     @DisplayName("Deve retornar AuthenticationResponse em autenticação bem-sucedida")
     void handle_shouldReturnResponse_onSuccessfulAuthentication() {
-        when(userRepository.findByEmail(authQuery.email())).thenReturn(Optional.of(existingUser));
+        when(userRepository.findByEmailIgnoreCase(authQuery.email())).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches(authQuery.password(), existingUser.getPassword())).thenReturn(true);
         when(tokenService.generateAccessToken(existingUser)).thenReturn("mocked.jwt.token");
         when(refreshTokenService.createRefreshToken(existingUser)).thenReturn("mocked.refresh.token");
@@ -67,7 +67,7 @@ class AuthenticateUserServiceTest {
         assertEquals(existingUser.getName(), response.name());
         assertEquals(existingUser.getRoles(), response.roles());
 
-        verify(userRepository).findByEmail(authQuery.email());
+        verify(userRepository).findByEmailIgnoreCase(authQuery.email());
         verify(passwordEncoder).matches(authQuery.password(), existingUser.getPassword());
         verify(tokenService).generateAccessToken(existingUser);
         verify(refreshTokenService).createRefreshToken(existingUser);
@@ -76,7 +76,7 @@ class AuthenticateUserServiceTest {
     @Test
     @DisplayName("Deve lançar BadCredentialsException quando usuário não encontrado")
     void handle_shouldThrowException_whenUserNotFound() {
-        when(userRepository.findByEmail(authQuery.email())).thenReturn(Optional.empty());
+        when(userRepository.findByEmailIgnoreCase(authQuery.email())).thenReturn(Optional.empty());
 
         assertThrows(BadCredentialsException.class, () -> {
             authenticateUserService.handle(authQuery);
@@ -90,7 +90,7 @@ class AuthenticateUserServiceTest {
     @Test
     @DisplayName("Deve lançar BadCredentialsException quando a senha não corresponde")
     void handle_shouldThrowException_whenPasswordDoesNotMatch() {
-        when(userRepository.findByEmail(authQuery.email())).thenReturn(Optional.of(existingUser));
+        when(userRepository.findByEmailIgnoreCase(authQuery.email())).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches(authQuery.password(), existingUser.getPassword())).thenReturn(false);
 
         assertThrows(BadCredentialsException.class, () -> {

@@ -7,6 +7,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.auth0.jwt.JWT;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.TimeZone;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("TokenService - Test")
@@ -47,5 +52,25 @@ class TokenServiceTest {
     @DisplayName("Deve lançar exceção quando o token for inválido")
     void getTokenVersion_ShouldThrowOnInvalidToken() {
         assertThrows(InternalException.class, () -> tokenService.getTokenVersion("invalid-token"));
+    }
+
+    @Test
+    @DisplayName("Access token deve expirar em 15 min independente do fuso horário da JVM (regressão: container em UTC)")
+    void generateAccessToken_ShouldExpireInConfiguredDuration_regardlessOfTimeZone() {
+        TimeZone original = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+            User user = User.create("test@example.com", "encoded", "Test User", "tester");
+
+            Instant before = Instant.now();
+            String token = tokenService.generateAccessToken(user);
+            Instant expiresAt = JWT.decode(token).getExpiresAtAsInstant();
+
+            Duration lifetime = Duration.between(before, expiresAt);
+            assertTrue(lifetime.compareTo(Duration.ofSeconds(895)) >= 0, "expira cedo demais: " + lifetime);
+            assertTrue(lifetime.compareTo(Duration.ofSeconds(905)) <= 0, "expira tarde demais: " + lifetime);
+        } finally {
+            TimeZone.setDefault(original);
+        }
     }
 }

@@ -15,6 +15,7 @@ erDiagram
     USERS ||--o| PASSWORD_RESET_TOKENS : "solicita"
     NATURAL_PERSON ||--o| EMAIL_CONFIRMATION_TOKENS : "confirma e-mail"
     NATURAL_PERSON ||--o{ NATURAL_PERSON_ROLE : "papéis derivados"
+    NATURAL_PERSON }o--o| LEGAL_PERSON : "workplace_id (local de trabalho)"
     FAMILY_GROUP }o--o{ NATURAL_PERSON : "family_group_natural_person"
     FAMILY_GROUP }o--o| ADDRESS : "mora em"
     LEGAL_PERSON }o--o| ADDRESS : "sede"
@@ -69,6 +70,9 @@ Pontos a notar:
   armazenam `token_hash`; o valor em texto puro só existe no cookie/e-mail.
 - **Endereço é compartilhado** entre `legal_person` e `family_group` (relação 1–1 com cascade).
   Não existe endereço para `natural_person`.
+- **Local de trabalho** (V018): `natural_person.workplace_id` é uma referência opcional a `legal_person`, no mesmo
+  padrão do `institution_id` do educando. A API valida que a pessoa jurídica existe ao gravar ou trocar o valor,
+  e devolve `workplaceId` e `workplaceName`.
 - `family_group.friendly_id` vem da sequence `family_group_friendly_id_seq` (V011) com prefixo `FAM-`.
 
 ## Acadêmico
@@ -149,7 +153,8 @@ Pontos a notar:
   não carrega o objeto relacionado sozinho.
 - **Unicidade:** um educando por pessoa física, um colaborador por pessoa física, um vínculo
   educando↔turma e colaborador↔turma. Os índices únicos são **parciais** (`WHERE deleted_at IS NULL`),
-  então uma linha excluída libera a combinação para ser recriada.
+  então uma linha excluída libera a combinação para ser recriada. O mesmo vale para CPF e RG de pessoa física,
+  CNPJ de pessoa jurídica e e-mail de usuário (V019). E-mail de pessoa física **não** é único.
 
 ## Estados do educando
 

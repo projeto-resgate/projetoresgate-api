@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 import static java.util.Objects.isNull;
 
@@ -79,9 +78,7 @@ public class TokenService implements ITokenService {
     }
 
     private Instant generateAccessTokenExpirationDate() {
-        return LocalDateTime.now()
-                .plusSeconds(accessTokenDuration)
-                .toInstant(ZoneOffset.of("-03:00"));
+        return Instant.now().plusSeconds(accessTokenDuration);
     }
 
     public LocalDateTime getRefreshTokenExpiryDate() {

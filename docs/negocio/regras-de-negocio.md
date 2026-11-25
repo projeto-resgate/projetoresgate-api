@@ -18,6 +18,8 @@ Status: ✅ funciona hoje · 🟡 parcial · ⬜ pedido, ainda não feito · ❓
 | RN-CAD-05 | Duas pessoas **não podem ter o mesmo CPF**; duas empresas **não podem ter o mesmo CNPJ**.                     | ✅ |
 | RN-CAD-06 | Data de nascimento **não pode ser futura**.                                                                   | ✅ |
 | RN-CAD-07 | Telefone, celular, e-mail, gênero e nascimento são coletados de **todas** as pessoas.                         | ✅ |
+| RN-CAD-08 | CPF, RG, CNPJ, CEP e telefones podem ser digitados **com ou sem pontos e traços**: o sistema guarda só os números (e as letras do RG). O RG pode ser o próprio CPF (nova carteira de identidade). | ✅ |
+| RN-CAD-09 | Duas pessoas **não podem ter o mesmo RG**, mesmo que digitado com pontuação diferente.                        | ✅ |
 
 ## Famílias
 
@@ -29,8 +31,8 @@ Status: ✅ funciona hoje · 🟡 parcial · ⬜ pedido, ainda não feito · ❓
 | RN-FAM-04 | Uma pessoa pode ser vinculada a uma família **existente** ou criada já dentro dela.                           | ✅ |
 | RN-FAM-06 | A **renda líquida per capita** é calculada automaticamente: `(renda − educação − habitação − saúde) ÷ moradores`, despesa vazia = 0. | ⬜ (hoje é digitada) |
 | RN-FAM-07 | O grupo familiar **não tem endereço**; o endereço do aluno vem da pessoa física.                              | ❓ (hoje é o contrário) |
-| RN-FAM-09 | Para colocar uma pessoa já cadastrada numa família, **pesquisa-se por CPF, RG, nome ou apelido**, seleciona-se a pessoa e adiciona-se à família. | ✅ |
 | RN-FAM-08 | Na ficha da pessoa e na do aluno, aparecem os dados do **grupo familiar**.                                    | 🟡 |
+| RN-FAM-09 | Para colocar uma pessoa já cadastrada numa família, **pesquisa-se por CPF, RG, nome ou apelido**, seleciona-se a pessoa e adiciona-se à família. | ✅ |
 
 ## Alunos e responsáveis
 
@@ -52,12 +54,14 @@ Status: ✅ funciona hoje · 🟡 parcial · ⬜ pedido, ainda não feito · ❓
 
 | Código   | Regra                                                                                                          | Status |
 |----------|----------------------------------------------------------------------------------------------------------------|--------|
-| RN-DES-01 | O aluno está **ativo** ou **desistente**.                                                                    | ✅ |
-| RN-DES-02 | Para registrar desistência, o **motivo é obrigatório**; a data é a informada ou a de hoje.                    | ✅ |
+| RN-DES-01 | O aluno está **ativo** ou **desistente**. Na lista de alunos, o ativo aparece como **cursando** (tem turma em andamento hoje) ou **sem turma** (ativo, mas sem turma em andamento hoje). | ✅ |
+| RN-DES-02 | Para registrar desistência, o **motivo é obrigatório**; a data é a informada (não pode ser futura) ou a de hoje. | ✅ |
 | RN-DES-03 | Não se pode registrar desistência de quem **já desistiu**, nem reativar quem **não está desistente**.         | ✅ |
-| RN-DES-04 | Cada desistência e retorno **fica registrado no histórico** do aluno, com data.                              | 🟡 (grava, mas ainda não aparece nas telas) |
+| RN-DES-04 | Cada desistência e retorno **fica registrado no histórico** do aluno, com motivo, data e hora do registro; a consulta traz o mais recente primeiro. | ✅ (a tela ainda precisa exibir) |
 | RN-DES-05 | Ao desistir, o aluno é **retirado de todas as turmas** em que estava (os vínculos ficam inativos).           | ✅ |
-| RN-DES-06 | Ao **voltar**, o aluno **não volta automaticamente** às turmas; a secretaria precisa matriculá-lo de novo.    | ✅ (a confirmar se é o desejado) |
+| RN-DES-06 | Ao **voltar**, o aluno **não volta automaticamente** às turmas; a menos que a secretaria indique **uma turma** no momento do retorno, e então ele volta **só àquela turma**. | ✅ |
+| RN-DES-07 | Um aluno que **já está ativo** pode ser colocado em **outra turma** a qualquer momento, sem aviso de "aluno já ativo". | ✅ |
+| RN-DES-08 | O cadastro de um aluno **não é apagado**: ele só pode **desistir** e **voltar**. O histórico fica sempre guardado.   | ✅ |
 
 ## Formações (turmas)
 
@@ -110,6 +114,24 @@ Detalhes e exemplos em [`beneficios-e-calculos.md`](beneficios-e-calculos.md).
 | RN-BEN-08 | O **valor total do transporte** é um **parâmetro geral**.                                                      | ⬜ |
 | RN-BEN-09 | O vale-transporte de cada pessoa = **total × (IHE da pessoa ÷ soma dos IHE)**; a soma é exatamente o total.   | ⬜ |
 | RN-BEN-10 | Quem tem **IHE 0 recebe 0**; se todos tiverem o mesmo IHE, **todos recebem igual**.                            | ⬜ |
+
+## Cadastros apagados
+
+Quando alguém apaga um cadastro (uma escola, um programa, uma pessoa, uma série), o que **já foi registrado**
+com ele não some nem fica sem sentido.
+
+| Código   | Regra                                                                                                          | Status |
+|----------|----------------------------------------------------------------------------------------------------------------|--------|
+| RN-EXC-01 | Quem já usava um cadastro apagado **continua aparecendo**, com o **nome** do cadastro apagado (ex.: a turma continua mostrando o programa que foi apagado). | ✅ |
+| RN-EXC-02 | Um registro que já existe **continua podendo ser alterado**, mesmo que o cadastro apagado que ele usa continue ligado a ele. | ✅ |
+| RN-EXC-03 | **Não é possível usar** um cadastro apagado em um **novo** registro (ex.: criar uma turma de um programa apagado, ou colocar em turma um aluno cuja pessoa foi apagada). | ✅ |
+| RN-EXC-04 | Cadastros apagados **não aparecem** nas buscas de seleção (ex.: ao escolher um aluno ou um educador).           | ✅ |
+| RN-EXC-05 | Apagar uma **série escolar** não muda o nome das turmas que já a usavam.                                       | ✅ |
+| RN-EXC-06 | Apagar uma pessoa ou um educador **não tira** a pessoa da lista de alunos/educadores da turma.                   | ✅ |
+| RN-EXC-07 | Apagar um **grupo familiar** não impede de alterar os alunos daquela família.                                    | ✅ |
+| RN-EXC-08 | O CPF, RG ou CNPJ de um cadastro apagado **pode ser cadastrado de novo**.                                       | ✅ |
+| RN-EXC-09 | Não é possível tirar de uma família o **aluno** (se for a única família dele) nem um **responsável** por aluno daquela família. | ✅ |
+| RN-EXC-10 | Não é possível remover de um programa uma **categoria de educador** que está em uso em alguma turma.             | ✅ |
 
 ## Acesso
 

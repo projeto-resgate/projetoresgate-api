@@ -5,7 +5,10 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.en
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.RegistrationStatus;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import com.projetoresgate.projetoresgate_api.shared.entity.AuditableEntity;
+import com.projetoresgate.projetoresgate_api.shared.util.MaskUtils;
 import jakarta.persistence.*;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.springframework.util.StringUtils;
@@ -40,6 +43,7 @@ public class LegalPerson extends AuditableEntity {
     private CompanyStatus companyStatus;
 
     @OneToOne(cascade = CascadeType.ALL)
+    @NotFound(action = NotFoundAction.IGNORE)
     @JoinColumn(name = "address_id")
     private Address address;
 
@@ -79,6 +83,8 @@ public class LegalPerson extends AuditableEntity {
     }
 
     public void validate() {
+        this.cnpj = MaskUtils.unmask(this.cnpj);
+        this.mainCnaeCode = MaskUtils.unmask(this.mainCnaeCode);
         if (!StringUtils.hasText(this.cnpj)) {
             throw new InternalException("O CNPJ não pode ser vazio.");
         }
@@ -181,6 +187,16 @@ public class LegalPerson extends AuditableEntity {
 
     public String getDisplayName() {
         return displayName;
+    }
+
+    public String getName() {
+        if (nonNull(displayName) && !displayName.isBlank()) {
+            return displayName;
+        }
+        if (nonNull(tradeName) && !tradeName.isBlank()) {
+            return tradeName;
+        }
+        return corporateName;
     }
 
     public String getMainCnaeCode() {

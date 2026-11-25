@@ -35,7 +35,8 @@ public record ClassGroupResponse(
                 institutionName,
                 entity.getSchoolGradeList().stream()
                         .sorted(Comparator.comparing(schoolGrade -> schoolGrade.getGradeOrder()))
-                        .map(SchoolGradeNameResponse::fromEntity)
+                        .map(schoolGrade -> new SchoolGradeNameResponse(schoolGrade.getId(), schoolGrade.getName(),
+                                schoolGrade.getAbbreviation(), schoolGrade.getGradeOrder()))
                         .toList(),
                 entity.getStudentProjections(),
                 entity.getStartDate(),

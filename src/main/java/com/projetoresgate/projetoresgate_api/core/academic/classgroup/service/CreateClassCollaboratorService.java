@@ -50,16 +50,13 @@ public class CreateClassCollaboratorService implements CreateClassCollaboratorUs
             throw new IllegalStateException("Este educador já está vinculado à turma.");
         }
 
+        NaturalPerson person = naturalPersonRepository.findByIdOrThrow(collaborator.getNaturalPersonId());
+
         ClassCollaborator classCollaborator = ClassCollaborator.create(
                 classGroup, command.collaboratorId(), command.educatorCategoryItemId());
 
         ClassCollaborator saved = repository.save(classCollaborator);
 
-        NaturalPerson person = naturalPersonRepository.findById(collaborator.getNaturalPersonId()).orElse(null);
-
-        return ClassCollaboratorResponse.fromEntity(
-                saved,
-                person == null ? null : person.getName(),
-                category.getName());
+        return ClassCollaboratorResponse.fromEntity(saved, person.getName(), category.getName());
     }
 }

@@ -25,7 +25,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -74,7 +74,8 @@ class ReactivateLearnerWithClassIntegrationTest extends PostgresIntegrationTest 
     @BeforeEach
     void setUp() {
         service = new ReactivateLearnerService(learnerRepository, query -> null,
-                new ActivateClassLearnerLinkService(classGroupRepository, classLearnerRepository));
+                new ActivateClassLearnerLinkService(
+                        classGroupRepository, classLearnerRepository, learnerRepository, naturalPersonRepository));
 
         classGroup = givenClassGroup(1);
         otherClassGroup = givenClassGroup(2);

@@ -1,7 +1,5 @@
 package com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.service;
 
-import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.RefreshClassGroupTitlesUseCase;
-import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.RefreshClassGroupTitlesCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.domain.SchoolGrade;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.repository.SchoolGradeRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.usecase.command.SoftDeleteSchoolGradeCommand;
@@ -26,9 +24,6 @@ class SoftDeleteSchoolGradeServiceTest {
     @Mock
     private SchoolGradeRepository repository;
 
-    @Mock
-    private RefreshClassGroupTitlesUseCase refreshClassGroupTitlesUseCase;
-
     @InjectMocks
     private SoftDeleteSchoolGradeService service;
 
@@ -42,18 +37,6 @@ class SoftDeleteSchoolGradeServiceTest {
         service.handle(new SoftDeleteSchoolGradeCommand(id));
 
         verify(repository).delete(existing);
-    }
-
-    @Test
-    @DisplayName("Deve recalcular o título das turmas afetadas após excluir a série")
-    void handle_ShouldRefreshClassGroupTitles() {
-        UUID id = UUID.randomUUID();
-        SchoolGrade existing = SchoolGrade.create("Primeiro ano", null, 1);
-        when(repository.findByIdOrThrow(id)).thenReturn(existing);
-
-        service.handle(new SoftDeleteSchoolGradeCommand(id));
-
-        verify(refreshClassGroupTitlesUseCase).handle(RefreshClassGroupTitlesCommand.bySchoolGrade(existing.getId()));
     }
 
     @Test

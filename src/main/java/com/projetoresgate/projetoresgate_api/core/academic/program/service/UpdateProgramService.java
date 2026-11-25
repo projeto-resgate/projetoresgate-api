@@ -1,15 +1,18 @@
 package com.projetoresgate.projetoresgate_api.core.academic.program.service;
 
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassCollaboratorRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.RefreshClassGroupTitlesUseCase;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.RefreshClassGroupTitlesCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.program.api.dto.ProgramResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.EducatorCategoryItem;
+import com.projetoresgate.projetoresgate_api.core.academic.program.domain.EducatorCategoryNames;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.Program;
 import com.projetoresgate.projetoresgate_api.core.academic.program.repository.EducatorCategoryItemRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.program.repository.ProgramRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.UpdateProgramUseCase;
 import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.command.UpdateProgramCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.api.dto.LegalPersonSummaryResponse;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.usecase.FindLegalPersonSummariesUseCase;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
 import org.springframework.stereotype.Service;
@@ -19,6 +22,7 @@ import org.springframework.util.StringUtils;
 import java.util.*;
 
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 @Service
 public class UpdateProgramService implements UpdateProgramUseCase {
@@ -27,15 +31,21 @@ public class UpdateProgramService implements UpdateProgramUseCase {
     private final EducatorCategoryItemRepository itemRepository;
     private final FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase;
     private final RefreshClassGroupTitlesUseCase refreshClassGroupTitlesUseCase;
+    private final ClassCollaboratorRepository classCollaboratorRepository;
+    private final LegalPersonRepository legalPersonRepository;
 
     public UpdateProgramService(ProgramRepository repository,
                                 EducatorCategoryItemRepository itemRepository,
                                 FindLegalPersonSummariesUseCase findLegalPersonSummariesUseCase,
-                                RefreshClassGroupTitlesUseCase refreshClassGroupTitlesUseCase) {
+                                RefreshClassGroupTitlesUseCase refreshClassGroupTitlesUseCase,
+                                ClassCollaboratorRepository classCollaboratorRepository,
+                                LegalPersonRepository legalPersonRepository) {
         this.repository = repository;
         this.itemRepository = itemRepository;
         this.findLegalPersonSummariesUseCase = findLegalPersonSummariesUseCase;
         this.refreshClassGroupTitlesUseCase = refreshClassGroupTitlesUseCase;
+        this.classCollaboratorRepository = classCollaboratorRepository;
+        this.legalPersonRepository = legalPersonRepository;
     }
 
     @Override
@@ -43,8 +53,12 @@ public class UpdateProgramService implements UpdateProgramUseCase {
     public ProgramResponse handle(UpdateProgramCommand command) {
         Program program = repository.findByIdOrThrow(command.id());
 
-        if (StringUtils.hasText(command.name()) && repository.existsByNameAndIdNot(command.name(), program.getId())) {
+        if (StringUtils.hasText(command.name()) && repository.existsByNameIgnoreCaseAndIdNot(command.name(), program.getId())) {
             throw new InternalException("Já existe um programa cadastrado com este nome.");
+        }
+
+        if (nonNull(command.institutionId()) && !command.institutionId().equals(program.getInstitutionId())) {
+            legalPersonRepository.findByIdOrThrow(command.institutionId());
         }
 
         String previousName = program.getName();
@@ -56,6 +70,7 @@ public class UpdateProgramService implements UpdateProgramUseCase {
                         .name(command.name())
                         .webSiteUrl(command.webSiteUrl())
                         .status(command.status())
+                        .institutionId(command.institutionId())
                         .apply()
         );
 
@@ -68,6 +83,10 @@ public class UpdateProgramService implements UpdateProgramUseCase {
 
     private void reconcileEducatorCategoryItems(Program program, List<UpdateProgramCommand.UpdateEducatorCategoryItemCommand> items) {
         List<UpdateProgramCommand.UpdateEducatorCategoryItemCommand> requested = isNull(items) ? List.of() : items;
+
+        EducatorCategoryNames.requireUnique(requested.stream()
+                .map(UpdateProgramCommand.UpdateEducatorCategoryItemCommand::name)
+                .toList());
 
         Map<UUID, EducatorCategoryItem> existingById = new HashMap<>();
         for (EducatorCategoryItem existing : program.getEducatorCategoryItemList()) {
@@ -98,6 +117,14 @@ public class UpdateProgramService implements UpdateProgramUseCase {
         List<EducatorCategoryItem> removed = program.getEducatorCategoryItemList().stream()
                 .filter(item -> !requestedIds.contains(item.getId()))
                 .toList();
+
+        removed.stream()
+                .filter(item -> classCollaboratorRepository.existsByEducatorCategoryItemId(item.getId()))
+                .findFirst()
+                .ifPresent(item -> {
+                    throw new IllegalStateException("A categoria \"" + item.getName()
+                            + "\" está vinculada a educadores de turmas e não pode ser removida.");
+                });
 
         program.getEducatorCategoryItemList().removeIf(item -> !requestedIds.contains(item.getId()));
 

@@ -70,7 +70,7 @@ class UpdateLegalPersonServiceTest {
         assertEquals("Nova Razão Social", person.getCorporateName());
         assertEquals("Novo Nome Fantasia", person.getTradeName());
         assertEquals("Novo Display", person.getDisplayName());
-        assertEquals("8599-6/04", person.getMainCnaeCode());
+        assertEquals("8599604", person.getMainCnaeCode());
         assertEquals(RegistrationStatus.SUSPENDED, person.getRegistrationStatus());
         assertEquals(CompanyStatus.INACTIVE, person.getCompanyStatus());
         assertEquals("Rio de Janeiro", person.getAddress().getCity());
@@ -115,26 +115,21 @@ class UpdateLegalPersonServiceTest {
     }
 
     @Test
-    @DisplayName("Deve manter o endereço existente quando nenhum endereço for enviado")
-    void handle_ShouldKeepExistingAddressWhenAddressCommandIsNull() {
-        UUID originalAddressId = address.getId();
-
+    @DisplayName("Endereço ausente no PUT deve ser recusado, como no POST")
+    void handle_ShouldRejectMissingAddress() {
         UpdateLegalPersonCommand command = new UpdateLegalPersonCommand(
                 personId, "Nova Razão Social", null, null, "12345678000195",
                 null, RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, null);
 
         when(repository.findByIdOrThrow(personId)).thenReturn(person);
         when(repository.existsByCnpjAndIdNot("12345678000195", personId)).thenReturn(false);
-        when(repository.save(any())).thenReturn(person);
 
-        service.handle(command);
+        InternalException exception = assertThrows(InternalException.class, () -> service.handle(command));
 
-        assertNotNull(person.getAddress());
-        assertEquals(originalAddressId, person.getAddress().getId());
-        assertEquals("São Paulo", person.getAddress().getCity());
-        assertEquals("01310-100", person.getAddress().getZipCode());
-        verify(repository).save(person);
+        assertEquals("O endereço é obrigatório.", exception.getMessage());
+        verify(repository, never()).save(any());
     }
+
 
     @Test
     @DisplayName("Deve atualizar normalizando o CNPJ formatado para apenas dígitos")

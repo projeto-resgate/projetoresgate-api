@@ -1,8 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.academic.collaborator.api.dto;
 
-import com.projetoresgate.projetoresgate_api.core.academic.collaborator.domain.Collaborator;
-import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
-import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
+import com.projetoresgate.projetoresgate_api.core.academic.collaborator.repository.CollaboratorRow;
 
 import java.util.UUID;
 
@@ -15,16 +13,15 @@ public record CollaboratorAutocompleteResponse(
         String legalPersonName,
         boolean isVoluntary
 ) {
-    public static CollaboratorAutocompleteResponse fromEntity(Collaborator entity, NaturalPerson naturalPerson,
-                                                              LegalPerson legalPerson) {
+    public static CollaboratorAutocompleteResponse fromRow(CollaboratorRow row) {
         return new CollaboratorAutocompleteResponse(
-                entity.getId(),
-                entity.getNaturalPersonId(),
-                naturalPerson == null ? null : naturalPerson.getName(),
-                naturalPerson == null ? null : naturalPerson.getCpf(),
-                entity.getLegalPersonId(),
-                legalPerson == null ? null : legalPerson.getDisplayName(),
-                entity.isVoluntary()
+                row.getId(),
+                row.getNaturalPersonId(),
+                row.getNaturalPersonName(),
+                row.getNaturalPersonCpf(),
+                row.getLegalPersonId(),
+                row.getLegalPersonName(),
+                row.getIsVoluntary()
         );
     }
 }

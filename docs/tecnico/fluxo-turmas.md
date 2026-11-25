@@ -43,11 +43,13 @@ Os sub-recursos são endpoints aninhados na turma:
 
 ### Edição (`PUT /class-group/{id}`)
 
-É **parcial**: campos `null` mantêm o valor atual (programa, instituição, previsão, `active`). Exceções:
+Recebe o **mesmo corpo do POST** e substitui a turma inteira (RN-GER-04):
 
-- `note` **sempre** é sobrescrita (enviar `null` apaga a observação);
-- `schoolGradeIds` só muda as séries se for enviado (`null` mantém; lista vazia **remove todas**);
-- mudar `startDate` ou `durationInMonths` **recalcula** `endDate`. Se só a duração mudar, usa-se o início atual.
+- programa, instituição, previsão, início e duração são **obrigatórios** (400 se faltarem);
+- `schoolGradeIds` ausente ou vazio **remove todas** as séries;
+- `note` ausente apaga a observação;
+- `active` ausente vale `true` (o padrão da criação);
+- `endDate` é sempre recalculado a partir de `startDate` + `durationInMonths`.
 
 ## Título automático
 
@@ -81,11 +83,12 @@ flowchart LR
     D[Editar horário<br/>dia ou ativo] --> T
     E[Excluir horário] --> T
     F[Renomear programa] -->|todas as turmas do programa| T
-    G[Excluir série] -->|todas as turmas com a série| T
+    G[Renomear série] -->|todas as turmas com a série| T
 ```
 
-Renomear um programa ou excluir uma série reescreve o título de **todas** as turmas afetadas
-(`RefreshClassGroupTitlesService`), em lote e na mesma transação.
+Renomear um programa ou uma série reescreve o título de **todas** as turmas afetadas
+(`RefreshClassGroupTitlesService`), em lote e na mesma transação. **Excluir** uma série não recalcula: a turma
+continua mostrando a série excluída (RN-SER-04).
 
 ## Horários
 
@@ -101,7 +104,8 @@ Renomear um programa ou excluir uma série reescreve o título de **todas** as t
 | Regra                                                          | Resposta |
 |----------------------------------------------------------------|----------|
 | Turma e educando precisam existir                              | 404      |
-| O educando **não pode estar duas vezes** na mesma turma         | 409      |
+| A **pessoa física do educando precisa existir** (não excluída)  | 404      |
+| O educando **não pode estar duas vezes** na mesma turma, mesmo com o vínculo **inativo** | 409 |
 | ⚠️ **Não valida** o status do educando: dá para vincular um `DROPPED_OUT` | — |
 | ⚠️ **Não valida** compatibilidade de série nem a **previsão de alunos** (é só uma projeção) | — |
 
@@ -113,7 +117,9 @@ Um educando pode estar em **várias turmas** ao mesmo tempo.
 
 Ao registrar desistência, **todos os vínculos** do educando com turmas viram `active = false` numa query
 única (`deactivateByLearnerId`). Os vínculos aparecem na turma como inativos, mas **não são removidos**.
-Reativar o educando **não** reativa os vínculos (ver [educandos](fluxo-educandos.md#reativar-reactivate)).
+Reativar o educando **sem** informar turma não reativa os vínculos. Para trazê-lo de volta a uma turma, use
+`POST /learner/{id}/reactivate` com `classGroupId` (ver [educandos](fluxo-educandos.md#reativar-reactivate)):
+é o caminho certo para vínculo **inativo**, porque o `POST` desta rota devolve 409 quando o vínculo já existe.
 
 ## Vincular educador
 
@@ -124,9 +130,11 @@ Reativar o educando **não** reativa os vínculos (ver [educandos](fluxo-educand
 | Turma e colaborador precisam existir                                                               | 404      |
 | A **categoria de educador precisa pertencer ao programa da turma**                                 | 404      |
 | O colaborador **não pode estar duas vezes** na mesma turma                                         | 409      |
+| A **pessoa física do colaborador precisa existir** (não excluída)                                  | 404      |
 
 A categoria é "o papel do educador **nesta turma**" (ex.: Professor, Auxiliar) e vem das categorias
 cadastradas no **programa**. Na edição, trocar a categoria exige que a nova também seja do programa.
+Uma categoria em uso por educadores de turma **não pode ser removida** do programa (409).
 
 ⚠️ Se o **programa da turma for trocado** (`PUT`), os educadores já vinculados **continuam** com a categoria
 do programa antigo — não há revalidação.

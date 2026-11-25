@@ -13,7 +13,7 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
@@ -62,14 +62,14 @@ class CollaboratorRepositoryIntegrationTest extends PostgresIntegrationTest {
                 false, naturalPerson.getId(), legalPerson == null ? null : legalPerson.getId()));
     }
 
-    private Page<Collaborator> search(String term) {
+    private Page<CollaboratorRow> search(String term) {
         entityManager.flush();
         entityManager.clear();
-        return repository.search(term, PageRequest.of(0, 10));
+        return repository.searchRows(term, false, PageRequest.of(0, 10));
     }
 
-    private List<UUID> naturalPersonIds(Page<Collaborator> page) {
-        return page.getContent().stream().map(Collaborator::getNaturalPersonId).toList();
+    private List<UUID> naturalPersonIds(Page<CollaboratorRow> page) {
+        return page.getContent().stream().map(CollaboratorRow::getNaturalPersonId).toList();
     }
 
     @Test
@@ -79,7 +79,7 @@ class CollaboratorRepositoryIntegrationTest extends PostgresIntegrationTest {
         Collaborator ana = givenCollaborator("Ana Souza", null, null, null);
         Collaborator bruno = givenCollaborator("Bruno Lima", null, null, null);
 
-        Page<Collaborator> result = search(null);
+        Page<CollaboratorRow> result = search(null);
 
         assertEquals(3, result.getTotalElements());
         assertEquals(List.of(ana.getNaturalPersonId(), bruno.getNaturalPersonId(), carla.getNaturalPersonId()),
@@ -92,7 +92,7 @@ class CollaboratorRepositoryIntegrationTest extends PostgresIntegrationTest {
         givenCollaborator("Ana Souza", null, null, null);
         Collaborator bruno = givenCollaborator("Bruno Lima", null, null, null);
 
-        Page<Collaborator> result = search("BRU");
+        Page<CollaboratorRow> result = search("BRU");
 
         assertEquals(1, result.getTotalElements());
         assertEquals(bruno.getNaturalPersonId(), naturalPersonIds(result).getFirst());
@@ -104,7 +104,7 @@ class CollaboratorRepositoryIntegrationTest extends PostgresIntegrationTest {
         givenCollaborator("Ana Souza", "Aninha", null, null);
         Collaborator bruno = givenCollaborator("Bruno Lima", "Brunão", null, null);
 
-        Page<Collaborator> result = search("brunão");
+        Page<CollaboratorRow> result = search("brunão");
 
         assertEquals(1, result.getTotalElements());
         assertEquals(bruno.getNaturalPersonId(), naturalPersonIds(result).getFirst());
@@ -116,7 +116,7 @@ class CollaboratorRepositoryIntegrationTest extends PostgresIntegrationTest {
         givenCollaborator("Ana Souza", null, "11122233344", null);
         Collaborator bruno = givenCollaborator("Bruno Lima", null, "55566677788", null);
 
-        Page<Collaborator> result = search("666777");
+        Page<CollaboratorRow> result = search("666777");
 
         assertEquals(1, result.getTotalElements());
         assertEquals(bruno.getNaturalPersonId(), naturalPersonIds(result).getFirst());
@@ -129,7 +129,7 @@ class CollaboratorRepositoryIntegrationTest extends PostgresIntegrationTest {
         LegalPerson organization = givenLegalPerson("Instituto Semear", null);
         Collaborator bruno = givenCollaborator("Bruno Lima", null, null, organization);
 
-        Page<Collaborator> result = search("semear");
+        Page<CollaboratorRow> result = search("semear");
 
         assertEquals(1, result.getTotalElements());
         assertEquals(bruno.getNaturalPersonId(), naturalPersonIds(result).getFirst());
@@ -142,7 +142,7 @@ class CollaboratorRepositoryIntegrationTest extends PostgresIntegrationTest {
         Collaborator ana = givenCollaborator("Ana Souza", null, null, organization);
         givenCollaborator("Bruno Lima", null, null, null);
 
-        Page<Collaborator> result = search("cursos");
+        Page<CollaboratorRow> result = search("cursos");
 
         assertEquals(1, result.getTotalElements());
         assertEquals(ana.getNaturalPersonId(), naturalPersonIds(result).getFirst());
