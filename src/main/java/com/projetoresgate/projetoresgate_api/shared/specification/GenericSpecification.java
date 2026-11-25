@@ -9,7 +9,7 @@ import java.util.Locale;
 
 public class GenericSpecification<T> implements Specification<T> {
 
-    public static final String EQUALS = ":";
+    public static final String EQUAL_TO = ":";
     public static final String ILIKE = "~";
     public static final String GREATER_THAN = ">";
     public static final String GREATER_OR_EQUAL = ">=";
@@ -17,7 +17,7 @@ public class GenericSpecification<T> implements Specification<T> {
     public static final String LESS_OR_EQUAL = "<=";
 
     private static final List<String> SUPPORTED_OPERATIONS =
-            List.of(EQUALS, ILIKE, GREATER_THAN, GREATER_OR_EQUAL, LESS_THAN, LESS_OR_EQUAL);
+            List.of(EQUAL_TO, ILIKE, GREATER_THAN, GREATER_OR_EQUAL, LESS_THAN, LESS_OR_EQUAL);
 
     private static final char ESCAPE_CHAR = '\\';
 
@@ -33,7 +33,7 @@ public class GenericSpecification<T> implements Specification<T> {
         Object value = criteria.value();
 
         return switch (criteria.operation()) {
-            case EQUALS -> builder.equal(path, value);
+            case EQUAL_TO -> builder.equal(path, value);
             case ILIKE -> ilike(path, value, builder);
             case GREATER_THAN -> greaterThan(path, value, builder);
             case GREATER_OR_EQUAL -> greaterOrEqual(path, value, builder);

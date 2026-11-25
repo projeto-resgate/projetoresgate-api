@@ -34,7 +34,48 @@ A configuração está em [`.github/dependabot.yml`](../../.github/dependabot.ym
    branch dele) ou feche o PR.
 4. **Major:** trate como tarefa. Leia o guia de migração, rode a aplicação localmente e só então faça o merge.
 5. **Comandos úteis, dentro do PR**, como comentário: `@dependabot rebase` (reaplica sobre a `main`),
-   `@dependabot ignore this major version`, `@dependabot ignore this dependency`.
+   `@dependabot ignore this major version`, `@dependabot ignore this dependency`. Veja
+   [Recusar uma atualização](#recusar-uma-atualização) antes de usar os de *ignore*.
+
+## Recusar uma atualização
+
+Há três jeitos de dizer "não" a um PR do Dependabot. Eles têm alcances bem diferentes.
+
+| Como                                               | O que acontece                                                                                       | Quando usar |
+|----------------------------------------------------|------------------------------------------------------------------------------------------------------|-------------|
+| **Só fechar o PR**                                 | Ele não reabre **aquela** versão. Quando sair uma versão mais nova, abre um PR novo                  | Recusa pontual: "esta versão, não" |
+| Comentar `@dependabot ignore this major version` e fechar | Ele para de sugerir **qualquer versão daquela major** (ex.: todo o Java 24). Correções da versão atual continuam chegando | A major inteira não serve, mas a próxima pode servir |
+| Comentar `@dependabot ignore this dependency` e fechar | Ele **nunca mais** sugere nada daquela dependência                                                   | Raramente. Você perde também as correções de segurança |
+
+Também existe `@dependabot ignore this minor version`, que vale para uma versão *minor* inteira (ex.: todo o 3.9.x).
+
+### Como o comando funciona
+
+- É um **comentário** no PR (aba *Conversation*), com o texto exato `@dependabot ignore this major version`. O
+  Dependabot responde no próprio PR confirmando e fecha o PR sozinho.
+- A "major" é sempre a do **número de versão que o Dependabot lê na dependência**, não a de algo que vem dentro dela.
+  Exemplo: em `eclipse-temurin:21-jre-alpine-3.24` a versão lida é `21` (o Java); em
+  `maven:3.9.12-eclipse-temurin-21` a versão lida é `3.9.12` (o **Maven**), e o `21` é só parte da tag.
+- A regra fica guardada **no GitHub, não no repositório**: não aparece no `dependabot.yml` nem passa por code review.
+  Para conferir o que está ignorado, comente em qualquer PR do Dependabot
+  `@dependabot show <nome da dependência> ignore conditions`.
+- Para desfazer: `@dependabot unignore this major version` (ou `unignore this dependency`) num PR daquela
+  dependência.
+- Se a regra deve valer para sempre e ficar documentada, prefira o `ignore` no próprio
+  [`.github/dependabot.yml`](../../.github/dependabot.yml), como já é feito para o Spring Boot e o Postgres.
+
+### Exemplo: imagens Java do Docker
+
+O projeto roda em **Java 21 (LTS)**. O Dependabot sugere subir as imagens para versões do Java que **não são LTS**
+(24, 26), com suporte curto. Essas trocas devem ser recusadas:
+
+| PR sugerido                                                        | O que fazer | Por quê |
+|--------------------------------------------------------------------|-------------|---------|
+| `eclipse-temurin` `21-jre-alpine-…` → `24-jre-alpine-…`            | Comentar `@dependabot ignore this major version` e fechar | A versão lida é a do Java: o comando ignora o Java 24 inteiro e mantém as correções do 21 |
+| `maven` `3.9.12-eclipse-temurin-21` → `3.9-eclipse-temurin-26`     | **Só fechar**, sem comando | A versão lida é a do Maven (3). O comando ignoraria **todo o Maven 3**, inclusive as correções |
+
+Quando o projeto decidir trocar de Java (por exemplo, para a próxima LTS), a mudança é feita à mão, nos dois `FROM`
+do `Dockerfile` e no `java.version` do `pom.xml`, como uma migração planejada.
 
 > O merge na `main` **não faz deploy**. O deploy continua manual (ver [`pipeline-ci-cd.md`](pipeline-ci-cd.md)).
 > Depois de aceitar atualizações, rode o deploy quando quiser publicar.
