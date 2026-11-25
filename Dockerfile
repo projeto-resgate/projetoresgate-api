@@ -12,7 +12,7 @@ RUN --mount=type=cache,target=/root/.m2 \
     && java -Djarmode=tools -jar target/*.jar extract --layers --destination target/extracted \
     && mv target/extracted/application/*.jar target/extracted/application/app.jar
 
-FROM eclipse-temurin:21-jre-alpine-3.24
+FROM eclipse-temurin:24-jre-alpine-3.22
 
 LABEL org.opencontainers.image.title="projetoresgate-api" \
       org.opencontainers.image.description="API do Projeto Resgate"
