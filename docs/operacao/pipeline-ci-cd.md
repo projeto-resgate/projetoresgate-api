@@ -196,10 +196,17 @@ Atualizações automáticas de dependências (Maven, GitHub Actions, Docker e Co
 A VM roda `:latest`. Para voltar a uma versão anterior, aponte o compose para uma tag `prod-<sha>` antiga —
 passo a passo em [`runbook.md`](runbook.md#rollback).
 
+## Actions fixadas por SHA
+
+Todas as actions de terceiros e do GitHub são referenciadas pelo **SHA completo do commit**, com a versão no
+comentário (`uses: docker/login-action@<sha> # v3.7.0`). Uma tag como `v3` pode ser movida para outro código;
+o SHA não. O Dependabot (`github-actions`) atualiza o SHA e o comentário juntos. Para trocar uma versão à mão,
+pegue o SHA da tag com `git ls-remote --tags https://github.com/<dono>/<action>.git` (use a linha `^{}` quando
+existir, que é o commit da tag anotada).
+
 ## Evoluções possíveis
 
 | Ideia                                                  | Ganho                                            |
 |--------------------------------------------------------|--------------------------------------------------|
-| Pinar as actions por SHA de commit                     | Proteção contra supply chain                     |
 | Quality Gate do Sonar bloqueando o merge               | Impede regressão de qualidade/cobertura          |
 | Notificação (e-mail/Discord) ao fim do deploy          | Feedback — o job termina antes da VM atualizar   |

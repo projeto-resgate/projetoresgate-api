@@ -130,10 +130,10 @@ public class Address extends AuditableEntity {
     }
 
     public void validate() {
+        this.zipCode = MaskUtils.unmask(this.zipCode);
         if (!StringUtils.hasText(this.zipCode)) {
             throw new InternalException("O CEP não pode ser vazio.");
         }
-        this.zipCode = MaskUtils.unmask(this.zipCode);
         if (!this.zipCode.matches("^\\d{8}$")) {
             throw new InternalException("O CEP deve ter 8 dígitos.");
         }

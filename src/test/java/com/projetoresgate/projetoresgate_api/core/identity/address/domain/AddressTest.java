@@ -223,4 +223,13 @@ class AddressTest {
         );
         assertEquals("O bairro não pode exceder 100 caracteres.", exception.getMessage());
     }
+
+    @Test
+    @DisplayName("CEP só com máscara deve ser tratado como vazio")
+    void validate_ShouldFailIfZipCodeIsOnlyMask() {
+        InternalException exception = assertThrows(InternalException.class, () ->
+                Address.create(null, null, "-.-", "1000", null, null, null, "São Paulo", "SP")
+        );
+        assertEquals("O CEP não pode ser vazio.", exception.getMessage());
+    }
 }
