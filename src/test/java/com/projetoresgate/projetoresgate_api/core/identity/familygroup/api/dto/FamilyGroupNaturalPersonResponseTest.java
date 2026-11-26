@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -19,9 +20,12 @@ class FamilyGroupNaturalPersonResponseTest {
                 "Daniela Ferreira", "daniela@email.com", "Dani", "11144477735", "123456789",
                 null, null, null, "11911112222");
 
-        FamilyGroupNaturalPersonResponse response = FamilyGroupNaturalPersonResponse.fromEntity(person, List.of());
+        UUID learnerId = UUID.randomUUID();
+
+        FamilyGroupNaturalPersonResponse response = FamilyGroupNaturalPersonResponse.fromEntity(person, List.of(), learnerId);
 
         assertEquals(person.getId(), response.id());
+        assertEquals(learnerId, response.learnerId());
         assertEquals("Daniela Ferreira", response.name());
         assertEquals("123456789", response.rg());
         assertEquals("11144477735", response.cpf());
@@ -34,9 +38,10 @@ class FamilyGroupNaturalPersonResponseTest {
         NaturalPerson person = NaturalPerson.create(
                 "Breno Ferreira", "breno@email.com", null, null, null, null, null, null, null);
 
-        FamilyGroupNaturalPersonResponse response = FamilyGroupNaturalPersonResponse.fromEntity(person, List.of());
+        FamilyGroupNaturalPersonResponse response = FamilyGroupNaturalPersonResponse.fromEntity(person, List.of(), null);
 
         assertEquals("Breno Ferreira", response.name());
+        assertNull(response.learnerId());
         assertNull(response.rg());
         assertNull(response.cpf());
         assertNull(response.cellphone());

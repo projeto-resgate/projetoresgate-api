@@ -12,6 +12,8 @@ import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.q
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindFamilyGroupNaturalPersonsQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.repository.LearnerRepository;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Learner;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.service.FindLearnerIdsByNaturalPersonIdsService;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.repository.ResponsibleRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRoleRepository;
@@ -73,7 +75,8 @@ class FamilyGroupServiceIntegrationTest extends PostgresIntegrationTest {
         updateService = new UpdateFamilyGroupService(familyGroupRepository);
         searchService = new FindAllFamilyGroupsService(familyGroupRepository);
         findNaturalPersonsService = new FindFamilyGroupNaturalPersonsService(familyGroupRepository,
-                new FindNaturalPersonRolesService(naturalPersonRoleRepository));
+                new FindNaturalPersonRolesService(naturalPersonRoleRepository),
+                new FindLearnerIdsByNaturalPersonIdsService(learnerRepository));
         addNaturalPersonService = new AddNaturalPersonToFamilyGroupService(
                 familyGroupRepository, naturalPersonRepository);
         removeNaturalPersonService = new RemoveNaturalPersonFromFamilyGroupService(familyGroupRepository);
@@ -296,6 +299,35 @@ class FamilyGroupServiceIntegrationTest extends PostgresIntegrationTest {
         assertEquals("Breno Ferreira", result.getContent().getFirst().name());
         assertEquals("11144477736", result.getContent().getFirst().cpf());
         assertEquals("11911113333", result.getContent().getFirst().cellphone());
+    }
+
+    @Test
+    @DisplayName("Deve retornar o id de educando de quem é educando, e null para quem não é ou teve o educando excluído")
+    void handle_ShouldReturnLearnerIdOfLinkedPersons() {
+        FamilyGroup group = createService.handle(buildCommand("Família Ferreira", "Joinville"));
+        NaturalPerson breno = givenPerson("Breno Ferreira", "11144477735");
+        NaturalPerson daniela = givenPerson("Daniela Ferreira", "11144477736");
+        NaturalPerson maria = givenPerson("Maria Silva", "11144477737");
+        Learner brenoLearner = learnerRepository.save(
+                Learner.create(breno.getId(), null, null, false, null, 2026, null, null));
+        Learner mariaLearner = learnerRepository.save(
+                Learner.create(maria.getId(), null, null, false, null, 2026, null, null));
+        familyGroupRepository.findByIdOrThrow(group.getId())
+                .update()
+                .naturalPersonList(List.of(breno, daniela, maria))
+                .apply();
+        familyGroupRepository.flush();
+        learnerRepository.delete(mariaLearner);
+        learnerRepository.flush();
+
+        List<FamilyGroupNaturalPersonResponse> result = findNaturalPersonsService.handle(
+                new FindFamilyGroupNaturalPersonsQuery(group.getId(), PAGE_ALL)).getContent();
+
+        assertEquals(List.of("Breno Ferreira", "Daniela Ferreira", "Maria Silva"),
+                result.stream().map(FamilyGroupNaturalPersonResponse::name).toList());
+        assertEquals(brenoLearner.getId(), result.get(0).learnerId());
+        assertNull(result.get(1).learnerId());
+        assertNull(result.get(2).learnerId());
     }
 
     @Test

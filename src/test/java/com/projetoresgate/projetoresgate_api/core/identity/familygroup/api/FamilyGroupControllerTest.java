@@ -40,6 +40,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(FamilyGroupController.class)
@@ -263,16 +264,20 @@ class FamilyGroupControllerTest {
                 "Breno Ferreira", "breno@email.com", null, "11144477736", "223456789",
                 null, null, null, "11911113333");
 
+        UUID danielaLearnerId = UUID.randomUUID();
+
         when(findNaturalPersonsUseCase.handle(any())).thenReturn(
                 new PageImpl<>(List.of(
-                        FamilyGroupNaturalPersonResponse.fromEntity(daniela, List.of(NaturalPersonRoleType.LEARNER)),
-                        FamilyGroupNaturalPersonResponse.fromEntity(breno, List.of(NaturalPersonRoleType.RESPONSIBLE))), PAGEABLE, 2));
+                        FamilyGroupNaturalPersonResponse.fromEntity(daniela, List.of(NaturalPersonRoleType.LEARNER), danielaLearnerId),
+                        FamilyGroupNaturalPersonResponse.fromEntity(breno, List.of(NaturalPersonRoleType.RESPONSIBLE), null)), PAGEABLE, 2));
 
         mockMvc.perform(get("/family-group/{id}/natural-person", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(2))
                 .andExpect(jsonPath("$.size").value(10))
                 .andExpect(jsonPath("$.content[0].id").value(daniela.getId().toString()))
+                .andExpect(jsonPath("$.content[0].learnerId").value(danielaLearnerId.toString()))
+                .andExpect(jsonPath("$.content[1].learnerId").value(nullValue()))
                 .andExpect(jsonPath("$.content[0].name").value("Daniela Ferreira"))
                 .andExpect(jsonPath("$.content[0].cpf").value("11144477735"))
                 .andExpect(jsonPath("$.content[0].rg").value("123456789"))
