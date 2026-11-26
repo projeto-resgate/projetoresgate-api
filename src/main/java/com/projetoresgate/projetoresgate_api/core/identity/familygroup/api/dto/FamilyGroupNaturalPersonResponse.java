@@ -10,15 +10,18 @@ import static java.util.Objects.isNull;
 
 public record FamilyGroupNaturalPersonResponse(
         UUID id,
+        UUID learnerId,
         String name,
         String rg,
         String cpf,
         String cellphone,
         List<NaturalPersonRoleType> roles
 ) {
-    public static FamilyGroupNaturalPersonResponse fromEntity(NaturalPerson entity, List<NaturalPersonRoleType> roles) {
+    public static FamilyGroupNaturalPersonResponse fromEntity(NaturalPerson entity, List<NaturalPersonRoleType> roles,
+                                                              UUID learnerId) {
         return new FamilyGroupNaturalPersonResponse(
                 entity.getId(),
+                learnerId,
                 entity.getName(),
                 entity.getRg(),
                 entity.getCpf(),

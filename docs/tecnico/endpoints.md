@@ -76,7 +76,7 @@ Fluxos: [`autenticacao.md`](autenticacao.md).
 | DELETE | `/family-group/{id}`                                  | Exclui (soft)                                      |
 | GET    | `/family-group`                                       | Lista com filtros                                  |
 | GET    | `/family-group/{id}`                                  | Detalhe                                            |
-| GET    | `/family-group/{id}/natural-person`                   | Membros da família (com papéis `LEARNER`/`RESPONSIBLE`) |
+| GET    | `/family-group/{id}/natural-person`                   | Membros da família (com papéis `LEARNER`/`RESPONSIBLE` e `learnerId`: o id do educando, para abrir `GET /learner/{id}`; `null` se a pessoa não for educanda) |
 | POST   | `/family-group/{id}/natural-person`                   | **Cria** pessoa nova já vinculada                  |
 | POST   | `/family-group/{id}/natural-person/{naturalPersonId}` | Vincula pessoa **existente**                       |
 | DELETE | `/family-group/{id}/natural-person/{naturalPersonId}` | Desvincula (não exclui a pessoa)                   |

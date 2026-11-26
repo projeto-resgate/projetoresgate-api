@@ -20,6 +20,8 @@ public interface LearnerRepository extends JpaRepository<Learner, UUID>, JpaSpec
 
     Optional<Learner> findByNaturalPersonId(UUID naturalPersonId);
 
+    List<Learner> findAllByNaturalPersonIdIn(Collection<UUID> naturalPersonIds);
+
     default Learner findByIdOrThrow(UUID id) {
         return findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Educando não encontrado com ID: " + id));

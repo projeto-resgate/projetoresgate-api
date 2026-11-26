@@ -6,6 +6,7 @@ import com.projetoresgate.projetoresgate_api.core.identity.familygroup.repositor
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.usecase.query.FindFamilyGroupNaturalPersonsQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.NaturalPersonRoleType;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.FindLearnerIdsByNaturalPersonIdsUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.FindNaturalPersonRolesUseCase;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.DisplayName;
@@ -36,6 +37,9 @@ class FindFamilyGroupNaturalPersonsServiceTest {
 
     @Mock
     private FindNaturalPersonRolesUseCase findNaturalPersonRolesUseCase;
+
+    @Mock
+    private FindLearnerIdsByNaturalPersonIdsUseCase findLearnerIdsUseCase;
 
     @InjectMocks
     private FindFamilyGroupNaturalPersonsService service;
@@ -141,6 +145,31 @@ class FindFamilyGroupNaturalPersonsServiceTest {
         assertEquals(List.of(NaturalPersonRoleType.LEARNER, NaturalPersonRoleType.RESPONSIBLE),
                 result.getContent().getFirst().roles());
         assertTrue(result.getContent().get(1).roles().isEmpty());
+    }
+
+    @Test
+    @DisplayName("Deve retornar o id de educando de quem é educando e null para os demais")
+    void handle_ShouldReturnLearnerIdWhenPersonIsLearner() {
+        UUID id = UUID.randomUUID();
+        UUID learnerId = UUID.randomUUID();
+        FamilyGroup familyGroup = FamilyGroup.create("FAM-1", "Família Ferreira", null, null, null, null, null, 4, null);
+        NaturalPerson daniela = NaturalPerson.create(
+                "Daniela Ferreira", "daniela@email.com", null, "11144477735", "123456789", null, null, null, "11911112222");
+        NaturalPerson breno = NaturalPerson.create(
+                "Breno Ferreira", "breno@email.com", null, "11144477736", "223456789", null, null, null, "11911113333");
+
+        when(repository.findByIdOrThrow(id)).thenReturn(familyGroup);
+        when(repository.findNaturalPersonsByFamilyGroupId(eq(id), eq(PAGEABLE)))
+                .thenReturn(new PageImpl<>(List.of(daniela, breno), PAGEABLE, 2));
+        when(findNaturalPersonRolesUseCase.handle(any())).thenReturn(Map.of());
+        when(findLearnerIdsUseCase.handle(List.of(daniela.getId(), breno.getId())))
+                .thenReturn(Map.of(daniela.getId(), learnerId));
+
+        Page<FamilyGroupNaturalPersonResponse> result =
+                service.handle(new FindFamilyGroupNaturalPersonsQuery(id, PAGEABLE));
+
+        assertEquals(learnerId, result.getContent().getFirst().learnerId());
+        assertNull(result.getContent().get(1).learnerId());
     }
 
     @Test
