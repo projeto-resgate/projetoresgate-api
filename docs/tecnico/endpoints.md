@@ -17,7 +17,7 @@ vale o Swagger.
 | IDs               | UUID nas rotas (`/{id}`)                                                                           |
 | Criar             | `POST` → `201 Created` (com `Location` em alguns) e corpo                                          |
 | Editar            | `PUT /{id}` → `200` com o recurso; o `id` vem **da URL**, nunca do corpo. O corpo é o **mesmo do POST** e substitui o registro inteiro: campo ausente vale como não enviado (RN-GER-04) |
-| Excluir           | `DELETE /{id}` → `204 No Content` (soft delete)                                                    |
+| Excluir           | `DELETE /{id}` → `204 No Content` (soft delete). **`409`** se o registro ainda estiver em uso, com a lista do que impede ([RN-GER-05](regras-implementadas.md#exclusão-e-cascatas)) |
 | Listar            | `GET` paginado + filtros dinâmicos ([ADR 009](../adr/009-busca-com-specification-builder.md))      |
 | Autocomplete      | `GET /autocomplete?searchTerm=&limit=` — leve, para campos de busca                                |
 | Nomes             | `GET /names` — lista enxuta `{id, name}` para preencher `<select>`                                 |
@@ -126,7 +126,7 @@ Fluxos: [`fluxo-educandos.md`](fluxo-educandos.md).
 |--------|---------------------------|---------------------------|
 | POST   | `/school-grade`           | Cria                      |
 | PUT    | `/school-grade/{id}`      | Edita (recalcula títulos) |
-| DELETE | `/school-grade/{id}`      | Exclui (recalcula títulos)|
+| DELETE | `/school-grade/{id}`      | Exclui; 409 se usada por turma, educando ou responsável |
 | GET    | `/school-grade`           | Lista                     |
 | GET    | `/school-grade/names`     | Nomes para `<select>`     |
 | GET    | `/school-grade/{id}`      | Detalhe                   |
@@ -137,7 +137,7 @@ Fluxos: [`fluxo-educandos.md`](fluxo-educandos.md).
 |--------|---------------------------------------------|---------------------------------------------|
 | POST   | `/class-group`                              | Cria                                        |
 | PUT    | `/class-group/{id}`                         | Edita (substitui; mesmo corpo do POST)      |
-| DELETE | `/class-group/{id}`                         | Exclui (cascata nos vínculos)               |
+| DELETE | `/class-group/{id}`                         | Exclui com horários e séries; 409 se houver educandos ou educadores vinculados |
 | GET    | `/class-group`                              | Lista resumida                              |
 | GET    | `/class-group/{id}`                         | Detalhe                                     |
 | POST   | `/class-group/{classGroupId}/schedule`      | Cria horário                                |

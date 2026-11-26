@@ -51,10 +51,10 @@ public class UpdateClassCollaboratorService implements UpdateClassCollaboratorUs
 
         ClassCollaborator saved = repository.save(classCollaborator);
 
-        Collaborator collaborator = collaboratorRepository.findByIdIncludingDeleted(saved.getCollaboratorId()).orElse(null);
+        Collaborator collaborator = collaboratorRepository.findById(saved.getCollaboratorId()).orElse(null);
         NaturalPerson person = isNull(collaborator) ? null
-                : naturalPersonRepository.findByIdIncludingDeleted(collaborator.getNaturalPersonId()).orElse(null);
-        String categoryName = educatorCategoryItemRepository.findByIdIncludingDeleted(saved.getEducatorCategoryItemId())
+                : naturalPersonRepository.findById(collaborator.getNaturalPersonId()).orElse(null);
+        String categoryName = educatorCategoryItemRepository.findById(saved.getEducatorCategoryItemId())
                 .map(item -> item.getName())
                 .orElse(null);
 

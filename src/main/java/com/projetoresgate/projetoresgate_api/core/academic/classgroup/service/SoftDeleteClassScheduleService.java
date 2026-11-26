@@ -36,7 +36,7 @@ public class SoftDeleteClassScheduleService implements SoftDeleteClassScheduleUs
     }
 
     private void refreshTitle(ClassGroup classGroup) {
-        Program program = programRepository.findByIdIncludingDeletedOrThrow(classGroup.getProgramId());
+        Program program = programRepository.findByIdOrThrow(classGroup.getProgramId());
         List<WeekDay> weekDays = repository.findActiveWeekDaysByClassGroupId(classGroup.getId());
         classGroup.refreshTitle(program.getName(), weekDays);
     }

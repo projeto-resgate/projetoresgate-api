@@ -104,12 +104,4 @@ public interface ClassLearnerRepository extends JpaRepository<ClassLearner, UUID
             where cl.learnerId = :learnerId and cl.active = true
             """)
     int deactivateByLearnerId(@Param("learnerId") UUID learnerId);
-
-    @Modifying
-    @Query(value = """
-            update class_learner
-            set deleted_at = now()
-            where class_group_id = :classGroupId and deleted_at is null
-            """, nativeQuery = true)
-    void softDeleteByClassGroupId(@Param("classGroupId") UUID classGroupId);
 }

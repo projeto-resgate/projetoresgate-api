@@ -16,6 +16,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
+import static org.mockito.Mockito.mock;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -40,10 +42,38 @@ class SoftDeleteLegalPersonServiceTest {
         SoftDeleteLegalPersonCommand command = new SoftDeleteLegalPersonCommand(id);
 
         when(repository.findByIdOrThrow(id)).thenReturn(person);
+        when(repository.countDependencies(person.getId()))
+                .thenReturn(mock(LegalPersonRepository.LegalPersonDependencies.class));
 
         service.handle(command);
 
         verify(repository).delete(person);
+    }
+
+    @Test
+    @DisplayName("Não deve excluir a pessoa jurídica referenciada por turmas, programas, colaboradores, educandos ou pessoas")
+    void handle_ShouldBlockWhenLegalPersonIsInUse() {
+        UUID id = UUID.randomUUID();
+        LegalPerson person = LegalPerson.create(
+                "11222333000181", "Razão Social LTDA", null, null, null,
+                RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE,
+                Address.create(null, null, "01310-100", "1000", null, null, "Bela Vista", "São Paulo", "SP"), null);
+        LegalPersonRepository.LegalPersonDependencies dependencies = mock(LegalPersonRepository.LegalPersonDependencies.class);
+        when(dependencies.getClassGroups()).thenReturn(1L);
+        when(dependencies.getPrograms()).thenReturn(2L);
+        when(dependencies.getCollaborators()).thenReturn(1L);
+        when(dependencies.getLearners()).thenReturn(3L);
+        when(dependencies.getWorkplaces()).thenReturn(1L);
+        when(repository.findByIdOrThrow(id)).thenReturn(person);
+        when(repository.countDependencies(person.getId())).thenReturn(dependencies);
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> service.handle(new SoftDeleteLegalPersonCommand(id)));
+
+        assertEquals("Não é possível excluir a pessoa jurídica porque existem vínculos com: 1 turma, 2 programas, "
+                + "1 colaborador, 3 educandos e 1 pessoa física (local de trabalho). Remova os vínculos antes de excluir.",
+                exception.getMessage());
+        verify(repository, never()).delete(any(LegalPerson.class));
     }
 
     @Test

@@ -32,10 +32,10 @@ public class FindClassGroupByIdService implements FindClassGroupByIdUseCase {
     public ClassGroupResponse handle(FindClassGroupByIdQuery query) {
         ClassGroup classGroup = repository.findByIdOrThrow(query.id());
 
-        String programName = programRepository.findByIdIncludingDeleted(classGroup.getProgramId())
+        String programName = programRepository.findById(classGroup.getProgramId())
                 .map(Program::getName)
                 .orElse(null);
-        String institutionName = legalPersonRepository.findByIdIncludingDeleted(classGroup.getInstitutionId())
+        String institutionName = legalPersonRepository.findById(classGroup.getInstitutionId())
                 .map(LegalPerson::getName)
                 .orElse(null);
 

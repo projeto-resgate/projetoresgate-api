@@ -1,7 +1,5 @@
 package com.projetoresgate.projetoresgate_api.core.academic.program.repository;
 
-import java.util.Collection;
-import java.util.List;
 
 
 import org.springframework.data.repository.query.Param;
@@ -29,10 +27,4 @@ public interface EducatorCategoryItemRepository extends JpaRepository<EducatorCa
                         "Categoria de educador não encontrada com ID: " + id + " no programa: " + programId));
     }
 
-    @Query(value = "SELECT * FROM educator_category_item WHERE id IN (:ids)", nativeQuery = true)
-    List<EducatorCategoryItem> findAllByIdIncludingDeleted(@Param("ids") Collection<UUID> ids);
-
-    default Optional<EducatorCategoryItem> findByIdIncludingDeleted(UUID id) {
-        return findAllByIdIncludingDeleted(List.of(id)).stream().findFirst();
-    }
 }

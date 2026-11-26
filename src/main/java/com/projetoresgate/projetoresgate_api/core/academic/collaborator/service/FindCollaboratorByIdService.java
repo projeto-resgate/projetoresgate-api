@@ -34,10 +34,10 @@ public class FindCollaboratorByIdService implements FindCollaboratorByIdUseCase 
     public CollaboratorResponse handle(FindCollaboratorByIdQuery query) {
         Collaborator collaborator = repository.findByIdOrThrow(query.id());
 
-        NaturalPerson naturalPerson = naturalPersonRepository.findByIdIncludingDeleted(collaborator.getNaturalPersonId())
+        NaturalPerson naturalPerson = naturalPersonRepository.findById(collaborator.getNaturalPersonId())
                 .orElse(null);
         LegalPerson legalPerson = isNull(collaborator.getLegalPersonId()) ? null
-                : legalPersonRepository.findByIdIncludingDeleted(collaborator.getLegalPersonId()).orElse(null);
+                : legalPersonRepository.findById(collaborator.getLegalPersonId()).orElse(null);
 
         return CollaboratorResponse.fromEntity(collaborator, naturalPerson, legalPerson);
     }

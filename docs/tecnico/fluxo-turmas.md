@@ -87,8 +87,8 @@ flowchart LR
 ```
 
 Renomear um programa ou uma série reescreve o título de **todas** as turmas afetadas
-(`RefreshClassGroupTitlesService`), em lote e na mesma transação. **Excluir** uma série não recalcula: a turma
-continua mostrando a série excluída (RN-SER-04).
+(`RefreshClassGroupTitlesService`), em lote e na mesma transação. Uma série usada por alguma turma **não pode ser
+excluída** (409, RN-GER-05), então o título nunca perde uma série.
 
 ## Horários
 
@@ -141,15 +141,17 @@ do programa antigo — não há revalidação.
 
 ## Excluir turma
 
-`DELETE /class-group/{id}` faz soft delete em **cascata manual**, na mesma transação:
+`DELETE /class-group/{id}` só é permitido quando a turma **não tem educandos nem educadores vinculados**
+(ativos ou inativos). Caso contrário responde **409** com a quantidade de cada um (RN-GER-05): remova os vínculos
+antes (`DELETE /class-group/{id}/learner/{id}` e `.../collaborator/{id}`).
+
+Sem vínculos, faz soft delete na mesma transação de:
 
 1. horários da turma;
-2. educadores da turma;
-3. educandos da turma;
-4. limpa a associação com séries;
-5. a própria turma.
+2. associação com séries;
+3. a própria turma.
 
-O programa, a instituição, os educandos e os colaboradores em si **não** são afetados — só os vínculos.
+O programa, a instituição, os educandos e os colaboradores em si **não** são afetados.
 
 ## Listagem e busca
 

@@ -64,4 +64,18 @@ public interface ClassGroupRepository extends JpaRepository<ClassGroup, UUID>, J
                                  @Param("institutionId") UUID institutionId,
                                  @Param("active") Boolean active,
                                  Pageable pageable);
+
+    interface ClassGroupDependencies {
+        long getLearners();
+
+        long getCollaborators();
+    }
+
+    @Query(value = """
+            select (select count(*) from class_learner
+                    where class_group_id = :id and deleted_at is null) as "learners",
+                   (select count(*) from class_collaborator
+                    where class_group_id = :id and deleted_at is null) as "collaborators"
+            """, nativeQuery = true)
+    ClassGroupDependencies countDependencies(@Param("id") UUID id);
 }

@@ -97,7 +97,7 @@ public class UpdateLearnerService implements UpdateLearnerUseCase {
     }
 
     private void validateLearnerBelongsToFamilyGroup(UUID familyGroupId, UUID naturalPersonId) {
-        if (!familyGroupRepository.existsByIdIncludingDeleted(familyGroupId)) {
+        if (!familyGroupRepository.existsById(familyGroupId)) {
             throw new ResourceNotFoundException("Grupo familiar não encontrado com ID: " + familyGroupId);
         }
         validatePersonBelongsToFamilyGroup(familyGroupId, naturalPersonId);

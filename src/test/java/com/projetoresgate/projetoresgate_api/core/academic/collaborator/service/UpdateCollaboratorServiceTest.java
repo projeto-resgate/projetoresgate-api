@@ -53,7 +53,7 @@ class UpdateCollaboratorServiceTest {
         Collaborator collaborator = Collaborator.create(false, naturalPersonId, null);
 
         when(repository.findByIdOrThrow(collaborator.getId())).thenReturn(collaborator);
-        when(naturalPersonRepository.findByIdIncludingDeletedOrThrow(naturalPersonId)).thenReturn(mock(NaturalPerson.class));
+        when(naturalPersonRepository.findByIdOrThrow(naturalPersonId)).thenReturn(mock(NaturalPerson.class));
         when(legalPersonRepository.findByIdOrThrow(legalPersonId)).thenReturn(mock(LegalPerson.class));
         when(repository.save(collaborator)).thenReturn(collaborator);
 
@@ -71,7 +71,7 @@ class UpdateCollaboratorServiceTest {
         Collaborator collaborator = Collaborator.create(false, naturalPersonId, UUID.randomUUID());
 
         when(repository.findByIdOrThrow(collaborator.getId())).thenReturn(collaborator);
-        when(naturalPersonRepository.findByIdIncludingDeletedOrThrow(naturalPersonId)).thenReturn(mock(NaturalPerson.class));
+        when(naturalPersonRepository.findByIdOrThrow(naturalPersonId)).thenReturn(mock(NaturalPerson.class));
         when(repository.save(collaborator)).thenReturn(collaborator);
 
         service.handle(new UpdateCollaboratorCommand(collaborator.getId(), naturalPersonId, null, false));
@@ -98,26 +98,6 @@ class UpdateCollaboratorServiceTest {
     }
 
     @Test
-    @DisplayName("Colaborador de pessoa/empresa excluídas continua editável quando elas não mudam")
-    void handle_ShouldAllowEditingWhenPersonAndCompanyUnchangedEvenIfDeleted() {
-        UUID naturalPersonId = UUID.randomUUID();
-        UUID legalPersonId = UUID.randomUUID();
-        Collaborator collaborator = Collaborator.create(false, naturalPersonId, legalPersonId);
-
-        when(repository.findByIdOrThrow(collaborator.getId())).thenReturn(collaborator);
-        when(naturalPersonRepository.findByIdIncludingDeletedOrThrow(naturalPersonId)).thenReturn(mock(NaturalPerson.class));
-        when(legalPersonRepository.findByIdIncludingDeletedOrThrow(legalPersonId)).thenReturn(mock(LegalPerson.class));
-        when(repository.save(collaborator)).thenReturn(collaborator);
-
-        service.handle(new UpdateCollaboratorCommand(collaborator.getId(), naturalPersonId, legalPersonId, true));
-
-        assertTrue(collaborator.isVoluntary());
-        verify(naturalPersonRepository, never()).findByIdOrThrow(any());
-        verify(legalPersonRepository, never()).findByIdOrThrow(any());
-        verify(repository).save(collaborator);
-    }
-
-    @Test
     @DisplayName("Não deve permitir trocar para uma empresa excluída")
     void handle_ShouldRejectChangingToDeletedCompany() {
         UUID naturalPersonId = UUID.randomUUID();
@@ -125,7 +105,7 @@ class UpdateCollaboratorServiceTest {
         Collaborator collaborator = Collaborator.create(false, naturalPersonId, null);
 
         when(repository.findByIdOrThrow(collaborator.getId())).thenReturn(collaborator);
-        when(naturalPersonRepository.findByIdIncludingDeletedOrThrow(naturalPersonId)).thenReturn(mock(NaturalPerson.class));
+        when(naturalPersonRepository.findByIdOrThrow(naturalPersonId)).thenReturn(mock(NaturalPerson.class));
         when(legalPersonRepository.findByIdOrThrow(deletedCompanyId)).thenThrow(new ResourceNotFoundException("excluída"));
 
         assertThrows(ResourceNotFoundException.class, () -> service.handle(

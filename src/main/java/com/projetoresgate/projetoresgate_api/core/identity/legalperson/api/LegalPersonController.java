@@ -87,7 +87,8 @@ public class LegalPersonController {
     @Operation(summary = "Deletar Pessoa Jurídica (Soft Delete)", description = "Marca uma pessoa jurídica como deletada sem remover do banco.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Pessoa jurídica deletada com sucesso", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Pessoa jurídica não encontrada", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Pessoa jurídica não encontrada", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Pessoa jurídica referenciada por turmas, programas, colaboradores, educandos ou pessoas físicas: remova os vínculos antes de excluir", content = @Content)
     })
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         softDeleteUseCase.handle(new SoftDeleteLegalPersonCommand(id));

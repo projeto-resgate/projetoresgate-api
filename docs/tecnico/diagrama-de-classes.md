@@ -472,8 +472,8 @@ Regras que moram aqui:
 ## Notas das últimas mudanças
 
 - `ClassGroup.schoolGradeList` referencia `SchoolGradeRef`, uma entidade somente leitura (`@Immutable`) mapeada na
-  mesma tabela `school_grade`, **sem** o filtro de exclusão. Assim a turma e o título continuam mostrando uma
-  série que foi excluída. Ver [política de exclusão](regras-implementadas.md#política-com-registros-excluídos-decidida-com-a-ong).
+  mesma tabela `school_grade`, com o mesmo filtro de exclusão das demais entidades. Uma série usada por turma não
+  pode ser excluída ([RN-GER-05](regras-implementadas.md#exclusão-e-cascatas)).
 - `NaturalPerson.workplaceId` aponta para `LegalPerson` (local de trabalho), por id, sem associação JPA.
 - `LearnerParticipationStatus` (`ACTIVE`, `NO_CLASS`, `DROPPED_OUT`) é um enum de resposta, **calculado** na
   listagem de educandos. O que é gravado no `Learner` continua sendo `LearnerStatus` (`ACTIVE`, `DROPPED_OUT`).

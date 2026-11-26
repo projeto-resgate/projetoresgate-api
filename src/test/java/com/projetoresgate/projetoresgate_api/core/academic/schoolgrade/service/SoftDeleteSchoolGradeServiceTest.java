@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
+import static org.mockito.Mockito.mock;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
@@ -33,10 +34,32 @@ class SoftDeleteSchoolGradeServiceTest {
         UUID id = UUID.randomUUID();
         SchoolGrade existing = SchoolGrade.create("Primeiro ano", null, 1);
         when(repository.findByIdOrThrow(id)).thenReturn(existing);
+        when(repository.countDependencies(existing.getId()))
+                .thenReturn(mock(SchoolGradeRepository.SchoolGradeDependencies.class));
 
         service.handle(new SoftDeleteSchoolGradeCommand(id));
 
         verify(repository).delete(existing);
+    }
+
+    @Test
+    @DisplayName("Não deve excluir a série usada por turmas, educandos ou responsáveis")
+    void handle_ShouldBlockWhenSchoolGradeIsInUse() {
+        UUID id = UUID.randomUUID();
+        SchoolGrade existing = SchoolGrade.create("Primeiro ano", null, 1);
+        SchoolGradeRepository.SchoolGradeDependencies dependencies = mock(SchoolGradeRepository.SchoolGradeDependencies.class);
+        when(dependencies.getClassGroups()).thenReturn(2L);
+        when(dependencies.getLearners()).thenReturn(1L);
+        when(dependencies.getResponsibles()).thenReturn(4L);
+        when(repository.findByIdOrThrow(id)).thenReturn(existing);
+        when(repository.countDependencies(existing.getId())).thenReturn(dependencies);
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> service.handle(new SoftDeleteSchoolGradeCommand(id)));
+
+        assertEquals("Não é possível excluir a série escolar porque existem vínculos com: 2 turmas, 1 educando "
+                + "e 4 responsáveis. Remova os vínculos antes de excluir.", exception.getMessage());
+        verify(repository, never()).delete(any(SchoolGrade.class));
     }
 
     @Test

@@ -99,7 +99,8 @@ public class NaturalPersonController {
     @Operation(summary = "Deletar Pessoa Física (Soft Delete)", description = "Marca uma pessoa física como deletada sem remover do banco.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Pessoa física deletada com sucesso", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Pessoa física não encontrada", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Pessoa física não encontrada", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Pessoa física que é educando, responsável, colaborador ou membro de grupo familiar: remova os vínculos antes de excluir", content = @Content)
     })
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         SoftDeleteNaturalPersonCommand command = new SoftDeleteNaturalPersonCommand(id);

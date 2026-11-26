@@ -23,6 +23,7 @@ Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `F
 | RN-GER-01  | Dados com máscara são gravados **só com o valor**: ao criar e editar, a API aceita com ou sem máscara e remove `.`, `-`, `/`, `(`, `)` e espaços de CPF, RG (também em maiúsculas), CNPJ, CNAE, CEP, telefone e celular (inclusive do representante). Letras não são removidas, então valor inválido continua sendo recusado. A **exibição com máscara é do front** | — | `MaskUtils`, comandos e `validate()` das entidades |
 | RN-GER-02  | A migration V020 limpou os valores já gravados; CPF/RG cuja limpeza criaria duplicidade com outro registro ativo foram mantidos como estavam | — | `V020__Remove_masks_from_stored_values.sql` |
 | RN-GER-03  | Buscas, filtros e autocompletes **não tratam máscara**: o termo é comparado como foi enviado. Como os valores são gravados limpos, o front deve enviar CPF, RG, CNPJ, CEP e telefones **sem máscara** ao buscar | — | Serviços de listagem e autocomplete |
+| RN-GER-05  | **Não se exclui o que está em uso.** `DELETE` de programa, série escolar, pessoa jurídica, pessoa física, grupo familiar, colaborador e turma é recusado se ainda houver dependentes **ativos**, com a lista do que impede: *"Não é possível excluir o programa porque existem vínculos com: 2 turmas. Remova os vínculos antes de excluir."*. Dependentes já excluídos não contam. Ver [Exclusão](#exclusão-e-cascatas) | 409 | `DeletionGuard` e `countDependencies`/`count*` dos repositórios |
 | RN-GER-04  | **PUT recebe o mesmo corpo do POST e se comporta igual**: substitui o registro inteiro. Campo obrigatório no POST é obrigatório no PUT (400); campo opcional ausente fica **nulo**; lista ausente vale como **lista vazia**; `active` ausente vale o padrão da criação (`true`). Exceções: `PUT /user` não altera e-mail e só troca a senha quando `password` (com `currentPassword`) é enviado; o vínculo de educador com a turma não troca o colaborador | 400 | Comandos `Update*Command` e serviços de edição |
 
 ## Usuário e acesso
@@ -98,7 +99,7 @@ Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `F
 | RN-FAM-07  | Uma pessoa pode estar em **mais de uma** família (relação N–N)                          | —    | `family_group_natural_person`      |
 | RN-FAM-08  | Não dá para desvincular um **educando** do seu único grupo familiar ativo (vincule-o a outro antes) | 409 | `RemoveNaturalPersonFromFamilyGroupService` |
 | RN-FAM-09  | Não dá para desvincular quem é **responsável** por um educando daquela família (tire-o da lista de responsáveis antes) | 409 | `RemoveNaturalPersonFromFamilyGroupService` |
-| RN-FAM-10  | Excluir a família **mantém** os vínculos das pessoas (o educando continua editável informando a família excluída) e exclui o endereço | — | `SoftDeleteFamilyGroupService` |
+| RN-FAM-10  | Excluir a família só é permitido **sem pessoas vinculadas** (RN-GER-05); o endereço é excluído junto | 409 | `SoftDeleteFamilyGroupService` |
 | RN-FAM-11  | No PUT, endereço ausente deixa a família **sem endereço** (o endereço anterior é excluído) | — | `UpdateFamilyGroupService` |
 
 ## Programa
@@ -122,7 +123,7 @@ Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `F
 | RN-SER-01  | Nome obrigatório (≤ 255) e **único** entre ativas, sem diferenciar maiúsculas/minúsculas | 400  | `CreateSchoolGradeService`         |
 | RN-SER-02  | Ordem (`gradeOrder`) obrigatória e **≥ 1**; define a ordenação no título das turmas     | 400  | `SchoolGrade.validate`             |
 | RN-SER-03  | Abreviação ≤ 50 caracteres (opcional)                                                   | 400  | `SchoolGrade.validate`             |
-| RN-SER-04  | **Renomear** uma série recalcula o título das turmas que a usam. **Excluir** não recalcula: a turma continua mostrando a série excluída | — | `UpdateSchoolGradeService`, `SchoolGradeRef` |
+| RN-SER-04  | **Renomear** uma série recalcula o título das turmas que a usam. Série usada por turma, educando ou responsável **não pode ser excluída** (RN-GER-05) | 409 | `UpdateSchoolGradeService`, `SoftDeleteSchoolGradeService` |
 
 ## Educando e responsáveis
 
@@ -176,59 +177,51 @@ Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `F
 | RN-TUR-08  | Educador só uma vez por turma; a pessoa física do colaborador precisa existir           | 409/404 | `CreateClassCollaboratorService` |
 | RN-TUR-09  | A categoria do educador deve ser do **programa da turma**                               | 404  | `findByIdAndProgramIdOrThrow`      |
 | RN-TUR-10  | Criar/editar/excluir horário recalcula o título                                         | —    | `*ClassScheduleService`            |
-| RN-TUR-11  | Excluir turma remove (soft) horários, educadores, educandos e séries associadas         | —    | `SoftDeleteClassGroupService`      |
+| RN-TUR-11  | Excluir turma só é permitido **sem educandos nem educadores vinculados** (RN-GER-05); horários e séries vão junto | 409  | `SoftDeleteClassGroupService`      |
 | ~~RN-TUR-12~~ | ~~Editar turma: campos `null` preservam o valor atual~~ (substituída pela RN-GER-04) | — | — |
 
 ## Exclusão e cascatas
 
 Tudo é **soft delete**: o registro continua no banco com `deleted_at` preenchido.
 
-### Política com registros excluídos (decidida com a ONG)
+### Regra: não se exclui o que está em uso (RN-GER-05)
 
-| Situação                                                              | Comportamento                                                                                   |
-|-----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|
-| **Ler** algo já gravado cujo pai foi excluído (GET por id, listagens)  | Continua aparecendo, **com o nome do pai excluído** (turma mostra o programa excluído, etc.)     |
-| **Editar** um registro já gravado                                      | O pai só é validado se **mudou**; manter o pai excluído não trava a edição                       |
-| **Criar** um registro novo apontando para um pai excluído              | **Bloqueado** (404)                                                                              |
-| **Escolher** em autocomplete / seletores                               | Registros excluídos **não aparecem**                                                             |
+Antes de excluir, o service conta os dependentes **ativos** (com `deleted_at` nulo). Se houver algum, a exclusão é
+recusada com **409** e a mensagem lista o que impede, para quem está na tela saber o que desvincular antes.
 
-Como funciona no código:
-- **Listagens que juntam nomes** (colaboradores e seu autocomplete, educandos e educadores da turma, turmas e
-  autocomplete de educando) são **uma query SQL nativa** que devolve uma projection (`*Row`) já com os nomes.
-  O SQL lê as tabelas direto, então cada `JOIN` decide se filtra `deleted_at`: nome de pai excluído aparece;
-  autocompletes filtram pessoa excluída. O nome da empresa usa o mesmo fallback de `LegalPerson.getName()`
-  (nome de exibição → nome fantasia → razão social).
-- Demais leituras de nome e título usam `findByIdIncludingDeleted` / `findAllByIdIncludingDeleted` (consulta
-  nativa que ignora o filtro `deleted_at`). **Só leituras** usam esses métodos.
-- Validação de criação e de troca de pai usa o `findById` normal, que não enxerga excluídos.
-- Série escolar: a turma referencia a série pela entidade `SchoolGradeRef` (sem filtro de exclusão), então a
-  turma e o título mantêm uma série excluída. A criação continua exigindo série existente.
-- `LegalPerson.address` usa `@NotFound(IGNORE)` para não quebrar a leitura quando o endereço foi excluído.
-- Pessoas com `deleted_at` continuam **fora** do grupo familiar (a relação família ↔ pessoa respeita o filtro).
-- CPF, RG, CNPJ e e-mail de usuário são únicos **só entre registros ativos** (índices parciais, V019): é possível
-  recadastrar o documento de um registro excluído.
+| Ao excluir…        | É bloqueado se houver…                                                                 | Vai junto (partes do próprio registro) |
+|--------------------|----------------------------------------------------------------------------------------|----------------------------------------|
+| **Programa**       | turmas                                                                                 | categorias de educador                 |
+| **Série escolar**  | turmas, educandos ou responsáveis com essa série                                       | —                                      |
+| **Pessoa jurídica**| turmas (instituição), programas, colaboradores, educandos (instituição) ou pessoas físicas (local de trabalho) | endereço           |
+| **Pessoa física**  | cadastro de educando, responsabilidade por educando, cadastro de colaborador ou grupo familiar | —                              |
+| **Grupo familiar** | pessoas físicas no grupo                                                               | endereço                               |
+| **Colaborador**    | vínculos de educador em turmas (ativos ou inativos)                                    | —                                      |
+| **Turma**          | educandos ou educadores vinculados (ativos ou inativos)                                | horários e séries da turma             |
+| **Educando**       | — (não existe exclusão de educando; só desistência)                                    | —                                      |
+| **Usuário**        | — (sem dependentes; exclui só o próprio usuário)                                       | —                                      |
 
-### O que cada exclusão arrasta
+Para excluir algo em uso, desfaça os vínculos primeiro: remova o educando/educador da turma
+(`DELETE /class-group/{id}/learner|collaborator/{id}`), tire a pessoa do grupo
+(`DELETE /family-group/{id}/natural-person/{naturalPersonId}`), troque o programa/instituição das turmas, etc.
 
-Em **negrito**, o que **não** é verificado e pode deixar referências "órfãs" (agora **toleradas e exibidas**, conforme a política acima).
+Como funciona no código: `shared/deletion/DeletionGuard` monta a mensagem e lança `IllegalStateException` (409). Cada
+repositório tem uma consulta nativa de contagem (`countDependencies`, `countActiveClassGroups`, `countActiveClassLinks`,
+`countActiveMembers`), em SQL para que `identity` não precise importar classes de `academic`. Testes:
+`DeletionDependenciesIntegrationTest` (consultas no Postgres) e os `SoftDelete*ServiceTest`.
 
-| Ao excluir…        | Também some                                              | **Não é verificado / não some**                                              |
-|--------------------|----------------------------------------------------------|------------------------------------------------------------------------------|
-| **Turma**          | Horários, educadores, educandos (vínculos), séries da turma | —                                                                          |
-| **Educando**       | — (não existe exclusão de educando; só desistência)      | —                                                                            |
-| **Grupo familiar** | O grupo e o endereço dele                                | **Educandos, responsáveis e os vínculos das pessoas com o grupo continuam**; o educando segue editável informando a família excluída |
-| **Pessoa física**  | Só a pessoa                                              | **Educando, colaborador, responsabilidade, vínculos com família e com turmas continuam** (a turma segue listando); some do autocomplete e não pode ser vinculada a novas turmas |
-| **Pessoa jurídica**| Só a empresa (e seu endereço, por cascade)               | **Programas, turmas, educandos, colaboradores e locais de trabalho que a referenciam continuam**, exibindo o nome |
-| **Programa**       | Só o programa                                            | **Suas turmas continuam**, com o nome do programa; o título não é recalculado |
-| **Série escolar**  | Só a série                                               | Turmas e títulos mantêm a série; educandos/responsáveis seguem com `schoolGradeId` |
-| **Colaborador**    | Só o colaborador                                         | **Vínculos com turmas continuam** e aparecem na lista de educadores da turma |
-| **Usuário**        | Só o usuário (soft delete)                               | Refresh tokens continuam no banco até expirar (e não há revogação)           |
+### Leitura
 
-### Limitações conhecidas
-- A busca por nome/CPF de `GET /learner` (`searchTerm`) não encontra educando cuja pessoa física foi excluída.
-- A relação `FamilyGroup` ↔ `NaturalPerson` (ManyToMany) não lista pessoas excluídas.
+Como nada em uso pode ser excluído, **não existem registros órfãos** e não há código especial para eles: toda
+leitura usa os métodos normais (`findById`, `findAllById`), que respeitam o `@SQLRestriction("deleted_at IS NULL")`
+das entidades. Criar ou trocar um vínculo para um registro excluído responde **404**, como para um id inexistente.
+Autocompletes e seletores também não mostram excluídos.
 
-Testes: `DeletedRecordsLookupIntegrationTest`, `DeletedParentPolicyIntegrationTest`, `DeletionConsistencyIntegrationTest` e `ListingQueriesIntegrationTest` (banco real).
+CPF, RG, CNPJ e e-mail de usuário são únicos **só entre registros ativos** (índices parciais, V019): é possível
+recadastrar o documento de um registro excluído.
+
+Testes: `DeletionDependenciesIntegrationTest`, `DeletedParentPolicyIntegrationTest` e `DeletionConsistencyIntegrationTest`
+(banco real).
 
 ## Mensagens de erro
 

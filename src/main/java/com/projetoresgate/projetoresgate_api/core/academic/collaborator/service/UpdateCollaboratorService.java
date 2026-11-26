@@ -35,13 +35,9 @@ public class UpdateCollaboratorService implements UpdateCollaboratorUseCase {
     public CollaboratorResponse handle(UpdateCollaboratorCommand command) {
         Collaborator collaborator = repository.findByIdOrThrow(command.id());
 
-        NaturalPerson naturalPerson = command.naturalPersonId().equals(collaborator.getNaturalPersonId())
-                ? naturalPersonRepository.findByIdIncludingDeletedOrThrow(command.naturalPersonId())
-                : naturalPersonRepository.findByIdOrThrow(command.naturalPersonId());
+        NaturalPerson naturalPerson = naturalPersonRepository.findByIdOrThrow(command.naturalPersonId());
 
         LegalPerson legalPerson = isNull(command.legalPersonId()) ? null
-                : command.legalPersonId().equals(collaborator.getLegalPersonId())
-                ? legalPersonRepository.findByIdIncludingDeletedOrThrow(command.legalPersonId())
                 : legalPersonRepository.findByIdOrThrow(command.legalPersonId());
 
         if (!command.naturalPersonId().equals(collaborator.getNaturalPersonId())

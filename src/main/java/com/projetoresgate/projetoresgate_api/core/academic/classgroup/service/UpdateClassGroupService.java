@@ -11,7 +11,6 @@ import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.Up
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.UpdateClassGroupCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.Program;
 import com.projetoresgate.projetoresgate_api.core.academic.program.repository.ProgramRepository;
-import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.repository.SchoolGradeRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
@@ -33,20 +32,17 @@ public class UpdateClassGroupService implements UpdateClassGroupUseCase {
     private final ClassGroupRepository repository;
     private final ProgramRepository programRepository;
     private final LegalPersonRepository legalPersonRepository;
-    private final SchoolGradeRepository schoolGradeRepository;
     private final SchoolGradeRefRepository schoolGradeRefRepository;
     private final ClassScheduleRepository scheduleRepository;
 
     public UpdateClassGroupService(ClassGroupRepository repository,
                                    ProgramRepository programRepository,
                                    LegalPersonRepository legalPersonRepository,
-                                   SchoolGradeRepository schoolGradeRepository,
                                    SchoolGradeRefRepository schoolGradeRefRepository,
                                    ClassScheduleRepository scheduleRepository) {
         this.repository = repository;
         this.programRepository = programRepository;
         this.legalPersonRepository = legalPersonRepository;
-        this.schoolGradeRepository = schoolGradeRepository;
         this.schoolGradeRefRepository = schoolGradeRefRepository;
         this.scheduleRepository = scheduleRepository;
     }
@@ -71,8 +67,7 @@ public class UpdateClassGroupService implements UpdateClassGroupUseCase {
                 .durationInMonths(command.durationInMonths())
                 .note(command.note())
                 .active(isNull(command.active()) || command.active())
-                .schoolGradeList(loadSchoolGrades(classGroup,
-                        isNull(command.schoolGradeIds()) ? List.of() : command.schoolGradeIds()));
+                .schoolGradeList(loadSchoolGrades(isNull(command.schoolGradeIds()) ? List.of() : command.schoolGradeIds()));
 
         updater.apply();
 
@@ -84,34 +79,27 @@ public class UpdateClassGroupService implements UpdateClassGroupUseCase {
     }
 
     private void refreshTitle(ClassGroup classGroup) {
-        Program program = programRepository.findByIdIncludingDeletedOrThrow(classGroup.getProgramId());
+        Program program = programRepository.findByIdOrThrow(classGroup.getProgramId());
         List<WeekDay> weekDays = scheduleRepository.findActiveWeekDaysByClassGroupId(classGroup.getId());
         classGroup.refreshTitle(program.getName(), weekDays);
     }
 
     private String resolveProgramName(ClassGroup classGroup) {
-        return programRepository.findByIdIncludingDeleted(classGroup.getProgramId()).map(Program::getName).orElse(null);
+        return programRepository.findById(classGroup.getProgramId()).map(Program::getName).orElse(null);
     }
 
     private String resolveInstitutionName(ClassGroup classGroup) {
-        return legalPersonRepository.findByIdIncludingDeleted(classGroup.getInstitutionId())
+        return legalPersonRepository.findById(classGroup.getInstitutionId())
                 .map(LegalPerson::getName)
                 .orElse(null);
     }
 
-    private List<SchoolGradeRef> loadSchoolGrades(ClassGroup classGroup, List<UUID> ids) {
+    private List<SchoolGradeRef> loadSchoolGrades(List<UUID> ids) {
         if (isNull(ids) || ids.isEmpty()) {
             return new ArrayList<>();
         }
 
         Set<UUID> distinctIds = new LinkedHashSet<>(ids);
-
-        Set<UUID> newIds = new LinkedHashSet<>(distinctIds);
-        classGroup.getSchoolGradeList().forEach(current -> newIds.remove(current.getId()));
-
-        if (!newIds.isEmpty() && schoolGradeRepository.findAllById(newIds).size() != newIds.size()) {
-            throw new InternalException("Alguma série escolar informada não foi encontrada.");
-        }
 
         List<SchoolGradeRef> refs = schoolGradeRefRepository.findAllById(distinctIds);
         if (refs.size() != distinctIds.size()) {

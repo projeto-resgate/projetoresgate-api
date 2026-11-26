@@ -27,13 +27,6 @@ public interface LearnerRepository extends JpaRepository<Learner, UUID>, JpaSpec
                 .orElseThrow(() -> new ResourceNotFoundException("Educando não encontrado com ID: " + id));
     }
 
-    @Query(value = "SELECT * FROM learner WHERE id IN (:ids)", nativeQuery = true)
-    List<Learner> findAllByIdIncludingDeleted(@Param("ids") Collection<UUID> ids);
-
-    default Optional<Learner> findByIdIncludingDeleted(UUID id) {
-        return findAllByIdIncludingDeleted(List.of(id)).stream().findFirst();
-    }
-
     @Query(value = """
             select l.id as "id",
                    np.name as "name",

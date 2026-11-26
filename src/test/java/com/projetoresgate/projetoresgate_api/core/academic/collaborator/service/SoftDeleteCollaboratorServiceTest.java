@@ -12,6 +12,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
+import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -34,5 +38,20 @@ class SoftDeleteCollaboratorServiceTest {
         service.handle(new SoftDeleteCollaboratorCommand(collaborator.getId()));
 
         verify(repository).delete(collaborator);
+    }
+
+    @Test
+    @DisplayName("Não deve excluir o colaborador vinculado a turmas")
+    void handle_ShouldBlockWhenCollaboratorIsLinkedToClassGroups() {
+        Collaborator collaborator = Collaborator.create(false, UUID.randomUUID(), null);
+        when(repository.findByIdOrThrow(collaborator.getId())).thenReturn(collaborator);
+        when(repository.countActiveClassLinks(collaborator.getId())).thenReturn(1L);
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> service.handle(new SoftDeleteCollaboratorCommand(collaborator.getId())));
+
+        assertEquals("Não é possível excluir o colaborador porque existem vínculos com: 1 turma. "
+                + "Remova os vínculos antes de excluir.", exception.getMessage());
+        verify(repository, never()).delete(any(Collaborator.class));
     }
 }

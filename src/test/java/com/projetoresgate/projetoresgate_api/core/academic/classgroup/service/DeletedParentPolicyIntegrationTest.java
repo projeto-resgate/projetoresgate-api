@@ -1,16 +1,11 @@
 package com.projetoresgate.projetoresgate_api.core.academic.classgroup.service;
 
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.api.dto.ClassGroupResponse;
-import com.projetoresgate.projetoresgate_api.core.academic.classgroup.api.dto.ClassGroupSummaryResponse;
-import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.enums.WeekDay;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassGroupRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassScheduleRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.SchoolGradeRefRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.CreateClassGroupCommand;
-import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.CreateClassScheduleCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.UpdateClassGroupCommand;
-import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.query.FindAllClassGroupsQuery;
-import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.query.FindClassGroupByIdQuery;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.Program;
 import com.projetoresgate.projetoresgate_api.core.academic.program.domain.enums.ProgramStatus;
 import com.projetoresgate.projetoresgate_api.core.academic.program.repository.ProgramRepository;
@@ -19,9 +14,7 @@ import com.projetoresgate.projetoresgate_api.core.academic.program.usecase.comma
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.domain.SchoolGrade;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.repository.SchoolGradeRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.service.SoftDeleteSchoolGradeService;
-import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.service.UpdateSchoolGradeService;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.usecase.command.SoftDeleteSchoolGradeCommand;
-import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.usecase.command.UpdateSchoolGradeCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.enums.CompanyStatus;
@@ -37,17 +30,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-@DisplayName("Política de exclusão de pais da turma - Integração")
+@DisplayName("Exclusão de programa, instituição e série da turma - Integração")
 class DeletedParentPolicyIntegrationTest extends PostgresIntegrationTest {
 
     private static final AtomicInteger SEQUENCE = new AtomicInteger(0);
@@ -63,28 +54,19 @@ class DeletedParentPolicyIntegrationTest extends PostgresIntegrationTest {
 
     private CreateClassGroupService createClassGroup;
     private UpdateClassGroupService updateClassGroup;
-    private FindAllClassGroupsService findAll;
-    private FindClassGroupByIdService findById;
-    private CreateClassScheduleService createSchedule;
     private SoftDeleteProgramService deleteProgram;
     private SoftDeleteLegalPersonService deleteInstitution;
     private SoftDeleteSchoolGradeService deleteSchoolGrade;
-    private UpdateSchoolGradeService updateSchoolGrade;
 
     @BeforeEach
     void setUp() {
         createClassGroup = new CreateClassGroupService(classGroupRepository, programRepository,
                 legalPersonRepository, schoolGradeRepository, schoolGradeRefRepository);
         updateClassGroup = new UpdateClassGroupService(classGroupRepository, programRepository,
-                legalPersonRepository, schoolGradeRepository, schoolGradeRefRepository, scheduleRepository);
-        findAll = new FindAllClassGroupsService(classGroupRepository);
-        findById = new FindClassGroupByIdService(classGroupRepository, programRepository, legalPersonRepository);
-        createSchedule = new CreateClassScheduleService(classGroupRepository, scheduleRepository, programRepository);
+                legalPersonRepository, schoolGradeRefRepository, scheduleRepository);
         deleteProgram = new SoftDeleteProgramService(programRepository);
         deleteInstitution = new SoftDeleteLegalPersonService(legalPersonRepository);
         deleteSchoolGrade = new SoftDeleteSchoolGradeService(schoolGradeRepository);
-        updateSchoolGrade = new UpdateSchoolGradeService(schoolGradeRepository,
-                new RefreshClassGroupTitlesService(classGroupRepository, scheduleRepository, programRepository));
     }
 
     private Program givenProgram(String name) {
@@ -116,49 +98,6 @@ class DeletedParentPolicyIntegrationTest extends PostgresIntegrationTest {
         entityManager.clear();
     }
 
-    private List<ClassGroupSummaryResponse> listAll() {
-        return findAll.handle(new FindAllClassGroupsQuery(null, null, null, null, PageRequest.of(0, 50))).getContent();
-    }
-
-    @Test
-    @DisplayName("Programa excluído: a turma continua na listagem e no detalhe, com o nome do programa")
-    void deletedProgram_ClassGroupStaysVisibleWithProgramName() {
-        Program program = givenProgram("Reforço Escolar");
-        ClassGroupResponse created = givenClassGroup(program, givenInstitution("Escola A"));
-
-        deleteProgram.handle(new SoftDeleteProgramCommand(program.getId()));
-        flushAndClear();
-
-        List<ClassGroupSummaryResponse> list = listAll().stream()
-                .filter(c -> c.id().equals(created.id())).toList();
-        assertEquals(1, list.size(), "a turma não pode sumir da listagem");
-        assertEquals("Reforço Escolar", list.get(0).programName(), "o nome do programa excluído continua aparecendo");
-        assertEquals("Escola A", list.get(0).institutionName());
-
-        ClassGroupResponse detail = findById.handle(new FindClassGroupByIdQuery(created.id()));
-        assertEquals("Reforço Escolar", detail.programName());
-    }
-
-    @Test
-    @DisplayName("Programa excluído: a turma existente continua editável e aceita novos horários (o título é recalculado)")
-    void deletedProgram_ClassGroupStaysEditable() {
-        Program program = givenProgram("Arte e Cultura");
-        ClassGroupResponse created = givenClassGroup(program, givenInstitution("Escola B"));
-        deleteProgram.handle(new SoftDeleteProgramCommand(program.getId()));
-        flushAndClear();
-
-        ClassGroupResponse updated = assertDoesNotThrow(() -> updateClassGroup.handle(new UpdateClassGroupCommand(
-                created.id(), program.getId(), created.institutionId(), null, 45, null, null, "editada", null)));
-        assertEquals(45, updated.studentProjections());
-        assertEquals("Arte e Cultura", updated.programName());
-
-        assertDoesNotThrow(() -> createSchedule.handle(new CreateClassScheduleCommand(
-                created.id(), WeekDay.MONDAY, LocalTime.of(8, 0), LocalTime.of(9, 0))));
-        flushAndClear();
-
-        assertEquals("Arte e Cultura - Seg", findById.handle(new FindClassGroupByIdQuery(created.id())).title());
-    }
-
     @Test
     @DisplayName("Programa excluído: não é possível criar turma nova para ele")
     void deletedProgram_CannotCreateNewClassGroup() {
@@ -186,21 +125,6 @@ class DeletedParentPolicyIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("Instituição excluída (com o endereço): a turma continua visível com o nome da instituição")
-    void deletedInstitution_ClassGroupStaysVisibleWithInstitutionName() {
-        LegalPerson institution = givenInstitution("Colégio Esperança");
-        ClassGroupResponse created = givenClassGroup(givenProgram("Matemática"), institution);
-
-        deleteInstitution.handle(new SoftDeleteLegalPersonCommand(institution.getId()));
-        flushAndClear();
-
-        ClassGroupSummaryResponse summary = listAll().stream()
-                .filter(c -> c.id().equals(created.id())).findFirst().orElseThrow();
-        assertEquals("Colégio Esperança", summary.institutionName());
-        assertEquals("Colégio Esperança", findById.handle(new FindClassGroupByIdQuery(created.id())).institutionName());
-    }
-
-    @Test
     @DisplayName("Instituição excluída: não é possível criar turma nova para ela")
     void deletedInstitution_CannotCreateNewClassGroup() {
         Program program = givenProgram("Leitura");
@@ -210,42 +134,6 @@ class DeletedParentPolicyIntegrationTest extends PostgresIntegrationTest {
 
         assertThrows(ResourceNotFoundException.class, () -> createClassGroup.handle(new CreateClassGroupCommand(
                 program.getId(), institution.getId(), null, 30, START, 6, null)));
-    }
-
-    @Test
-    @DisplayName("Série excluída: a turma continua mostrando a série e o título não muda")
-    void deletedSchoolGrade_ClassGroupKeepsGradeAndTitle() {
-        SchoolGrade grade = givenGrade("7º ano", "7º", 7);
-        ClassGroupResponse created = givenClassGroup(givenProgram("Ciências"), givenInstitution("Escola F"), grade);
-        assertEquals("Ciências - 7º", created.title());
-
-        deleteSchoolGrade.handle(new SoftDeleteSchoolGradeCommand(grade.getId()));
-        flushAndClear();
-
-        ClassGroupResponse detail = findById.handle(new FindClassGroupByIdQuery(created.id()));
-        assertEquals(1, detail.schoolGrades().size(), "a série excluída continua na turma");
-        assertEquals(grade.getId(), detail.schoolGrades().get(0).id());
-        assertEquals("Ciências - 7º", detail.title(), "o título não perde a série excluída");
-    }
-
-    @Test
-    @DisplayName("Série excluída: a turma continua editável, mantendo a série; renomear a série ainda atualiza o título")
-    void deletedSchoolGrade_ClassGroupStaysEditable() {
-        SchoolGrade kept = givenGrade("8º ano", "8º", 8);
-        SchoolGrade other = givenGrade("9º ano", "9º", 9);
-        ClassGroupResponse created = givenClassGroup(givenProgram("História"), givenInstitution("Escola G"), kept, other);
-        deleteSchoolGrade.handle(new SoftDeleteSchoolGradeCommand(kept.getId()));
-        flushAndClear();
-
-        ClassGroupResponse updated = assertDoesNotThrow(() -> updateClassGroup.handle(new UpdateClassGroupCommand(
-                created.id(), null, null, List.of(kept.getId(), other.getId()), 40, null, null, null, null)));
-        assertEquals(2, updated.schoolGrades().size());
-        assertEquals("História - 8º, 9º", updated.title());
-        flushAndClear();
-
-        updateSchoolGrade.handle(new UpdateSchoolGradeCommand(other.getId(), other.getName(), "9ºA", 9));
-        flushAndClear();
-        assertEquals("História - 8º, 9ºA", findById.handle(new FindClassGroupByIdQuery(created.id())).title());
     }
 
     @Test
@@ -262,5 +150,31 @@ class DeletedParentPolicyIntegrationTest extends PostgresIntegrationTest {
                 program.getId(), institution.getId(), List.of(grade.getId()), 30, START, 6, null)));
         assertThrows(RuntimeException.class, () -> updateClassGroup.handle(new UpdateClassGroupCommand(
                 existing.id(), null, null, List.of(grade.getId()), null, null, null, null, null)));
+    }
+
+    @Test
+    @DisplayName("Não é possível excluir programa, instituição ou série que ainda tenham turma")
+    void parentsWithClassGroup_CannotBeDeleted() {
+        Program program = givenProgram("Robótica");
+        LegalPerson institution = givenInstitution("Escola I");
+        SchoolGrade grade = givenGrade("5º ano", "5º", 5);
+        givenClassGroup(program, institution, grade);
+
+        IllegalStateException programError = assertThrows(IllegalStateException.class,
+                () -> deleteProgram.handle(new SoftDeleteProgramCommand(program.getId())));
+        IllegalStateException institutionError = assertThrows(IllegalStateException.class,
+                () -> deleteInstitution.handle(new SoftDeleteLegalPersonCommand(institution.getId())));
+        IllegalStateException gradeError = assertThrows(IllegalStateException.class,
+                () -> deleteSchoolGrade.handle(new SoftDeleteSchoolGradeCommand(grade.getId())));
+        flushAndClear();
+
+        assertEquals("Não é possível excluir o programa porque existem vínculos com: 1 turma. "
+                + "Remova os vínculos antes de excluir.", programError.getMessage());
+        assertTrue(institutionError.getMessage().contains("1 turma"));
+        assertFalse(institutionError.getMessage().contains("programa"));
+        assertTrue(gradeError.getMessage().contains("1 turma"));
+        assertTrue(programRepository.findById(program.getId()).isPresent());
+        assertTrue(legalPersonRepository.findById(institution.getId()).isPresent());
+        assertTrue(schoolGradeRepository.findById(grade.getId()).isPresent());
     }
 }

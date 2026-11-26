@@ -9,7 +9,6 @@ import com.projetoresgate.projetoresgate_api.core.academic.program.repository.Pr
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.SchoolGradeRef;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.SchoolGradeRefRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.domain.SchoolGrade;
-import com.projetoresgate.projetoresgate_api.core.academic.schoolgrade.repository.SchoolGradeRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.ResourceNotFoundException;
 import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalException;
@@ -28,11 +27,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,9 +47,6 @@ class UpdateClassGroupServiceTest {
 
     @Mock
     private LegalPersonRepository legalPersonRepository;
-
-    @Mock
-    private SchoolGradeRepository schoolGradeRepository;
 
     @Mock
     private SchoolGradeRefRepository schoolGradeRefRepository;
@@ -76,10 +70,9 @@ class UpdateClassGroupServiceTest {
         when(program.getName()).thenReturn("Programa A");
 
         when(repository.findByIdOrThrow(classGroup.getId())).thenReturn(classGroup);
-        when(schoolGradeRepository.findAllById(any())).thenReturn(List.of(SchoolGrade.create("1ª Série", "1ª", 1)));
         when(schoolGradeRefRepository.findAllById(any())).thenReturn(
                 List.of(SchoolGradeRef.of(UUID.randomUUID(), "1ª Série", "1ª", 1)));
-        when(programRepository.findByIdIncludingDeletedOrThrow(classGroup.getProgramId())).thenReturn(program);
+        when(programRepository.findByIdOrThrow(classGroup.getProgramId())).thenReturn(program);
         when(scheduleRepository.findActiveWeekDaysByClassGroupId(classGroup.getId())).thenReturn(List.of());
         when(repository.save(any(ClassGroup.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -99,7 +92,7 @@ class UpdateClassGroupServiceTest {
         when(program.getName()).thenReturn("Programa A");
 
         when(repository.findByIdOrThrow(classGroup.getId())).thenReturn(classGroup);
-        when(programRepository.findByIdIncludingDeletedOrThrow(classGroup.getProgramId())).thenReturn(program);
+        when(programRepository.findByIdOrThrow(classGroup.getProgramId())).thenReturn(program);
         when(scheduleRepository.findActiveWeekDaysByClassGroupId(classGroup.getId())).thenReturn(List.of());
         when(repository.save(any(ClassGroup.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -109,30 +102,6 @@ class UpdateClassGroupServiceTest {
         assertEquals(PROGRAM_ID, classGroup.getProgramId());
         assertEquals(INSTITUTION_ID, classGroup.getInstitutionId());
         verify(legalPersonRepository, never()).findByIdOrThrow(any());
-    }
-
-    @Test
-    @DisplayName("Turma de programa/instituição excluídos continua editável quando eles não mudam")
-    void handle_ShouldAllowEditingWhenParentsAreUnchangedEvenIfDeleted() {
-        ClassGroup classGroup = givenClassGroup();
-        Program deletedProgram = mock(Program.class);
-        when(deletedProgram.getName()).thenReturn("Programa A");
-
-        when(repository.findByIdOrThrow(classGroup.getId())).thenReturn(classGroup);
-        lenient().when(programRepository.findByIdOrThrow(PROGRAM_ID)).thenThrow(new ResourceNotFoundException("excluído"));
-        lenient().when(legalPersonRepository.findByIdOrThrow(INSTITUTION_ID)).thenThrow(new ResourceNotFoundException("excluída"));
-        when(programRepository.findByIdIncludingDeletedOrThrow(PROGRAM_ID)).thenReturn(deletedProgram);
-        when(scheduleRepository.findActiveWeekDaysByClassGroupId(classGroup.getId())).thenReturn(List.of());
-        when(repository.save(any(ClassGroup.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        service.handle(new UpdateClassGroupCommand(classGroup.getId(), PROGRAM_ID, INSTITUTION_ID,
-                null, 45, null, null, "nova observação", null));
-
-        assertEquals(45, classGroup.getStudentProjections());
-        assertEquals("nova observação", classGroup.getNote());
-        verify(programRepository, never()).findByIdOrThrow(any());
-        verify(legalPersonRepository, never()).findByIdOrThrow(any());
-        verify(repository).save(classGroup);
     }
 
     @Test
@@ -167,43 +136,17 @@ class UpdateClassGroupServiceTest {
     }
 
     @Test
-    @DisplayName("Turma que já tem uma série excluída pode mantê-la ao ser editada (e ela continua no título)")
-    void handle_ShouldKeepAlreadyLinkedDeletedSchoolGrade() {
-        UUID deletedGradeId = UUID.randomUUID();
-        SchoolGradeRef deletedGrade = SchoolGradeRef.of(deletedGradeId, "1ª Série", "1ª", 1);
-        ClassGroup classGroup = ClassGroup.create(PROGRAM_ID, INSTITUTION_ID, 30,
-                LocalDateTime.of(2026, 2, 1, 8, 0), 6, null, "Programa A", List.of(deletedGrade));
-        Program program = mock(Program.class);
-        when(program.getName()).thenReturn("Programa A");
-
-        when(repository.findByIdOrThrow(classGroup.getId())).thenReturn(classGroup);
-        when(schoolGradeRefRepository.findAllById(any())).thenReturn(List.of(deletedGrade));
-        when(programRepository.findByIdIncludingDeletedOrThrow(PROGRAM_ID)).thenReturn(program);
-        when(scheduleRepository.findActiveWeekDaysByClassGroupId(classGroup.getId())).thenReturn(List.of());
-        when(repository.save(any(ClassGroup.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        service.handle(new UpdateClassGroupCommand(classGroup.getId(), null, null,
-                List.of(deletedGradeId), null, null, null, null, null));
-
-        assertEquals("Programa A - 1ª", classGroup.getTitle());
-        assertEquals(1, classGroup.getSchoolGradeList().size());
-        verify(schoolGradeRepository, never()).findAllById(any());
-        verify(repository).save(classGroup);
-    }
-
-    @Test
-    @DisplayName("Não deve permitir ADICIONAR a uma turma uma série que já foi excluída")
-    void handle_ShouldRejectAddingDeletedSchoolGrade() {
+    @DisplayName("Não deve permitir vincular à turma uma série inexistente ou excluída")
+    void handle_ShouldRejectMissingOrDeletedSchoolGrade() {
         ClassGroup classGroup = givenClassGroup();
         UUID deletedGradeId = UUID.randomUUID();
 
         when(repository.findByIdOrThrow(classGroup.getId())).thenReturn(classGroup);
-        when(schoolGradeRepository.findAllById(any())).thenReturn(List.of());
+        when(schoolGradeRefRepository.findAllById(any())).thenReturn(List.of());
 
         assertThrows(InternalException.class, () -> service.handle(new UpdateClassGroupCommand(
                 classGroup.getId(), null, null, List.of(deletedGradeId), null, null, null, null, null)));
 
         verify(repository, never()).save(any());
-        verifyNoInteractions(schoolGradeRefRepository);
     }
 }

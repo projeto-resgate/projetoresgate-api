@@ -91,7 +91,8 @@ public class ProgramController {
     @Operation(summary = "Deletar Programa (Soft Delete)", description = "Marca um programa como deletado sem remover do banco.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Programa deletado com sucesso", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Programa não encontrado", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Programa não encontrado", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Programa vinculado a turmas: remova os vínculos antes de excluir", content = @Content)
     })
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         softDeleteUseCase.handle(new SoftDeleteProgramCommand(id));

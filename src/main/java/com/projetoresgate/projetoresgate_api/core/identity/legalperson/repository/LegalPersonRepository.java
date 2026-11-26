@@ -1,10 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository;
 
-import java.util.Optional;
 
-import java.util.List;
 
-import java.util.Collection;
 
 import org.springframework.data.repository.query.Param;
 
@@ -30,15 +27,29 @@ public interface LegalPersonRepository extends JpaRepository<LegalPerson, UUID>,
                 .orElseThrow(() -> new ResourceNotFoundException("Pessoa jurídica não encontrada com ID: " + id));
     }
 
-    @Query(value = "SELECT * FROM legal_person WHERE id IN (:ids)", nativeQuery = true)
-    List<LegalPerson> findAllByIdIncludingDeleted(@Param("ids") Collection<UUID> ids);
+    interface LegalPersonDependencies {
+        long getClassGroups();
 
-    default Optional<LegalPerson> findByIdIncludingDeleted(UUID id) {
-        return findAllByIdIncludingDeleted(List.of(id)).stream().findFirst();
+        long getPrograms();
+
+        long getCollaborators();
+
+        long getLearners();
+
+        long getWorkplaces();
     }
 
-    default LegalPerson findByIdIncludingDeletedOrThrow(UUID id) {
-        return findByIdIncludingDeleted(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Pessoa jurídica não encontrada com ID: " + id));
-    }
+    @Query(value = """
+            select (select count(*) from class_group
+                    where institution_id = :id and deleted_at is null) as "classGroups",
+                   (select count(*) from program
+                    where institution_id = :id and deleted_at is null) as "programs",
+                   (select count(*) from collaborator
+                    where legal_person_id = :id and deleted_at is null) as "collaborators",
+                   (select count(*) from learner
+                    where institution_id = :id and deleted_at is null) as "learners",
+                   (select count(*) from natural_person
+                    where workplace_id = :id and deleted_at is null) as "workplaces"
+            """, nativeQuery = true)
+    LegalPersonDependencies countDependencies(@Param("id") UUID id);
 }

@@ -91,9 +91,6 @@ public interface FamilyGroupRepository extends JpaRepository<FamilyGroup, UUID>,
     @Query(value = "update family_group set deleted_at = now() where id = :id and deleted_at is null", nativeQuery = true)
     void softDeleteKeepingMembers(@Param("id") UUID id);
 
-    @Query(value = "select exists (select 1 from family_group where id = :id)", nativeQuery = true)
-    boolean existsByIdIncludingDeleted(@Param("id") UUID id);
-
     @Query(value = """
             select exists (
                 select 1 from learner l
@@ -148,4 +145,11 @@ public interface FamilyGroupRepository extends JpaRepository<FamilyGroup, UUID>,
 
         Long getRegisteredPeopleCount();
     }
+
+    @Query(value = """
+            select count(*) from family_group_natural_person fgnp
+            join natural_person np on np.id = fgnp.natural_person_id and np.deleted_at is null
+            where fgnp.family_group_id = :id
+            """, nativeQuery = true)
+    long countActiveMembers(@Param("id") UUID id);
 }
