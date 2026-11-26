@@ -117,7 +117,8 @@ public class ClassGroupController {
                     + "educadores e educandos). Os registros não são removidos fisicamente do banco.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Turma excluída com sucesso", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Turma não encontrada", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Turma não encontrada", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Turma com educandos ou educadores vinculados: remova os vínculos antes de excluir", content = @Content)
     })
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         softDeleteUseCase.handle(new SoftDeleteClassGroupCommand(id));

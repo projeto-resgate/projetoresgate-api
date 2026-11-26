@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -40,6 +41,22 @@ class SoftDeleteProgramServiceTest {
         service.handle(command);
 
         verify(repository).delete(program);
+    }
+
+    @Test
+    @DisplayName("Não deve excluir o programa que ainda tem turmas")
+    void handle_ShouldBlockWhenProgramHasClassGroups() {
+        UUID id = UUID.randomUUID();
+        Program program = Program.create("Programa A", null, ProgramStatus.ACTIVE, null);
+        when(repository.findByIdOrThrow(id)).thenReturn(program);
+        when(repository.countActiveClassGroups(program.getId())).thenReturn(2L);
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> service.handle(new SoftDeleteProgramCommand(id)));
+
+        assertEquals("Não é possível excluir o programa porque existem vínculos com: 2 turmas. "
+                + "Remova os vínculos antes de excluir.", exception.getMessage());
+        verify(repository, never()).delete(any(Program.class));
     }
 
     @Test

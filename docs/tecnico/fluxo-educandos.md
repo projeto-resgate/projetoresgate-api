@@ -184,10 +184,10 @@ Lista vazia se nunca houve evento; **404** se o educando não existir.
 
 | Operação                       | Efeito                                                                                          |
 |--------------------------------|-------------------------------------------------------------------------------------------------|
-| `DELETE /family-group/{id}`    | Soft delete do grupo e do endereço dele. Pessoas, educandos e os **vínculos** das pessoas com o grupo continuam: o educando segue editável informando o `familyGroupId` excluído. Novos cadastros com essa família dão 404. |
+| `DELETE /family-group/{id}`    | Soft delete do grupo e do endereço dele. **409** se ainda houver pessoas no grupo: desvincule todas antes (RN-GER-05). Novos cadastros com uma família excluída dão 404. |
 | `DELETE .../natural-person/{id}` (da família) | Só **desvincula** a pessoa da família. Não exclui a pessoa. **409** se: não estava vinculada; é educando e esta é a única família ativa dela; ou é responsável por um educando desta família. |
 
-Ver [tabela completa de cascatas](regras-implementadas.md#exclusão-e-cascatas).
+Ver [regra de exclusão completa](regras-implementadas.md#exclusão-e-cascatas).
 
 ## Grupo familiar: regras
 

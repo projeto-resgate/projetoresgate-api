@@ -49,7 +49,7 @@ class SoftDeleteClassScheduleServiceTest {
 
         when(repository.findByIdAndClassGroupIdOrThrow(schedule.getId(), classGroup.getId()))
                 .thenReturn(schedule);
-        when(programRepository.findByIdIncludingDeletedOrThrow(classGroup.getProgramId())).thenReturn(program);
+        when(programRepository.findByIdOrThrow(classGroup.getProgramId())).thenReturn(program);
         when(repository.findActiveWeekDaysByClassGroupId(classGroup.getId())).thenReturn(List.of());
 
         service.handle(new SoftDeleteClassScheduleCommand(classGroup.getId(), schedule.getId()));

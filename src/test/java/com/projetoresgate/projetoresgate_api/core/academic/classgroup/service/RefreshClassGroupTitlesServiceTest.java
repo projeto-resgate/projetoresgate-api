@@ -59,7 +59,7 @@ class RefreshClassGroupTitlesServiceTest {
                 List.of(SchoolGradeRef.of(UUID.randomUUID(), "1ª Série", "1ª", 1)));
         Program program = program(programId, "Programa B");
         when(classGroupRepository.findByProgramId(programId)).thenReturn(List.of(classGroup));
-        when(programRepository.findAllByIdIncludingDeleted(Set.of(programId))).thenReturn(List.of(program));
+        when(programRepository.findAllById(Set.of(programId))).thenReturn(List.of(program));
         when(scheduleRepository.findActiveWeekDaysByClassGroupIds(List.of(classGroup.getId())))
                 .thenReturn(List.<Object[]>of(new Object[]{classGroup.getId(), WeekDay.MONDAY}));
 
@@ -80,7 +80,7 @@ class RefreshClassGroupTitlesServiceTest {
                 List.of(SchoolGradeRef.of(UUID.randomUUID(), "1ª Série", "1ª", 1)));
         Program program = program(programId, "Programa A");
         when(classGroupRepository.findBySchoolGradeId(schoolGradeId)).thenReturn(List.of(classGroup));
-        when(programRepository.findAllByIdIncludingDeleted(Set.of(programId))).thenReturn(List.of(program));
+        when(programRepository.findAllById(Set.of(programId))).thenReturn(List.of(program));
         when(scheduleRepository.findActiveWeekDaysByClassGroupIds(List.of(classGroup.getId())))
                 .thenReturn(List.of());
 

@@ -1,10 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.academic.program.repository;
 
-import java.util.Optional;
 
-import java.util.List;
 
-import java.util.Collection;
 
 import org.springframework.data.repository.query.Param;
 
@@ -35,15 +32,9 @@ public interface ProgramRepository extends JpaRepository<Program, UUID>, JpaSpec
 
     boolean existsByStatus(ProgramStatus status);
 
-    @Query(value = "SELECT * FROM program WHERE id IN (:ids)", nativeQuery = true)
-    List<Program> findAllByIdIncludingDeleted(@Param("ids") Collection<UUID> ids);
-
-    default Optional<Program> findByIdIncludingDeleted(UUID id) {
-        return findAllByIdIncludingDeleted(List.of(id)).stream().findFirst();
-    }
-
-    default Program findByIdIncludingDeletedOrThrow(UUID id) {
-        return findByIdIncludingDeleted(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Programa não encontrado com ID: " + id));
-    }
+    @Query(value = """
+            select count(*) from class_group
+            where program_id = :id and deleted_at is null
+            """, nativeQuery = true)
+    long countActiveClassGroups(@Param("id") UUID id);
 }

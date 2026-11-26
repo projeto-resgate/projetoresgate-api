@@ -135,7 +135,8 @@ public class SchoolGradeController {
             description = "Realiza a exclusão lógica (soft delete) da série escolar. O registro não é removido fisicamente do banco.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Série escolar excluída com sucesso", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Série escolar não encontrada", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Série escolar não encontrada", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Série usada por turmas, educandos ou responsáveis: remova os vínculos antes de excluir", content = @Content)
     })
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         softDeleteUseCase.handle(new SoftDeleteSchoolGradeCommand(id));

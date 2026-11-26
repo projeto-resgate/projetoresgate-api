@@ -233,14 +233,36 @@ class FamilyGroupServiceIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("Excluir o grupo familiar deve manter os vínculos das pessoas e excluir o endereço")
-    void handle_ShouldKeepMembersAndDeleteAddressWhenSoftDeleting() {
+    @DisplayName("Não deve excluir o grupo familiar que ainda tem pessoas; pessoa excluída não conta como vínculo")
+    void handle_ShouldBlockDeletionWhileGroupHasActiveMembers() {
         NaturalPerson person = naturalPersonRepository.save(
                 NaturalPerson.create("Maria Silva", "maria@email.com", null, "52998224725", null,
+                        null, null, null, null));
+        NaturalPerson deletedPerson = naturalPersonRepository.save(
+                NaturalPerson.create("João Silva", "joao@email.com", null, "93089835207", null,
                         null, null, null, null));
         FamilyGroup saved = createService.handle(buildCommand("Família Souza", "São Paulo"));
         familyGroupRepository.flush();
         familyGroupRepository.linkNaturalPerson(saved.getId(), person.getId());
+        familyGroupRepository.linkNaturalPerson(saved.getId(), deletedPerson.getId());
+        naturalPersonRepository.delete(deletedPerson);
+        naturalPersonRepository.flush();
+        SoftDeleteFamilyGroupService deleteService = new SoftDeleteFamilyGroupService(familyGroupRepository);
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> deleteService.handle(new SoftDeleteFamilyGroupCommand(saved.getId())));
+        entityManager.clear();
+
+        assertTrue(exception.getMessage().contains("1 pessoa física"));
+        assertTrue(familyGroupRepository.findById(saved.getId()).isPresent());
+        assertTrue(familyGroupRepository.existsNaturalPersonMember(saved.getId(), person.getId()));
+    }
+
+    @Test
+    @DisplayName("Excluir o grupo familiar sem pessoas deve excluir também o endereço")
+    void handle_ShouldDeleteAddressWhenSoftDeletingEmptyGroup() {
+        FamilyGroup saved = createService.handle(buildCommand("Família Souza", "São Paulo"));
+        familyGroupRepository.flush();
         UUID addressId = saved.getAddress().getId();
 
         new SoftDeleteFamilyGroupService(familyGroupRepository)
@@ -249,7 +271,6 @@ class FamilyGroupServiceIntegrationTest extends PostgresIntegrationTest {
         entityManager.clear();
 
         assertTrue(familyGroupRepository.findById(saved.getId()).isEmpty());
-        assertTrue(familyGroupRepository.existsNaturalPersonMember(saved.getId(), person.getId()));
         assertNull(entityManager.find(Address.class, addressId));
     }
 

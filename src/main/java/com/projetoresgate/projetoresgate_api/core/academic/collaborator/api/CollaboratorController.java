@@ -149,7 +149,8 @@ public class CollaboratorController {
             description = "Realiza a exclusão lógica (soft delete) do colaborador. O registro não é removido fisicamente do banco.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Colaborador excluído com sucesso", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Colaborador não encontrado", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Colaborador não encontrado", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Colaborador vinculado a turmas: remova os vínculos antes de excluir", content = @Content)
     })
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         softDeleteUseCase.handle(new SoftDeleteCollaboratorCommand(id));

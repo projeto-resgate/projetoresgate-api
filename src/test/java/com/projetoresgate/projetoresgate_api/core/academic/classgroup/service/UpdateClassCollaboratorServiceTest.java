@@ -65,7 +65,7 @@ class UpdateClassCollaboratorServiceTest {
     private EducatorCategoryItem givenCategory(UUID categoryId, String name) {
         EducatorCategoryItem category = mock(EducatorCategoryItem.class);
         when(category.getName()).thenReturn(name);
-        when(educatorCategoryItemRepository.findByIdIncludingDeleted(categoryId)).thenReturn(Optional.of(category));
+        when(educatorCategoryItemRepository.findById(categoryId)).thenReturn(Optional.of(category));
         return category;
     }
 
@@ -78,8 +78,8 @@ class UpdateClassCollaboratorServiceTest {
                 "MG98765431", null, null, null, null);
         ClassCollaborator link = givenLink(collaborator.getId(), categoryId);
         givenCategory(categoryId, "Professor");
-        when(collaboratorRepository.findByIdIncludingDeleted(collaborator.getId())).thenReturn(Optional.of(collaborator));
-        when(naturalPersonRepository.findByIdIncludingDeleted(collaborator.getNaturalPersonId()))
+        when(collaboratorRepository.findById(collaborator.getId())).thenReturn(Optional.of(collaborator));
+        when(naturalPersonRepository.findById(collaborator.getNaturalPersonId()))
                 .thenReturn(Optional.of(person));
 
         ClassCollaboratorResponse response = service.handle(
@@ -105,8 +105,8 @@ class UpdateClassCollaboratorServiceTest {
         EducatorCategoryItem newCategory = givenCategory(newCategoryId, "Auxiliar");
         when(educatorCategoryItemRepository.findByIdAndProgramIdOrThrow(newCategoryId, classGroup.getProgramId()))
                 .thenReturn(newCategory);
-        when(collaboratorRepository.findByIdIncludingDeleted(collaborator.getId())).thenReturn(Optional.of(collaborator));
-        when(naturalPersonRepository.findByIdIncludingDeleted(collaborator.getNaturalPersonId()))
+        when(collaboratorRepository.findById(collaborator.getId())).thenReturn(Optional.of(collaborator));
+        when(naturalPersonRepository.findById(collaborator.getNaturalPersonId()))
                 .thenReturn(Optional.of(personWithoutDocuments));
 
         ClassCollaboratorResponse response = service.handle(
@@ -126,8 +126,8 @@ class UpdateClassCollaboratorServiceTest {
         UUID categoryId = UUID.randomUUID();
         UUID collaboratorId = UUID.randomUUID();
         ClassCollaborator link = givenLink(collaboratorId, categoryId);
-        when(educatorCategoryItemRepository.findByIdIncludingDeleted(categoryId)).thenReturn(Optional.empty());
-        when(collaboratorRepository.findByIdIncludingDeleted(collaboratorId)).thenReturn(Optional.empty());
+        when(educatorCategoryItemRepository.findById(categoryId)).thenReturn(Optional.empty());
+        when(collaboratorRepository.findById(collaboratorId)).thenReturn(Optional.empty());
 
         ClassCollaboratorResponse response = service.handle(
                 new UpdateClassCollaboratorCommand(link.getId(), classGroup.getId(), categoryId, true));
@@ -136,6 +136,6 @@ class UpdateClassCollaboratorServiceTest {
         assertNull(response.collaboratorCpf());
         assertNull(response.collaboratorRg());
         assertNull(response.educatorCategoryItemName());
-        verify(naturalPersonRepository, never()).findByIdIncludingDeleted(any());
+        verify(naturalPersonRepository, never()).findById(any());
     }
 }

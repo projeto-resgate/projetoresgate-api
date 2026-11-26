@@ -72,7 +72,7 @@ class UpdateLearnerServiceTest {
     void givenPersonBelongsToFamilyGroup() {
         lenient().when(familyGroupRepository.existsNaturalPersonMember(any(UUID.class), any(UUID.class)))
                 .thenReturn(true);
-        lenient().when(familyGroupRepository.existsByIdIncludingDeleted(any(UUID.class))).thenReturn(true);
+        lenient().when(familyGroupRepository.existsById(any(UUID.class))).thenReturn(true);
     }
 
     private void givenNotMemberOfFamilyGroup(UUID naturalPersonId) {
@@ -181,6 +181,20 @@ class UpdateLearnerServiceTest {
                 () -> service.handle(givenCommand(List.of()).withId(existing.getId())));
 
         assertEquals("A pessoa física informada não pertence a este grupo familiar.", exception.getMessage());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Deve recusar a edição quando o grupo familiar não existe ou foi excluído")
+    void handle_ShouldRejectMissingFamilyGroup() {
+        Learner existing = givenLearner();
+        when(repository.findByIdOrThrow(existing.getId())).thenReturn(existing);
+        when(familyGroupRepository.existsById(FAMILY_GROUP_ID)).thenReturn(false);
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
+                () -> service.handle(givenCommand(List.of()).withId(existing.getId())));
+
+        assertEquals("Grupo familiar não encontrado com ID: " + FAMILY_GROUP_ID, exception.getMessage());
         verify(repository, never()).save(any());
     }
 

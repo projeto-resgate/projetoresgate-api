@@ -67,7 +67,7 @@ class FindAllLearnersServiceTest {
         Page<Learner> page = new PageImpl<>(List.of(learner));
 
         when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
-        when(naturalPersonRepository.findAllByIdIncludingDeleted(any())).thenReturn(List.of(person));
+        when(naturalPersonRepository.findAllById(any())).thenReturn(List.of(person));
         when(findLegalPersonSummariesUseCase.handle(any()))
                 .thenReturn(List.of(new LegalPersonSummaryResponse(institutionId, "Escola X", "12345678000195")));
 
@@ -97,7 +97,7 @@ class FindAllLearnersServiceTest {
 
         when(repository.findAll(any(Specification.class), eq(pageable)))
                 .thenReturn(new PageImpl<>(List.of(mariaLearner, joaoLearner)));
-        when(naturalPersonRepository.findAllByIdIncludingDeleted(any())).thenReturn(List.of(maria, joao));
+        when(naturalPersonRepository.findAllById(any())).thenReturn(List.of(maria, joao));
         when(classLearnerRepository.findActiveProgramNamesByLearnerIds(any())).thenReturn(List.of(
                 programRow(mariaLearner.getId(), "Música"),
                 programRow(mariaLearner.getId(), "Robótica")));
@@ -134,7 +134,7 @@ class FindAllLearnersServiceTest {
         Page<Learner> page = new PageImpl<>(List.of(learner));
 
         when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
-        when(naturalPersonRepository.findAllByIdIncludingDeleted(any())).thenReturn(List.of(person));
+        when(naturalPersonRepository.findAllById(any())).thenReturn(List.of(person));
 
         Page<LearnerSummaryResponse> result = service.handle(
                 new FindAllLearnersQuery(null, null, null, null, null, pageable));
@@ -152,7 +152,7 @@ class FindAllLearnersServiceTest {
         Page<Learner> page = new PageImpl<>(List.of(learner));
 
         when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
-        when(naturalPersonRepository.findAllByIdIncludingDeleted(any())).thenReturn(List.of(person));
+        when(naturalPersonRepository.findAllById(any())).thenReturn(List.of(person));
 
         Page<LearnerSummaryResponse> result = service.handle(
                 new FindAllLearnersQuery(null, null, null, null, null, pageable));
@@ -186,7 +186,7 @@ class FindAllLearnersServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
 
         when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(new PageImpl<>(List.of(learner)));
-        when(naturalPersonRepository.findAllByIdIncludingDeleted(any())).thenReturn(List.of(person));
+        when(naturalPersonRepository.findAllById(any())).thenReturn(List.of(person));
         when(classLearnerRepository.findLearnerIdsInProgress(any(), any())).thenReturn(List.of(learner.getId()));
 
         Page<LearnerSummaryResponse> result = service.handle(
@@ -204,7 +204,7 @@ class FindAllLearnersServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
 
         when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(new PageImpl<>(List.of(learner)));
-        when(naturalPersonRepository.findAllByIdIncludingDeleted(any())).thenReturn(List.of(person));
+        when(naturalPersonRepository.findAllById(any())).thenReturn(List.of(person));
         when(classLearnerRepository.findLearnerIdsInProgress(any(), any())).thenReturn(List.of());
 
         Page<LearnerSummaryResponse> result = service.handle(
@@ -223,7 +223,7 @@ class FindAllLearnersServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
 
         when(repository.findAll(any(Specification.class), eq(pageable))).thenReturn(new PageImpl<>(List.of(learner)));
-        when(naturalPersonRepository.findAllByIdIncludingDeleted(any())).thenReturn(List.of(person));
+        when(naturalPersonRepository.findAllById(any())).thenReturn(List.of(person));
         when(classLearnerRepository.findLearnerIdsInProgress(any(), any())).thenReturn(List.of(learner.getId()));
 
         Page<LearnerSummaryResponse> result = service.handle(

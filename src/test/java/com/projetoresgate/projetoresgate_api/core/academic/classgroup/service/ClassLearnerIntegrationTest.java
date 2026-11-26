@@ -154,18 +154,4 @@ class ClassLearnerIntegrationTest extends PostgresIntegrationTest {
         assertFalse(repository.findRowsByClassGroupId(classGroup.getId(), true, null, pageable).hasContent());
         assertFalse(repository.findRowsByClassGroupId(other.getId(), true, null, pageable).hasContent());
     }
-
-    @Test
-    @DisplayName("A exclusão lógica em lote deve esconder os vínculos da turma")
-    void softDeleteByClassGroupId_ShouldHideLinks() {
-        Learner learner = givenLearner("Ana Souza");
-        repository.save(ClassLearner.create(classGroup, learner.getId()));
-        repository.flush();
-
-        repository.softDeleteByClassGroupId(classGroup.getId());
-        entityManager.clear();
-
-        assertFalse(repository.findRowsByClassGroupId(
-                classGroup.getId(), null, null, PageRequest.of(0, 10)).hasContent());
-    }
 }

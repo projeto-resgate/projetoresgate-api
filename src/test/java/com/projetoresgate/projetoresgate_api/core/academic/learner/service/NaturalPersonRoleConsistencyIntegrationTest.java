@@ -167,7 +167,7 @@ class NaturalPersonRoleConsistencyIntegrationTest extends PostgresIntegrationTes
     }
 
     @Test
-    @DisplayName("Deve contar os vínculos de responsável que continuam ativos após a exclusão do educando")
+    @DisplayName("Deve ignorar na contagem os vínculos de responsável excluídos")
     void count_ShouldIgnoreSoftDeletedResponsibles() {
         NaturalPerson learnerPerson = givenPerson("Diego Ramos", "11144477742");
         NaturalPerson responsiblePerson = givenPerson("Elena Prado", "11144477743");
@@ -179,7 +179,8 @@ class NaturalPersonRoleConsistencyIntegrationTest extends PostgresIntegrationTes
 
         assertEquals(1, responsibleRepository.countActiveByNaturalPersonId(responsiblePerson.getId()));
 
-        responsibleRepository.softDeleteByLearnerId(learner.getId());
+        entityManager.createNativeQuery("update learner_responsible set deleted_at = now() where learner_id = :id")
+                .setParameter("id", learner.getId()).executeUpdate();
         entityManager.flush();
         entityManager.clear();
 
@@ -203,7 +204,8 @@ class NaturalPersonRoleConsistencyIntegrationTest extends PostgresIntegrationTes
                 secondLearner, responsiblePerson.getId(), ResponsibleType.FINANCIAL, Kinship.MOTHER, null));
         entityManager.flush();
 
-        responsibleRepository.softDeleteByLearnerId(firstLearner.getId());
+        entityManager.createNativeQuery("update learner_responsible set deleted_at = now() where learner_id = :id")
+                .setParameter("id", firstLearner.getId()).executeUpdate();
         entityManager.flush();
         entityManager.clear();
 

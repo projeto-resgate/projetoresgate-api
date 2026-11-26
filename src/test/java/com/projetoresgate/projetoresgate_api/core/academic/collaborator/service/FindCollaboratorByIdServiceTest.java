@@ -4,6 +4,7 @@ import com.projetoresgate.projetoresgate_api.core.academic.collaborator.api.dto.
 import com.projetoresgate.projetoresgate_api.core.academic.collaborator.domain.Collaborator;
 import com.projetoresgate.projetoresgate_api.core.academic.collaborator.repository.CollaboratorRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.collaborator.usecase.query.FindCollaboratorByIdQuery;
+import com.projetoresgate.projetoresgate_api.core.identity.legalperson.domain.LegalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
@@ -50,7 +51,7 @@ class FindCollaboratorByIdServiceTest {
         when(person.getCpf()).thenReturn("52998224725");
 
         when(repository.findByIdOrThrow(collaborator.getId())).thenReturn(collaborator);
-        when(naturalPersonRepository.findByIdIncludingDeleted(naturalPersonId)).thenReturn(Optional.of(person));
+        when(naturalPersonRepository.findById(naturalPersonId)).thenReturn(Optional.of(person));
 
         CollaboratorResponse response = service.handle(new FindCollaboratorByIdQuery(collaborator.getId()));
 
@@ -60,5 +61,24 @@ class FindCollaboratorByIdServiceTest {
         assertEquals("52998224725", response.naturalPersonCpf());
         assertNull(response.legalPersonName());
         verifyNoInteractions(legalPersonRepository);
+    }
+
+    @Test
+    @DisplayName("Deve trazer o nome da empresa quando o colaborador tiver uma")
+    void handle_ShouldReturnLegalPersonName() {
+        UUID naturalPersonId = UUID.randomUUID();
+        UUID legalPersonId = UUID.randomUUID();
+        Collaborator collaborator = Collaborator.create(false, naturalPersonId, legalPersonId);
+        LegalPerson company = mock(LegalPerson.class);
+        when(company.getName()).thenReturn("Empresa X");
+
+        when(repository.findByIdOrThrow(collaborator.getId())).thenReturn(collaborator);
+        when(naturalPersonRepository.findById(naturalPersonId)).thenReturn(Optional.of(mock(NaturalPerson.class)));
+        when(legalPersonRepository.findById(legalPersonId)).thenReturn(Optional.of(company));
+
+        CollaboratorResponse response = service.handle(new FindCollaboratorByIdQuery(collaborator.getId()));
+
+        assertEquals(legalPersonId, response.legalPersonId());
+        assertEquals("Empresa X", response.legalPersonName());
     }
 }

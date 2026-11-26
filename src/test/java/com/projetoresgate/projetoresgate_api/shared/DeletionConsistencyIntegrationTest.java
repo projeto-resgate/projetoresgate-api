@@ -108,50 +108,6 @@ class DeletionConsistencyIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("A lista de educandos da turma mantém quem teve a pessoa física excluída")
-    void classLearners_ShouldKeepLinkWhenPersonIsDeleted() {
-        NaturalPerson person = givenPerson("Ana Excluída", "ana@example.com");
-        Learner learner = givenLearner(person);
-        classLearnerRepository.save(ClassLearner.create(classGroup, learner.getId()));
-        flushAndClear();
-
-        naturalPersonRepository.delete(naturalPersonRepository.findByIdOrThrow(person.getId()));
-        flushAndClear();
-
-        Page<ClassLearnerRow> all = classLearnerRepository.findRowsByClassGroupId(classGroup.getId(), null, null, PageRequest.of(0, 10));
-        Page<ClassLearnerRow> byName = classLearnerRepository.findRowsByClassGroupId(classGroup.getId(), true, "excluída", PageRequest.of(0, 10));
-
-        assertEquals(1, all.getTotalElements());
-        assertEquals(learner.getId(), all.getContent().getFirst().getLearnerId());
-        assertEquals("Ana Excluída", all.getContent().getFirst().getLearnerName());
-        assertEquals(1, byName.getTotalElements());
-    }
-
-    @Test
-    @DisplayName("A lista de educadores da turma mantém o colaborador excluído")
-    void classCollaborators_ShouldKeepLinkWhenCollaboratorIsDeleted() {
-        NaturalPerson person = givenPerson("Bruno Educador", "bruno@example.com");
-        Collaborator collaborator = collaboratorRepository.save(Collaborator.create(false, person.getId(), null));
-        EducatorCategoryItem category = program.getEducatorCategoryItemList().getFirst();
-        classCollaboratorRepository.save(ClassCollaborator.create(classGroup, collaborator.getId(), category.getId()));
-        flushAndClear();
-
-        collaboratorRepository.delete(collaboratorRepository.findByIdOrThrow(collaborator.getId()));
-        flushAndClear();
-
-        Page<ClassCollaboratorRow> all = classCollaboratorRepository.findRowsByClassGroupId(
-                classGroup.getId(), null, null, null, PageRequest.of(0, 10));
-        Page<ClassCollaboratorRow> byCategory = classCollaboratorRepository.findRowsByClassGroupId(
-                classGroup.getId(), true, category.getId(), "bruno", PageRequest.of(0, 10));
-
-        assertEquals(1, all.getTotalElements());
-        assertEquals("Bruno Educador", all.getContent().getFirst().getCollaboratorName());
-        assertEquals("Professor", all.getContent().getFirst().getEducatorCategoryItemName());
-        assertEquals(1, byCategory.getTotalElements());
-        assertTrue(classCollaboratorRepository.existsByEducatorCategoryItemId(category.getId()));
-    }
-
-    @Test
     @DisplayName("Educando só pode sair da família se tiver outra família ativa")
     void isLearnerOnlyInFamilyGroup_ShouldConsiderOtherActiveFamilies() {
         NaturalPerson child = givenPerson("Criança", "crianca@example.com");
@@ -170,7 +126,6 @@ class DeletionConsistencyIntegrationTest extends PostgresIntegrationTest {
         flushAndClear();
 
         assertTrue(familyGroupRepository.isLearnerOnlyInFamilyGroup(first.getId(), child.getId()));
-        assertTrue(familyGroupRepository.existsByIdIncludingDeleted(second.getId()));
     }
 
     @Test

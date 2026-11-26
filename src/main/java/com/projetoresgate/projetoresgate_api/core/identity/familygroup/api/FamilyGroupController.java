@@ -201,7 +201,8 @@ public class FamilyGroupController {
             description = "Realiza a exclusão lógica (soft delete) do grupo familiar. O registro não é removido fisicamente do banco.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Grupo familiar excluído com sucesso", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Grupo familiar não encontrado", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Grupo familiar não encontrado", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Grupo familiar com pessoas vinculadas: remova os vínculos antes de excluir", content = @Content)
     })
     public ResponseEntity<Void> softDelete(@PathVariable UUID id) {
         softDeleteUseCase.handle(new SoftDeleteFamilyGroupCommand(id));

@@ -44,6 +44,24 @@ class SoftDeleteFamilyGroupServiceTest {
     }
 
     @Test
+    @DisplayName("Não deve excluir o grupo familiar que ainda tem pessoas vinculadas")
+    void handle_ShouldBlockWhenFamilyGroupHasMembers() {
+        UUID id = UUID.randomUUID();
+        FamilyGroup familyGroup = mock(FamilyGroup.class);
+        when(familyGroup.getId()).thenReturn(id);
+        when(repository.findByIdOrThrow(id)).thenReturn(familyGroup);
+        when(repository.countActiveMembers(id)).thenReturn(3L);
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> service.handle(new SoftDeleteFamilyGroupCommand(id)));
+
+        assertEquals("Não é possível excluir o grupo familiar porque existem vínculos com: 3 pessoas físicas. "
+                + "Remova os vínculos antes de excluir.", exception.getMessage());
+        verify(repository, never()).softDeleteAddressOf(any());
+        verify(repository, never()).softDeleteKeepingMembers(any());
+    }
+
+    @Test
     @DisplayName("Deve lançar exceção quando o grupo familiar não existir")
     void handle_ShouldThrowWhenNotFound() {
         UUID id = UUID.randomUUID();

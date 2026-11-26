@@ -10,8 +10,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -76,10 +74,10 @@ public interface CollaboratorRepository extends JpaRepository<Collaborator, UUID
                                      @Param("onlyActivePeople") boolean onlyActivePeople,
                                      Pageable pageable);
 
-    @Query(value = "SELECT * FROM collaborator WHERE id IN (:ids)", nativeQuery = true)
-    List<Collaborator> findAllByIdIncludingDeleted(@Param("ids") Collection<UUID> ids);
-
-    default Optional<Collaborator> findByIdIncludingDeleted(UUID id) {
-        return findAllByIdIncludingDeleted(List.of(id)).stream().findFirst();
-    }
+    @Query(value = """
+            select count(*) from class_collaborator cc
+            join class_group cg on cg.id = cc.class_group_id and cg.deleted_at is null
+            where cc.collaborator_id = :id and cc.deleted_at is null
+            """, nativeQuery = true)
+    long countActiveClassLinks(@Param("id") UUID id);
 }

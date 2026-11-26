@@ -2,7 +2,6 @@ package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.reposi
 
 import java.util.List;
 
-import java.util.Collection;
 
 import org.springframework.data.repository.query.Param;
 
@@ -14,7 +13,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -35,15 +33,27 @@ public interface NaturalPersonRepository extends JpaRepository<NaturalPerson, UU
                 .orElseThrow(() -> new ResourceNotFoundException("Pessoa física não encontrada com ID: " + id));
     }
 
-    @Query(value = "SELECT * FROM natural_person WHERE id IN (:ids)", nativeQuery = true)
-    List<NaturalPerson> findAllByIdIncludingDeleted(@Param("ids") Collection<UUID> ids);
+    interface NaturalPersonDependencies {
+        long getLearners();
 
-    default Optional<NaturalPerson> findByIdIncludingDeleted(UUID id) {
-        return findAllByIdIncludingDeleted(List.of(id)).stream().findFirst();
+        long getResponsibilities();
+
+        long getCollaborators();
+
+        long getFamilyGroups();
     }
 
-    default NaturalPerson findByIdIncludingDeletedOrThrow(UUID id) {
-        return findByIdIncludingDeleted(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Pessoa física não encontrada com ID: " + id));
-    }
+    @Query(value = """
+            select (select count(*) from learner
+                    where natural_person_id = :id and deleted_at is null) as "learners",
+                   (select count(*) from learner_responsible lr
+                    join learner l on l.id = lr.learner_id and l.deleted_at is null
+                    where lr.natural_person_id = :id and lr.deleted_at is null) as "responsibilities",
+                   (select count(*) from collaborator
+                    where natural_person_id = :id and deleted_at is null) as "collaborators",
+                   (select count(*) from family_group_natural_person fgnp
+                    join family_group fg on fg.id = fgnp.family_group_id and fg.deleted_at is null
+                    where fgnp.natural_person_id = :id) as "familyGroups"
+            """, nativeQuery = true)
+    NaturalPersonDependencies countDependencies(@Param("id") UUID id);
 }

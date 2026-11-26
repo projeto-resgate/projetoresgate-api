@@ -47,7 +47,7 @@ class FindLegalPersonSummariesServiceTest {
         LegalPerson person1 = buildPerson("11222333000181", "Empresa Alfa");
         LegalPerson person2 = buildPerson("98765432000198", "Empresa Beta");
 
-        when(repository.findAllByIdIncludingDeleted(Set.of(id1, id2))).thenReturn(List.of(person1, person2));
+        when(repository.findAllById(Set.of(id1, id2))).thenReturn(List.of(person1, person2));
 
         List<LegalPersonSummaryResponse> result = service.handle(Set.of(id1, id2));
 
@@ -60,7 +60,7 @@ class FindLegalPersonSummariesServiceTest {
         assertEquals("98765432000198", result.get(1).cnpj());
         assertEquals(person2.getId(), result.get(1).id());
 
-        verify(repository).findAllByIdIncludingDeleted(Set.of(id1, id2));
+        verify(repository).findAllById(Set.of(id1, id2));
     }
 
     @Test
