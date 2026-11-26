@@ -194,10 +194,10 @@ class ListingQueriesIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("Educandos da turma trazem nome, CPF e status, com ativos primeiro e pessoa excluída mantida")
+    @DisplayName("Educandos da turma trazem nome, CPF, RG e status, com ativos primeiro e pessoa excluída mantida")
     void classLearners_ShouldReturnRowsWithPersonData() {
         ClassGroup classGroup = givenClassGroup(givenProgram("Programa"), givenLegalPerson("Escola", null, "Escola"));
-        NaturalPerson ana = givenPerson("Ana Souza", "93089835207", null);
+        NaturalPerson ana = givenPerson("Ana Souza", "93089835207", "MG98765431");
         NaturalPerson bruno = givenPerson("Bruno Lima", null, null);
         Learner anaLearner = givenLearner(ana);
         Learner brunoLearner = givenLearner(bruno);
@@ -217,6 +217,10 @@ class ListingQueriesIntegrationTest extends PostgresIntegrationTest {
         ClassLearnerResponse anaRow = rows.get(1);
         assertEquals("Ana Souza " + tag, anaRow.learnerName());
         assertEquals("93089835207", anaRow.learnerCpf());
+        assertEquals("MG98765431", anaRow.learnerRg());
+        // RG e CPF são opcionais: quem não tem continua na lista, com os campos nulos
+        assertNull(rows.getFirst().learnerCpf());
+        assertNull(rows.getFirst().learnerRg());
         assertEquals(LearnerStatus.ACTIVE, anaRow.learnerStatus());
         assertFalse(anaRow.active());
         assertEquals(classGroup.getId(), anaRow.classGroupId());
@@ -226,13 +230,13 @@ class ListingQueriesIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("Educadores da turma trazem nome e categoria, inclusive de categoria excluída")
+    @DisplayName("Educadores da turma trazem nome, CPF, RG e categoria, inclusive de categoria excluída")
     void classCollaborators_ShouldReturnNamesAndCategory() {
         Program program = givenProgram("Programa", "Professor", "Auxiliar");
         ClassGroup classGroup = givenClassGroup(program, givenLegalPerson("Escola", null, "Escola"));
         EducatorCategoryItem professor = program.getEducatorCategoryItemList().getFirst();
         EducatorCategoryItem helper = program.getEducatorCategoryItemList().get(1);
-        Collaborator ana = collaboratorRepository.save(Collaborator.create(false, givenPerson("Ana Souza", null, null).getId(), null));
+        Collaborator ana = collaboratorRepository.save(Collaborator.create(false, givenPerson("Ana Souza", "52998224725", "SP1234567").getId(), null));
         Collaborator bruno = collaboratorRepository.save(Collaborator.create(false, givenPerson("Bruno Lima", null, null).getId(), null));
         classCollaboratorRepository.save(ClassCollaborator.create(classGroup, ana.getId(), professor.getId()));
         classCollaboratorRepository.save(ClassCollaborator.create(classGroup, bruno.getId(), helper.getId()));
@@ -249,6 +253,10 @@ class ListingQueriesIntegrationTest extends PostgresIntegrationTest {
                 rows.stream().map(ClassCollaboratorResponse::collaboratorName).toList());
         assertEquals(List.of("Professor", "Auxiliar"),
                 rows.stream().map(ClassCollaboratorResponse::educatorCategoryItemName).toList());
+        assertEquals("52998224725", rows.getFirst().collaboratorCpf());
+        assertEquals("SP1234567", rows.getFirst().collaboratorRg());
+        assertNull(rows.get(1).collaboratorCpf());
+        assertNull(rows.get(1).collaboratorRg());
         assertEquals(1, findAllClassCollaborators.handle(new FindAllClassCollaboratorsQuery(
                 classGroup.getId(), professor.getId(), "ana", true, PageRequest.of(0, 10))).getTotalElements());
     }

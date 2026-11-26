@@ -57,6 +57,7 @@ public class CreateClassCollaboratorService implements CreateClassCollaboratorUs
 
         ClassCollaborator saved = repository.save(classCollaborator);
 
-        return ClassCollaboratorResponse.fromEntity(saved, person.getName(), category.getName());
+        return ClassCollaboratorResponse.fromEntity(saved, person.getName(), person.getCpf(), person.getRg(),
+                category.getName());
     }
 }

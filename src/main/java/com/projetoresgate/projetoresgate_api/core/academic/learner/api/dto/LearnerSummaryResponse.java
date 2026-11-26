@@ -4,20 +4,24 @@ import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Learne
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.LearnerParticipationStatus;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.LearnerStatus;
 
+import java.util.List;
 import java.util.UUID;
 
 public record LearnerSummaryResponse(
         UUID id,
         String name,
+        // programas das turmas em que o educando tem vínculo ativo, sem repetição e em ordem alfabética
+        List<String> programNames,
         String institutionName,
         Integer academicYear,
         LearnerParticipationStatus status
 ) {
-    public static LearnerSummaryResponse fromEntity(Learner entity, String name, String institutionName,
-                                                    boolean inProgress) {
+    public static LearnerSummaryResponse fromEntity(Learner entity, String name, List<String> programNames,
+                                                    String institutionName, boolean inProgress) {
         return new LearnerSummaryResponse(
                 entity.getId(),
                 name,
+                programNames,
                 institutionName,
                 entity.getAcademicYear(),
                 participationStatus(entity, inProgress)

@@ -47,6 +47,7 @@ public class CreateClassLearnerService implements CreateClassLearnerUseCase {
         ClassLearner classLearner = ClassLearner.create(classGroup, command.learnerId());
         ClassLearner saved = repository.save(classLearner);
 
-        return ClassLearnerResponse.fromEntity(saved, person.getName(), person.getCpf(), learner.getStatus());
+        return ClassLearnerResponse.fromEntity(saved, person.getName(), person.getCpf(), person.getRg(),
+                learner.getStatus());
     }
 }

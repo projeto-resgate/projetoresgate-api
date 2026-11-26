@@ -13,6 +13,10 @@ public interface ClassCollaboratorRow {
 
     String getCollaboratorName();
 
+    String getCollaboratorCpf();
+
+    String getCollaboratorRg();
+
     UUID getEducatorCategoryItemId();
 
     String getEducatorCategoryItemName();

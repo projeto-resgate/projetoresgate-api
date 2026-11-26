@@ -2,6 +2,7 @@ package com.projetoresgate.projetoresgate_api.core.academic.learner.service;
 
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.ClassLearner;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassLearnerRepository;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.LearnerProgramRow;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerSummaryResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Learner;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.LearnerParticipationStatus;
@@ -68,12 +69,14 @@ public class FindAllLearnersService implements FindAllLearnersUseCase {
 
         Map<UUID, String> personNames = resolvePersonNames(page.getContent());
         Map<UUID, String> institutionNames = resolveInstitutionNames(page.getContent());
+        Map<UUID, List<String>> programNames = resolveProgramNames(page.getContent());
 
         Set<UUID> inProgress = resolveLearnersInProgress(page.getContent(), now);
 
         return page.map(learner -> LearnerSummaryResponse.fromEntity(
                 learner,
                 isNull(learner.getNaturalPersonId()) ? null : personNames.get(learner.getNaturalPersonId()),
+                programNames.getOrDefault(learner.getId(), List.of()),
                 isNull(learner.getInstitutionId()) ? null : institutionNames.get(learner.getInstitutionId()),
                 inProgress.contains(learner.getId())));
     }
@@ -86,6 +89,19 @@ public class FindAllLearnersService implements FindAllLearnersUseCase {
         }
 
         return new HashSet<>(classLearnerRepository.findLearnerIdsInProgress(ids, now));
+    }
+
+    // uma consulta para a página inteira; a query já devolve os nomes distintos e em ordem alfabética
+    private Map<UUID, List<String>> resolveProgramNames(List<Learner> learners) {
+        List<UUID> ids = learners.stream().map(Learner::getId).toList();
+
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+
+        return classLearnerRepository.findActiveProgramNamesByLearnerIds(ids).stream()
+                .collect(Collectors.groupingBy(LearnerProgramRow::getLearnerId, LinkedHashMap::new,
+                        Collectors.mapping(LearnerProgramRow::getProgramName, Collectors.toList())));
     }
 
     private Specification<Learner> hasParticipationStatus(LearnerParticipationStatus status, LocalDateTime now) {

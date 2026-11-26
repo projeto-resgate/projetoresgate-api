@@ -35,6 +35,8 @@ public interface ClassCollaboratorRepository extends JpaRepository<ClassCollabor
                    c.class_group_id as "classGroupId",
                    c.collaborator_id as "collaboratorId",
                    np.name as "collaboratorName",
+                   np.cpf as "collaboratorCpf",
+                   np.rg as "collaboratorRg",
                    c.educator_category_item_id as "educatorCategoryItemId",
                    eci.name as "educatorCategoryItemName",
                    c.active as "active",

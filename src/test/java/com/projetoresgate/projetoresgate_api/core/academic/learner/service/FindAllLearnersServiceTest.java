@@ -1,6 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.academic.learner.service;
 
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassLearnerRepository;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.LearnerProgramRow;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerSummaryResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.LearnerParticipationStatus;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Learner;
@@ -80,6 +81,46 @@ class FindAllLearnersServiceTest {
         assertEquals("Escola X", response.institutionName());
         assertEquals(2026, response.academicYear());
         assertEquals(LearnerParticipationStatus.NO_CLASS, response.status());
+        assertEquals(List.of(), response.programNames());
+    }
+
+    @Test
+    @DisplayName("Deve devolver os programas das turmas de cada educando, sem misturar educandos")
+    void handle_ShouldReturnProgramNamesPerLearner() {
+        NaturalPerson maria = NaturalPerson.create(
+                "Maria Silva", "maria@email.com", null, "52998224725", null, null, null, null, null);
+        NaturalPerson joao = NaturalPerson.create(
+                "João Lima", "joao@email.com", null, "93089835207", null, null, null, null, null);
+        Learner mariaLearner = Learner.create(maria.getId(), null, null, false, null, 2026, null, null);
+        Learner joaoLearner = Learner.create(joao.getId(), null, null, false, null, 2026, null, null);
+        Pageable pageable = PageRequest.of(0, 10);
+
+        when(repository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(mariaLearner, joaoLearner)));
+        when(naturalPersonRepository.findAllByIdIncludingDeleted(any())).thenReturn(List.of(maria, joao));
+        when(classLearnerRepository.findActiveProgramNamesByLearnerIds(any())).thenReturn(List.of(
+                programRow(mariaLearner.getId(), "Música"),
+                programRow(mariaLearner.getId(), "Robótica")));
+
+        List<LearnerSummaryResponse> result = service.handle(
+                new FindAllLearnersQuery(null, null, null, null, null, pageable)).getContent();
+
+        assertEquals(List.of("Música", "Robótica"), result.get(0).programNames());
+        assertEquals(List.of(), result.get(1).programNames());
+    }
+
+    private static LearnerProgramRow programRow(UUID learnerId, String programName) {
+        return new LearnerProgramRow() {
+            @Override
+            public UUID getLearnerId() {
+                return learnerId;
+            }
+
+            @Override
+            public String getProgramName() {
+                return programName;
+            }
+        };
     }
 
     @Test
