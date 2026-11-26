@@ -292,8 +292,8 @@ Como o Flyway é idempotente, restaurar um dump **e** subir a API é seguro.
 
 | Item                                     | Observação                                                                       |
 |------------------------------------------|----------------------------------------------------------------------------------|
-| **Domínio + HTTPS (Caddy)**              | Hoje a API expõe `:8080` em HTTP. O cookie de refresh é `Secure`, então **o login no navegador exige HTTPS**. Passo a passo em [`frontend-deploy.md`](frontend-deploy.md). |
-| Front no mesmo compose                   | Entra como mais um serviço atrás do proxy: ver [`frontend-deploy.md`](frontend-deploy.md). |
+| **Domínio + HTTPS (Caddy)**              | Hoje a API expõe `:8080` em HTTP. O cookie de refresh é `Secure`, então **o login no navegador exige HTTPS**. Passo a passo em [`deploy.md` do front](https://github.com/projeto-resgate/projetoresgate-app/blob/main/docs/operacao/deploy.md). |
+| Front no mesmo compose                   | Entra como mais um serviço atrás do proxy: ver [`deploy.md` do front](https://github.com/projeto-resgate/projetoresgate-app/blob/main/docs/operacao/deploy.md). |
 | Fechar a porta 8080 ao público           | Só o proxy (80/443) exposto; API e banco na rede interna.                        |
 | Monitoramento externo                    | UptimeRobot (gratuito) apontando para a URL pública.                             |
 | Alinhar versão do Postgres               | Dev usa 15, testes usam outra: [RFC 0002](../rfc/0002-alinhar-versao-postgres.md). |

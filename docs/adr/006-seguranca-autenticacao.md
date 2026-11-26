@@ -74,7 +74,7 @@ CSRF do Spring exigiria que o front buscasse e reenviasse um token CSRF em todo 
 Isso deixa de valer se:
 - o cookie de refresh passar a usar `SameSite=None` (necessário se o front ficar em **outro domínio** que a API).
   Nesse caso, reative o CSRF ao menos em `/user/refresh` e `/user/logout`, ou volte a servir front e API no mesmo
-  domínio (o desenho atual, com Caddy: ver [`frontend-deploy.md`](../operacao/frontend-deploy.md));
+  domínio (o desenho atual, com Caddy: ver [`deploy.md` do front](https://github.com/projeto-resgate/projetoresgate-app/blob/main/docs/operacao/deploy.md));
 - a autenticação passar a usar cookie de sessão ou o access token for para cookie.
 
 No SonarCloud, o alerta "Make sure disabling Spring Security's CSRF protection is safe here" é um *security

@@ -107,23 +107,30 @@ Etapas do `build-and-push`:
 | Build                  | Usa o `Dockerfile` (multi-stage, ver abaixo) com cache `type=gha`.                             |
 | Push                   | Duas tags: **`:prod-<sha>`** (imutável, serve de rollback) e **`:latest`** (o que o Watchtower observa). |
 | Rastreabilidade        | Labels OCI `org.opencontainers.image.revision` e `version`: `docker inspect` mostra de qual commit saiu a imagem. |
-| Limpeza                | Apaga do Docker Hub as tags `prod-` antigas e mantém só a **do deploy atual e uma anterior** (mais o `:latest`). Ver abaixo. |
 
-### Limpeza das tags no Docker Hub
+### Limpeza das tags no Docker Hub (manual)
 
-O plano gratuito do Docker Hub tem armazenamento limitado (2 GB no repositório privado). Para não acumular, o último
-passo do `build-and-push` apaga as tags `prod-` antigas:
+Cada deploy cria uma tag `prod-<sha>` nova, e o pipeline **não apaga nenhuma**. O plano gratuito do Docker Hub tem
+armazenamento limitado, então as tags antigas precisam ser **excluídas à mão** de tempos em tempos.
 
-- **Mantém:** `:latest`, a tag `prod-` do deploy que acabou de rodar e **a mais recente anterior a ela** (para rollback
-  imediato). A quantidade de anteriores é a variável `KEEP_PREVIOUS` do passo (hoje `1`).
-- **Apaga:** as demais tags `prod-`, da mais antiga para a mais nova. Tags com outro nome nunca são tocadas.
-- **Como:** autentica em `POST https://hub.docker.com/v2/auth/token`, lista as tags e apaga cada uma com
-  `DELETE /v2/namespaces/{namespace}/repositories/{repositorio}/tags/{tag}`. Esse `DELETE` **não está na referência
-  oficial** da API do Docker Hub (é o que as ferramentas da comunidade usam); se a Docker mudar, o passo para de apagar.
-- **Nunca derruba o deploy:** qualquer falha (autenticação, permissão, API) vira um **aviso** amarelo no resumo da
-  execução; a imagem nova já foi publicada antes da limpeza.
-- **Permissão:** o `DOCKERHUB_TOKEN` precisa ser um access token com **Read, Write, Delete**. Com Read & Write o push
-  funciona, mas a limpeza só gera avisos de HTTP 403.
+> Houve uma tentativa de limpar automaticamente no fim do `deploy.yml` (pela API do Docker Hub), mas ela não
+> funcionou e foi removida.
+
+**Quando:** a cada poucos deploys, ou quando o Docker Hub avisar de espaço.
+
+**Como:**
+
+1. Entre em [hub.docker.com](https://hub.docker.com) com a conta do projeto e abra o repositório da imagem
+   (`DOCKER_IMAGE_REPO`).
+2. Aba **Tags**: ordene pela data do push (mais novas primeiro).
+3. **Mantenha** sempre:
+   - `latest`;
+   - a tag `prod-` do deploy atual (a mais recente);
+   - **pelo menos uma** `prod-` anterior, para rollback imediato.
+4. Marque as demais tags `prod-` e use **Delete**. Não apague tags com outro nome.
+
+A tag em uso na VM pode ser conferida com `docker inspect -f '{{.Config.Image}}' projetoresgate_api` e o label
+`org.opencontainers.image.version` da imagem. **Nunca apague a tag que está fixada no compose durante um rollback.**
 
 > Antes, a tag usava o `GITHUB_SHA`, que é o commit do workflow e não o da `ref` escolhida. Isso foi corrigido:
 > agora a tag, o CI e o build usam o **mesmo SHA**.
@@ -167,7 +174,7 @@ processo como `app` e desligamento gracioso.
 |----------------------|-------------|----------------------------------------------------------------|
 | `SONAR_TOKEN`        | `ci.yml`    | Token do SonarCloud                                            |
 | `DOCKERHUB_USERNAME` | `deploy.yml`| Usuário do Docker Hub                                          |
-| `DOCKERHUB_TOKEN`    | `deploy.yml`| **Access token** do Docker Hub com permissão **Read, Write, Delete** (o *delete* é usado pela limpeza de tags antigas) |
+| `DOCKERHUB_TOKEN`    | `deploy.yml`| **Access token** do Docker Hub com permissão **Read & Write** (a exclusão de tags antigas é feita à mão, no site) |
 
 > Prefira guardar os dois do Docker Hub no **environment `production`** em vez do nível do repositório.
 
@@ -211,9 +218,9 @@ Atualizações automáticas de dependências (Maven, GitHub Actions, Docker e Co
 ## Como fazer rollback
 
 A VM roda `:latest`. Para voltar à versão anterior, aponte o compose para a tag `prod-<sha>` anterior —
-passo a passo em [`runbook.md`](runbook.md#rollback). Como a limpeza mantém **só uma** tag anterior, o rollback
-automático alcança apenas o deploy imediatamente anterior; para voltar mais, gere a imagem de novo rodando o
-`deploy.yml` com a `ref` (commit ou tag do git) desejada.
+passo a passo em [`runbook.md`](runbook.md#rollback). O rollback alcança as tags `prod-` que ainda existem no Docker
+Hub (as antigas são [excluídas à mão](#limpeza-das-tags-no-docker-hub-manual)); para voltar a uma versão cuja tag já
+foi apagada, gere a imagem de novo rodando o `deploy.yml` com a `ref` (commit ou tag do git) desejada.
 
 ## Actions fixadas por SHA
 
