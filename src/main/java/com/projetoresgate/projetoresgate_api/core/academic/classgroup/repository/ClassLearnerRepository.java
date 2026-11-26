@@ -39,6 +39,7 @@ public interface ClassLearnerRepository extends JpaRepository<ClassLearner, UUID
                    cl.learner_id as "learnerId",
                    np.name as "learnerName",
                    np.cpf as "learnerCpf",
+                   np.rg as "learnerRg",
                    l.status as "learnerStatus",
                    cl.active as "active",
                    cl.date_created as "dateCreated"
@@ -54,17 +55,17 @@ public interface ClassLearnerRepository extends JpaRepository<ClassLearner, UUID
             order by cl.active desc, np.name asc, cl.id asc
             """,
             countQuery = """
-            select count(*)
-            from class_learner cl
-            join learner l on l.id = cl.learner_id and l.deleted_at is null
-            join natural_person np on np.id = l.natural_person_id
-            where cl.class_group_id = :classGroupId
-              and cl.deleted_at is null
-              and (cast(:active as boolean) is null or cl.active = cast(:active as boolean))
-              and (cast(:searchTerm as text) is null
-                   or strpos(lower(np.name), lower(cast(:searchTerm as text))) > 0
-                   or strpos(lower(coalesce(np.nickname, '')), lower(cast(:searchTerm as text))) > 0)
-            """,
+                    select count(*)
+                    from class_learner cl
+                    join learner l on l.id = cl.learner_id and l.deleted_at is null
+                    join natural_person np on np.id = l.natural_person_id
+                    where cl.class_group_id = :classGroupId
+                      and cl.deleted_at is null
+                      and (cast(:active as boolean) is null or cl.active = cast(:active as boolean))
+                      and (cast(:searchTerm as text) is null
+                           or strpos(lower(np.name), lower(cast(:searchTerm as text))) > 0
+                           or strpos(lower(coalesce(np.nickname, '')), lower(cast(:searchTerm as text))) > 0)
+                    """,
             nativeQuery = true)
     Page<ClassLearnerRow> findRowsByClassGroupId(@Param("classGroupId") UUID classGroupId,
                                                  @Param("active") Boolean active,
@@ -81,6 +82,20 @@ public interface ClassLearnerRepository extends JpaRepository<ClassLearner, UUID
             """)
     List<UUID> findLearnerIdsInProgress(@Param("learnerIds") Collection<UUID> learnerIds,
                                         @Param("now") LocalDateTime now);
+
+    @Query(value = """
+            select distinct cl.learner_id as "learnerId",
+                   p.name as "programName"
+            from class_learner cl
+            join class_group cg on cg.id = cl.class_group_id and cg.deleted_at is null
+            join program p on p.id = cg.program_id
+            where cl.learner_id in (:learnerIds)
+              and cl.deleted_at is null
+              and cl.active = true
+            order by p.name
+            """,
+            nativeQuery = true)
+    List<LearnerProgramRow> findActiveProgramNamesByLearnerIds(@Param("learnerIds") Collection<UUID> learnerIds);
 
     @Modifying
     @Query("""

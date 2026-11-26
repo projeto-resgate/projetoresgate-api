@@ -15,6 +15,8 @@ public interface ClassLearnerRow {
 
     String getLearnerCpf();
 
+    String getLearnerRg();
+
     String getLearnerStatus();
 
     boolean getActive();

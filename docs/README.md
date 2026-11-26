@@ -54,7 +54,7 @@ Como o sistema está implementado hoje (para quem desenvolve).
 | [`operacao/infraestrutura-deploy.md`](operacao/infraestrutura-deploy.md) | Montar a VM, variáveis, Watchtower, backup.                |
 | [`operacao/runbook.md`](operacao/runbook.md)                         | Validar deploy, ver logs, voltar versão, diagnosticar.         |
 | [`operacao/dependabot.md`](operacao/dependabot.md)                   | Como funcionam os PRs automáticos de atualização.              |
-| [`operacao/frontend-deploy.md`](operacao/frontend-deploy.md)         | Publicar o front (Docker Hub, nginx, Caddy, HTTPS) e ligá-lo à API. |
+| [`deploy.md` do front](https://github.com/projeto-resgate/projetoresgate-app/blob/main/docs/operacao/deploy.md) (repositório `projetoresgate-app`) | Publicar o front (Docker Hub, nginx, Caddy, HTTPS) e ligá-lo à API. |
 
 ## ADRs e RFCs
 

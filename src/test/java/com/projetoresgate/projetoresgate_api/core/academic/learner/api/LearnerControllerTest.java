@@ -898,7 +898,8 @@ class LearnerControllerTest {
     @DisplayName("GET /learner - Deve retornar 200 com a lista de educandos")
     void findAll_ShouldReturn200() throws Exception {
         LearnerSummaryResponse summary = new LearnerSummaryResponse(
-                LEARNER_ID, "Maria da Silva", "Escola Projeto Resgate", 2026, LearnerParticipationStatus.NO_CLASS);
+                LEARNER_ID, "Maria da Silva", List.of("Música", "Robótica"), "Escola Projeto Resgate", 2026,
+                LearnerParticipationStatus.NO_CLASS);
 
         when(findAllUseCase.handle(any(FindAllLearnersQuery.class)))
                 .thenReturn(new PageImpl<>(List.of(summary), PAGEABLE, 1));
@@ -908,6 +909,8 @@ class LearnerControllerTest {
                 .andExpect(jsonPath("$.content.length()").value(1))
                 .andExpect(jsonPath("$.content[0].id").value(LEARNER_ID.toString()))
                 .andExpect(jsonPath("$.content[0].name").value("Maria da Silva"))
+                .andExpect(jsonPath("$.content[0].programNames[0]").value("Música"))
+                .andExpect(jsonPath("$.content[0].programNames[1]").value("Robótica"))
                 .andExpect(jsonPath("$.content[0].institutionName").value("Escola Projeto Resgate"))
                 .andExpect(jsonPath("$.content[0].academicYear").value(2026))
                 .andExpect(jsonPath("$.content[0].status").value("NO_CLASS"));

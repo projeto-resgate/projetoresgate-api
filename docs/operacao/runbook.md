@@ -53,10 +53,10 @@ curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080/actuator/health
 
 A VM roda a tag `:latest`. Para voltar a uma versão específica, **fixe uma tag `prod-<sha>`** anterior.
 
-> O Docker Hub guarda só a tag `prod-` do deploy atual e **uma anterior** (a limpeza automática apaga as demais; ver
-> [pipeline](pipeline-ci-cd.md#limpeza-das-tags-no-docker-hub)). Se precisar voltar mais de um deploy, rode o
-> `deploy.yml` informando no campo `ref` o commit ou a tag do git da versão boa: ele gera a imagem de novo e vira o
-> `:latest`.
+> As tags `prod-` antigas são **excluídas à mão** no Docker Hub (ver
+> [pipeline](pipeline-ci-cd.md#limpeza-das-tags-no-docker-hub-manual)). Se a tag da versão boa já tiver sido apagada,
+> rode o `deploy.yml` informando no campo `ref` o commit ou a tag do git da versão boa: ele gera a imagem de novo e
+> vira o `:latest`.
 
 1. Descubra a tag boa: Docker Hub → tags do repositório, ou `Actions` → execução do `deploy.yml` daquela versão
    (`prod-` + 12 primeiros caracteres do commit).
@@ -132,6 +132,7 @@ volta a aceitar chamadas sem login: confira com
 | Diária     | Backup automático ([cron](infraestrutura-deploy.md#backup), 1 vez por dia, às 3h) — confira em `~/backups/backup.log` que o arquivo apareceu |
 | Semanal    | `dc ps` e olhar `docker stats`/`df -h` (sinal precoce de disco/memória)                  |
 | Mensal     | `sudo apt update && sudo apt upgrade` (e reiniciar se pedir kernel novo)                 |
+| Mensal     | Excluir tags `prod-` antigas no Docker Hub, mantendo `latest`, a atual e uma anterior ([como](pipeline-ci-cd.md#limpeza-das-tags-no-docker-hub-manual)) |
 | Trimestral | **Testar restauração do backup** num ambiente local                                      |
 | Anual      | Rotacionar `API_SECURITY_TOKEN_SECRET`, senha do banco e o token do Docker Hub           |
 

@@ -15,18 +15,20 @@ public record ClassLearnerResponse(
         UUID learnerId,
         String learnerName,
         String learnerCpf,
+        String learnerRg,
         LearnerStatus learnerStatus,
         boolean active,
         LocalDateTime dateCreated
 ) {
     public static ClassLearnerResponse fromEntity(ClassLearner entity, String learnerName, String learnerCpf,
-                                                  LearnerStatus learnerStatus) {
+                                                  String learnerRg, LearnerStatus learnerStatus) {
         return new ClassLearnerResponse(
                 entity.getId(),
                 entity.getClassGroup().getId(),
                 entity.getLearnerId(),
                 learnerName,
                 learnerCpf,
+                learnerRg,
                 learnerStatus,
                 entity.isActive(),
                 entity.getDateCreated()
@@ -40,6 +42,7 @@ public record ClassLearnerResponse(
                 row.getLearnerId(),
                 row.getLearnerName(),
                 row.getLearnerCpf(),
+                row.getLearnerRg(),
                 isNull(row.getLearnerStatus()) ? null : LearnerStatus.valueOf(row.getLearnerStatus()),
                 row.getActive(),
                 row.getDateCreated()

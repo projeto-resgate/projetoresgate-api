@@ -90,7 +90,7 @@ Fluxos: [`autenticacao.md`](autenticacao.md).
 | POST   | `/learner/{id}/dropout`             | Registra desistência (motivo obrigatório)                      |
 | POST   | `/learner/{id}/reactivate`          | Reativa; `classGroupId` opcional (re)vincula e ativa na turma, sem erro se já estiver ativo |
 | GET    | `/learner/{id}/status-history`      | Histórico de desistências e retomadas (tipo, motivo, `eventDate`, `registeredAt`), mais recente primeiro |
-| GET    | `/learner`                          | Lista com filtros; cada item traz `status`: `ACTIVE` (cursando turma em andamento), `NO_CLASS` (ativo sem turma em andamento) ou `DROPPED_OUT`; filtro `status` aceita os mesmos valores |
+| GET    | `/learner`                          | Lista com filtros; cada item traz `status`: `ACTIVE` (cursando turma em andamento), `NO_CLASS` (ativo sem turma em andamento) ou `DROPPED_OUT`; filtro `status` aceita os mesmos valores. Traz também `programNames`: os programas das turmas em que o educando tem **vínculo ativo** (sem repetição, em ordem alfabética; lista vazia se não houver) |
 | GET    | `/learner/{id}`                     | Detalhe (inclui responsáveis; **não** inclui o histórico de status (use `/status-history`)) |
 | GET    | `/learner/autocomplete`             | Busca rápida                                                   |
 | GET    | `/learner/eligible-responsibles`    | Pessoas da família elegíveis a responsável (`familyGroupId`, `excludeNaturalPersonId`) |
@@ -145,11 +145,11 @@ Fluxos: [`fluxo-educandos.md`](fluxo-educandos.md).
 | GET    | `/class-group/{classGroupId}/schedule`      | Lista horários                              |
 | DELETE | `/class-group/{classGroupId}/schedule/{id}` | Exclui horário                              |
 | POST   | `/class-group/{classGroupId}/learner`       | Vincula educando                            |
-| GET    | `/class-group/{classGroupId}/learner`       | Lista educandos da turma                    |
+| GET    | `/class-group/{classGroupId}/learner`       | Lista educandos da turma, com `learnerName`, `learnerCpf` e `learnerRg` (RG e CPF opcionais: `null` se a pessoa não tiver) |
 | DELETE | `/class-group/{classGroupId}/learner/{id}`  | Remove vínculo (`id` = id do **vínculo**)   |
 | POST   | `/class-group/{classGroupId}/collaborator`  | Vincula educador                            |
 | PUT    | `/class-group/{classGroupId}/collaborator/{id}` | Edita categoria/ativo                   |
-| GET    | `/class-group/{classGroupId}/collaborator`  | Lista educadores                            |
+| GET    | `/class-group/{classGroupId}/collaborator`  | Lista educadores, com `collaboratorName`, `collaboratorCpf` e `collaboratorRg` (RG e CPF opcionais: `null` se a pessoa não tiver) |
 | DELETE | `/class-group/{classGroupId}/collaborator/{id}` | Remove vínculo                          |
 
 > Nos sub-recursos o `{id}` é o **id do vínculo** (`ClassLearner`, `ClassCollaborator`, `ClassSchedule`),

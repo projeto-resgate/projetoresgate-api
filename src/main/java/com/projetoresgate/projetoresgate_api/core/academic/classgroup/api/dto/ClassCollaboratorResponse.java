@@ -11,18 +11,23 @@ public record ClassCollaboratorResponse(
         UUID classGroupId,
         UUID collaboratorId,
         String collaboratorName,
+        String collaboratorCpf,
+        String collaboratorRg,
         UUID educatorCategoryItemId,
         String educatorCategoryItemName,
         boolean active,
         LocalDateTime dateCreated
 ) {
     public static ClassCollaboratorResponse fromEntity(ClassCollaborator entity, String collaboratorName,
+                                                       String collaboratorCpf, String collaboratorRg,
                                                        String educatorCategoryItemName) {
         return new ClassCollaboratorResponse(
                 entity.getId(),
                 entity.getClassGroup().getId(),
                 entity.getCollaboratorId(),
                 collaboratorName,
+                collaboratorCpf,
+                collaboratorRg,
                 entity.getEducatorCategoryItemId(),
                 educatorCategoryItemName,
                 entity.isActive(),
@@ -36,6 +41,8 @@ public record ClassCollaboratorResponse(
                 row.getClassGroupId(),
                 row.getCollaboratorId(),
                 row.getCollaboratorName(),
+                row.getCollaboratorCpf(),
+                row.getCollaboratorRg(),
                 row.getEducatorCategoryItemId(),
                 row.getEducatorCategoryItemName(),
                 row.getActive(),

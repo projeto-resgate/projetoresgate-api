@@ -61,6 +61,8 @@ public class UpdateClassCollaboratorService implements UpdateClassCollaboratorUs
         return ClassCollaboratorResponse.fromEntity(
                 saved,
                 isNull(person) ? null : person.getName(),
+                isNull(person) ? null : person.getCpf(),
+                isNull(person) ? null : person.getRg(),
                 categoryName);
     }
 }

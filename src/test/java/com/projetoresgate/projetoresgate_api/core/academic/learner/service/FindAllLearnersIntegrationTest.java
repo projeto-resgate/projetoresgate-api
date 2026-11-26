@@ -233,6 +233,48 @@ class FindAllLearnersIntegrationTest extends PostgresIntegrationTest {
                 }, item.status(), item.name()));
     }
 
+    private ClassGroup givenClassGroupOf(Program program) {
+        int sequence = CPF_SEQUENCE.incrementAndGet();
+        Address address = Address.create("Rua", "Das Flores", "60000-000", "100", null, null,
+                "Centro", "Fortaleza", "CE");
+        LegalPerson institution = legalPersonRepository.save(LegalPerson.create(
+                String.format("%014d", 20000000000000L + sequence), "Escola " + sequence, null, "Escola " + sequence,
+                null, RegistrationStatus.ACTIVE, CompanyStatus.ACTIVE, address, null));
+        return classGroupRepository.save(ClassGroup.create(program.getId(), institution.getId(), 20,
+                LocalDateTime.now().minusMonths(1), 6, null, program.getName(), List.of()));
+    }
+
+    @Test
+    @DisplayName("Deve listar os programas das turmas com vínculo ativo, sem repetir e em ordem alfabética")
+    void handle_ShouldReturnProgramNamesFromActiveClassLinks() {
+        Program robotics = programRepository.save(Program.create("Robótica", null, ProgramStatus.ACTIVE, null));
+        Program music = programRepository.save(Program.create("Música", null, ProgramStatus.ACTIVE, null));
+        Program theater = programRepository.save(Program.create("Teatro", null, ProgramStatus.ACTIVE, null));
+        Program chess = programRepository.save(Program.create("Xadrez", null, ProgramStatus.ACTIVE, null));
+
+        Learner ana = givenLearnerInClass("Ana", givenClassGroupOf(robotics), true);
+        classLearnerRepository.save(ClassLearner.create(givenClassGroupOf(music), ana.getId()));
+        classLearnerRepository.save(ClassLearner.create(givenClassGroupOf(robotics), ana.getId()));
+        ClassLearner inactiveLink = ClassLearner.create(givenClassGroupOf(theater), ana.getId());
+        inactiveLink.deactivate();
+        classLearnerRepository.save(inactiveLink);
+        ClassGroup deletedClass = givenClassGroupOf(chess);
+        classLearnerRepository.save(ClassLearner.create(deletedClass, ana.getId()));
+        Learner bruno = givenLearner("Bruno", null, 2026);
+        entityManager.flush();
+        entityManager.createNativeQuery("update class_group set deleted_at = now() where id = :id")
+                .setParameter("id", deletedClass.getId()).executeUpdate();
+
+        Page<LearnerSummaryResponse> result = findByStatus(null);
+
+        LearnerSummaryResponse anaRow = result.getContent().stream()
+                .filter(item -> item.id().equals(ana.getId())).findFirst().orElseThrow();
+        LearnerSummaryResponse brunoRow = result.getContent().stream()
+                .filter(item -> item.id().equals(bruno.getId())).findFirst().orElseThrow();
+        assertEquals(List.of("Música", "Robótica"), anaRow.programNames());
+        assertEquals(List.of(), brunoRow.programNames());
+    }
+
     @Test
     @DisplayName("Educando em duas turmas, uma em andamento e outra não, aparece uma única vez como ACTIVE")
     void handle_ShouldNotDuplicateLearnerWithManyClasses() {
