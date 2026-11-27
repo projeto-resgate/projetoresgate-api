@@ -138,7 +138,7 @@ Fluxos: [`fluxo-educandos.md`](fluxo-educandos.md).
 | POST   | `/class-group`                              | Cria                                        |
 | PUT    | `/class-group/{id}`                         | Edita (substitui; mesmo corpo do POST)      |
 | DELETE | `/class-group/{id}`                         | Exclui com horários e séries; 409 se houver educandos ou educadores vinculados |
-| GET    | `/class-group`                              | Lista resumida                              |
+| GET    | `/class-group`                              | Lista resumida; `active` = hoje entre o início e o término (também no filtro `?active=`) |
 | GET    | `/class-group/{id}`                         | Detalhe                                     |
 | POST   | `/class-group/{classGroupId}/schedule`      | Cria horário                                |
 | PUT    | `/class-group/{classGroupId}/schedule/{id}` | Edita horário                               |

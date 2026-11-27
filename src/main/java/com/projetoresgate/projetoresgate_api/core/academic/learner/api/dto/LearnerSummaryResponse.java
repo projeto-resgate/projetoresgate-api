@@ -10,7 +10,6 @@ import java.util.UUID;
 public record LearnerSummaryResponse(
         UUID id,
         String name,
-        // programas das turmas em que o educando tem vínculo ativo, sem repetição e em ordem alfabética
         List<String> programNames,
         String institutionName,
         Integer academicYear,

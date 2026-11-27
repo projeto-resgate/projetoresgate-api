@@ -7,6 +7,8 @@ import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.qu
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
@@ -25,7 +27,7 @@ public class FindAllClassGroupsService implements FindAllClassGroupsUseCase {
         String searchTerm = StringUtils.hasText(query.searchTerm()) ? query.searchTerm() : null;
 
         return repository.findRows(searchTerm, query.programId(), query.institutionId(), query.active(),
-                        PageRequest.of(query.pageable().getPageNumber(), query.pageable().getPageSize()))
+                        LocalDateTime.now(), PageRequest.of(query.pageable().getPageNumber(), query.pageable().getPageSize()))
                 .map(ClassGroupSummaryResponse::fromRow);
     }
 }

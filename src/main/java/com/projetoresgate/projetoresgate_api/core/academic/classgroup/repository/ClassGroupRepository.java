@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,7 +39,7 @@ public interface ClassGroupRepository extends JpaRepository<ClassGroup, UUID>, J
                    p.name as "programName",
                    cg.institution_id as "institutionId",
                    coalesce(nullif(trim(lp.display_name), ''), nullif(trim(lp.trade_name), ''), lp.corporate_name) as "institutionName",
-                   cg.active as "active"
+                   (cg.active and cg.start_date <= :now and cg.end_date >= :now) as "active"
             from class_group cg
             left join program p on p.id = cg.program_id
             left join legal_person lp on lp.id = cg.institution_id
@@ -46,7 +47,7 @@ public interface ClassGroupRepository extends JpaRepository<ClassGroup, UUID>, J
               and (cast(:searchTerm as text) is null or strpos(lower(cg.title), lower(cast(:searchTerm as text))) > 0)
               and (cast(:programId as uuid) is null or cg.program_id = cast(:programId as uuid))
               and (cast(:institutionId as uuid) is null or cg.institution_id = cast(:institutionId as uuid))
-              and (cast(:active as boolean) is null or cg.active = cast(:active as boolean))
+              and (cast(:active as boolean) is null or (cg.active and cg.start_date <= :now and cg.end_date >= :now) = cast(:active as boolean))
             order by cg.title asc, cg.id asc
             """,
             countQuery = """
@@ -56,13 +57,14 @@ public interface ClassGroupRepository extends JpaRepository<ClassGroup, UUID>, J
               and (cast(:searchTerm as text) is null or strpos(lower(cg.title), lower(cast(:searchTerm as text))) > 0)
               and (cast(:programId as uuid) is null or cg.program_id = cast(:programId as uuid))
               and (cast(:institutionId as uuid) is null or cg.institution_id = cast(:institutionId as uuid))
-              and (cast(:active as boolean) is null or cg.active = cast(:active as boolean))
+              and (cast(:active as boolean) is null or (cg.active and cg.start_date <= :now and cg.end_date >= :now) = cast(:active as boolean))
             """,
             nativeQuery = true)
     Page<ClassGroupRow> findRows(@Param("searchTerm") String searchTerm,
                                  @Param("programId") UUID programId,
                                  @Param("institutionId") UUID institutionId,
                                  @Param("active") Boolean active,
+                                 @Param("now") LocalDateTime now,
                                  Pageable pageable);
 
     interface ClassGroupDependencies {

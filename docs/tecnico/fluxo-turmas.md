@@ -39,7 +39,7 @@ Os sub-recursos são endpoints aninhados na turma:
 | Término não pode ser anterior ao início                                                           | 400      |
 | Observação ≤ 2000 caracteres                                                                      | 400      |
 | Todas as séries informadas precisam existir (senão a operação inteira falha)                      | 400      |
-| `active` controla se a turma está em andamento; é editável no `PUT`                               | —        |
+| **Ativa = a data de hoje está entre o início e o término** (`active` nas respostas é calculado; ao mudar as datas, muda junto) | —        |
 
 ### Edição (`PUT /class-group/{id}`)
 
@@ -157,6 +157,7 @@ O programa, a instituição, os educandos e os colaboradores em si **não** são
 
 `GET /class-group` é paginado e filtra via `SpecificationBuilder` (ver
 [ADR 009](../adr/009-busca-com-specification-builder.md)). O response resumido
-(`ClassGroupSummaryResponse`) traz id, título, programa, instituição e `active`; o detalhe
+(`ClassGroupSummaryResponse`) traz id, título, programa, instituição e `active` (hoje entre o início e o término;
+o filtro `?active=` usa a mesma regra); o detalhe
 (`GET /class-group/{id}`) acrescenta séries, previsão de alunos, datas de início/término, duração, observação
 e data de criação. Educandos, educadores e horários **não** vêm embutidos: use os sub-recursos.

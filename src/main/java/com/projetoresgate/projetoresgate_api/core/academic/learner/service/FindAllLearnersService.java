@@ -91,7 +91,6 @@ public class FindAllLearnersService implements FindAllLearnersUseCase {
         return new HashSet<>(classLearnerRepository.findLearnerIdsInProgress(ids, now));
     }
 
-    // uma consulta para a página inteira; a query já devolve os nomes distintos e em ordem alfabética
     private Map<UUID, List<String>> resolveProgramNames(List<Learner> learners) {
         List<UUID> ids = learners.stream().map(Learner::getId).toList();
 

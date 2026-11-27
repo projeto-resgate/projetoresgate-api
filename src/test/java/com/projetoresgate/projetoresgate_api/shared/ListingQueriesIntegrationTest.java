@@ -63,15 +63,24 @@ class ListingQueriesIntegrationTest extends PostgresIntegrationTest {
 
     private static final AtomicInteger SEQUENCE = new AtomicInteger(0);
 
-    @Autowired private CollaboratorRepository collaboratorRepository;
-    @Autowired private ClassGroupRepository classGroupRepository;
-    @Autowired private ClassLearnerRepository classLearnerRepository;
-    @Autowired private ClassCollaboratorRepository classCollaboratorRepository;
-    @Autowired private LearnerRepository learnerRepository;
-    @Autowired private ProgramRepository programRepository;
-    @Autowired private LegalPersonRepository legalPersonRepository;
-    @Autowired private NaturalPersonRepository naturalPersonRepository;
-    @Autowired private EntityManager entityManager;
+    @Autowired
+    private CollaboratorRepository collaboratorRepository;
+    @Autowired
+    private ClassGroupRepository classGroupRepository;
+    @Autowired
+    private ClassLearnerRepository classLearnerRepository;
+    @Autowired
+    private ClassCollaboratorRepository classCollaboratorRepository;
+    @Autowired
+    private LearnerRepository learnerRepository;
+    @Autowired
+    private ProgramRepository programRepository;
+    @Autowired
+    private LegalPersonRepository legalPersonRepository;
+    @Autowired
+    private NaturalPersonRepository naturalPersonRepository;
+    @Autowired
+    private EntityManager entityManager;
 
     private FindAllCollaboratorsService findAllCollaborators;
     private AutocompleteCollaboratorService autocompleteCollaborators;
@@ -116,7 +125,7 @@ class ListingQueriesIntegrationTest extends PostgresIntegrationTest {
 
     private ClassGroup givenClassGroup(Program program, LegalPerson institution) {
         return classGroupRepository.save(ClassGroup.create(program.getId(), institution.getId(), 20,
-                LocalDateTime.of(2026, 2, 1, 8, 0), 6, null, program.getName(), List.of()));
+                LocalDateTime.now().minusMonths(1), 6, null, program.getName(), List.of()));
     }
 
     private Learner givenLearner(NaturalPerson person) {
@@ -218,7 +227,6 @@ class ListingQueriesIntegrationTest extends PostgresIntegrationTest {
         assertEquals("Ana Souza " + tag, anaRow.learnerName());
         assertEquals("93089835207", anaRow.learnerCpf());
         assertEquals("MG98765431", anaRow.learnerRg());
-        // RG e CPF são opcionais: quem não tem continua na lista, com os campos nulos
         assertNull(rows.getFirst().learnerCpf());
         assertNull(rows.getFirst().learnerRg());
         assertEquals(LearnerStatus.ACTIVE, anaRow.learnerStatus());
@@ -335,5 +343,31 @@ class ListingQueriesIntegrationTest extends PostgresIntegrationTest {
         assertTrue(suggestions.stream().noneMatch(suggestion -> suggestion.name().startsWith("Ana")));
         assertTrue(suggestions.stream().allMatch(LearnerAutocompleteResponse::active));
         assertTrue(byName.isEmpty());
+    }
+
+
+    @Test
+    @DisplayName("Turma é ativa só com a data de hoje entre o início e o término; o filtro active segue a mesma regra")
+    void classGroups_ShouldBeActiveOnlyWithinPeriod() {
+        Program program = givenProgram("Período");
+        LegalPerson school = givenLegalPerson("Escola Período", null, "Escola Período");
+        LocalDateTime now = LocalDateTime.now();
+        ClassGroup running = givenClassGroup(program, school);
+        ClassGroup future = classGroupRepository.save(ClassGroup.create(program.getId(), school.getId(), 20,
+                now.plusMonths(1), 6, null, "Futura", List.of()));
+        ClassGroup finished = classGroupRepository.save(ClassGroup.create(program.getId(), school.getId(), 20,
+                now.minusMonths(3), 1, null, "Encerrada", List.of()));
+        flushAndClear();
+
+        List<ClassGroupSummaryResponse> all = findAllClassGroups.handle(new FindAllClassGroupsQuery(
+                null, program.getId(), null, null, PageRequest.of(0, 10))).getContent();
+        List<ClassGroupSummaryResponse> active = findAllClassGroups.handle(new FindAllClassGroupsQuery(
+                null, program.getId(), null, true, PageRequest.of(0, 10))).getContent();
+
+        assertEquals(3, all.size());
+        assertTrue(all.stream().filter(row -> row.id().equals(running.getId())).findFirst().orElseThrow().active());
+        assertFalse(all.stream().filter(row -> row.id().equals(future.getId())).findFirst().orElseThrow().active());
+        assertFalse(all.stream().filter(row -> row.id().equals(finished.getId())).findFirst().orElseThrow().active());
+        assertEquals(List.of(running.getId()), active.stream().map(ClassGroupSummaryResponse::id).toList());
     }
 }

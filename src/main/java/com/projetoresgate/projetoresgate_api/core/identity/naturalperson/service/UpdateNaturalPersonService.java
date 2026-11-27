@@ -71,7 +71,6 @@ public class UpdateNaturalPersonService implements UpdateNaturalPersonUseCase {
         if (nonNull(saved.getEmail()) && !saved.getEmail().equalsIgnoreCase(previousEmail)) {
             requestEmailConfirmationUseCase.handle(saved);
         } else if (isNull(saved.getEmail()) && nonNull(previousEmail)) {
-            // Sem e-mail não há o que confirmar: um link enviado antes marcaria como verificada uma pessoa sem e-mail
             emailConfirmationTokenRepository.deleteByNaturalPerson(saved);
         }
 
