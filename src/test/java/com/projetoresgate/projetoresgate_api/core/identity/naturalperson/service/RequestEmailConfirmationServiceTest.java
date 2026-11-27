@@ -149,4 +149,14 @@ class RequestEmailConfirmationServiceTest {
 
         verifyNoInteractions(emailConfirmationTokenRepository, javaMailEmailService);
     }
+
+    @Test
+    @DisplayName("Não deve enviar confirmação para pessoa sem e-mail")
+    void handlePerson_shouldDoNothing_whenPersonHasNoEmail() {
+        NaturalPerson withoutEmail = NaturalPerson.create("Sem E-mail", null, null, null, null, null, null, null, null);
+
+        requestEmailConfirmationService.handle(withoutEmail);
+
+        verifyNoInteractions(emailConfirmationTokenRepository, javaMailEmailService, emailRateLimiter);
+    }
 }

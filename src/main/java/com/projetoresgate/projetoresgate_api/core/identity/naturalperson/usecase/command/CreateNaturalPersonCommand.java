@@ -17,7 +17,6 @@ import static com.projetoresgate.projetoresgate_api.shared.util.TextUtils.blankT
 public record CreateNaturalPersonCommand(
         @NotBlank(message = "O nome é obrigatório")
         String name,
-        @NotBlank(message = "O e-mail é obrigatório")
         @Email(message = "E-mail inválido")
         String email,
         String nickname,

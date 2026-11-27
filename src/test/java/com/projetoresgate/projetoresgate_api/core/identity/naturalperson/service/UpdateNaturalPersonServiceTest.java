@@ -3,6 +3,7 @@ package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.servic
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.enums.Gender;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.EmailConfirmationTokenRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.RequestEmailConfirmationUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.command.UpdateNaturalPersonCommand;
@@ -34,6 +35,9 @@ class UpdateNaturalPersonServiceTest {
 
     @Mock
     private RequestEmailConfirmationUseCase requestEmailConfirmationUseCase;
+
+    @Mock
+    private EmailConfirmationTokenRepository emailConfirmationTokenRepository;
 
     @InjectMocks
     private UpdateNaturalPersonService service;
@@ -215,6 +219,24 @@ class UpdateNaturalPersonServiceTest {
 
         assertFalse(person.isEmailVerified());
         verify(requestEmailConfirmationUseCase).handle(person);
+    }
+
+    @Test
+    @DisplayName("Tirar o e-mail deve desfazer a verificação e apagar os links de confirmação pendentes")
+    void handle_ShouldDiscardPendingConfirmationsWhenEmailIsRemoved() {
+        person.confirmEmail();
+        UpdateNaturalPersonCommand command = new UpdateNaturalPersonCommand(
+                personId, "Old Name", null, "nick", null, null, null, null, null, null, null);
+
+        when(repository.findByIdOrThrow(personId)).thenReturn(person);
+        when(repository.save(any())).thenReturn(person);
+
+        service.handle(command);
+
+        assertNull(person.getEmail());
+        assertFalse(person.isEmailVerified());
+        verify(emailConfirmationTokenRepository).deleteByNaturalPerson(person);
+        verify(requestEmailConfirmationUseCase, never()).handle(any(NaturalPerson.class));
     }
 
     @Test

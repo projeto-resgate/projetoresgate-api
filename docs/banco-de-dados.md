@@ -163,9 +163,9 @@ O que o seed cobre, para demonstração e testes manuais:
 
 | Item | Quantidade / situação |
 |---|---|
-| Pessoas físicas | 35 (pais, mães, avô, tio, irmãos, educadores sem família) |
-| Grupos familiares | 10 (`FAM-1` a `FAM-10`), em cidades e UFs diferentes |
-| Educandos | 17: 13 `ACTIVE`, 3 `NO_CLASS` e 1 `DROPPED_OUT` |
+| Pessoas físicas | 63: 45 em famílias ou como educador e **18 sem nenhum vínculo** (pré-cadastro) |
+| Grupos familiares | 13 (`FAM-1` a `FAM-13`), em cidades e UFs diferentes |
+| Educandos | 24: 13 `ACTIVE`, 10 `NO_CLASS` e 1 `DROPPED_OUT` |
 | Colaboradores | 11, voluntários e contratados, com e sem empresa |
 | Turmas | 7: **4 em andamento** (até 5 alunos e 3 educadores), **1 futura** (começa em fev/2027), **1 encerrada** (1º semestre de 2026) e **1 inativa** |
 
@@ -175,8 +175,27 @@ Casos especiais incluídos:
 - **Só turma futura ou encerrada:** Thiago Costa e Laura Almeida aparecem como `NO_CLASS`.
 - **Sem turma e sem série:** Sofia Ramos.
 - **Educanda em duas turmas:** Júlia Pereira (uma inativa e uma em andamento).
-- **Irmã que também é responsável:** Mariana Santos (de Lucas) e Camila Souza (de Carlos).
+- **Educando que também é responsável** (papéis `LEARNER` e `RESPONSIBLE` juntos):
+  - irmãs: Mariana Santos (de Lucas) e Camila Souza (de Carlos);
+  - **mãe jovem que ainda estuda:** Jéssica Nascimento (FAM-11, 3º EM), mãe de Miguel; a avó Sueli é
+    responsável dos dois;
+  - **irmã mais velha que cuida dos gêmeos:** Larissa Andrade (FAM-12, 3º EM), responsável pela comunicação
+    de Pedro Henrique e Paulo Henrique; a tia Cláudia é a responsável financeira dos três;
+  - **tio adolescente:** Tiago Moura (FAM-13, 2º EM), leva e busca o sobrinho Heitor; a irmã Kelly é mãe de
+    Heitor e tutora legal de Tiago.
 - **Responsável que não é pai nem mãe:** avô (Roberto Santos) e tio/tutor legal (Eduardo Rocha).
+- **Pessoas sem vínculo** (IDs `00000000-0000-0000-0002-…`): nenhuma está em família, é educando,
+  responsável ou colaborador, então podem ser vinculadas ou excluídas livremente. Cobrem documentos reais,
+  gravados sem máscara (RN-GER-01):
+  - RG no formato de cada UF: SP (`284519372`), SP antigo com dígito `X` (`37284915X`), MG com prefixo da UF
+    (`MG17293846`), RJ, PR, RS, BA, CE, PE, SC, DF e GO;
+  - **RG igual ao CPF** (Carteira de Identidade Nacional): Kauã Freitas e Alex Moreira;
+  - **sem RG:** criança e bebê, só com o CPF da certidão (Ana Clara, Lorenzo);
+  - **sem CPF:** idosos só com o RG antigo (Benedita, Sebastião);
+  - **e-mail compartilhado:** mãe e filho (Rosana e Kauã), pai e filha (Jefferson e Ana Clara), mãe e bebê
+    (Camila e Lorenzo);
+  - telefone só fixo, só celular, os dois ou nenhum; gênero `OTHER` (Alex); cadastro incompleto, sem RG,
+    nascimento, gênero e telefone (Joana).
 Quando o seed muda um dado que já existia, o script traz um `UPDATE` que só altera a linha se ela ainda
 tiver o valor antigo, para corrigir bancos já semeados sem sobrescrever o que foi editado depois.
 

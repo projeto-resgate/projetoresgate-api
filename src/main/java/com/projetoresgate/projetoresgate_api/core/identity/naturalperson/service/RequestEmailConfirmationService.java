@@ -11,6 +11,7 @@ import com.projetoresgate.projetoresgate_api.infrastructure.utils.TokenUtils;
 import com.projetoresgate.projetoresgate_api.shared.util.UrlUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -51,7 +52,8 @@ public class RequestEmailConfirmationService implements RequestEmailConfirmation
     @Override
     @Transactional
     public void handle(NaturalPerson person) {
-        if (person.isEmailVerified() || !emailRateLimiter.tryAcquire(person.getEmail())) {
+        if (!StringUtils.hasText(person.getEmail()) || person.isEmailVerified()
+                || !emailRateLimiter.tryAcquire(person.getEmail())) {
             return;
         }
         sendConfirmation(person);

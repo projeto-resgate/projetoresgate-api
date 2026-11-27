@@ -41,15 +41,6 @@ class NaturalPersonTest {
     }
 
     @Test
-    @DisplayName("Deve lançar exceção ao criar sem e-mail")
-    void create_ShouldFailWithoutEmail() {
-        String cpf = "51086174968";
-        assertThrows(InternalException.class, () ->
-                NaturalPerson.create("Test User", "", null, cpf, "1234567", LocalDate.now(), Gender.FEMALE, null, null)
-        );
-    }
-
-    @Test
     @DisplayName("Deve lançar exceção na validação se o CPF exceder 11 caracteres")
     void validate_ShouldFailIfCpfTooLong() {
         InternalException exception = assertThrows(InternalException.class, () ->
@@ -149,5 +140,31 @@ class NaturalPersonTest {
 
         assertEquals("12345678909", person.getRg());
         assertEquals("11988887777", person.getCellphone());
+    }
+
+    @Test
+    @DisplayName("Deve criar pessoa sem e-mail, que é opcional, gravando o e-mail em branco como nulo")
+    void create_ShouldAllowMissingOrBlankEmail() {
+        NaturalPerson withoutEmail = NaturalPerson.create("Sem E-mail", null, null, null, null, null, null, null, null);
+        NaturalPerson blankEmail = NaturalPerson.create("E-mail em Branco", "   ", null, null, null, null, null, null, null);
+
+        assertNull(withoutEmail.getEmail());
+        assertNull(blankEmail.getEmail());
+        assertFalse(withoutEmail.isEmailVerified());
+    }
+
+    @Test
+    @DisplayName("Tirar o e-mail na edição deve desfazer a verificação; manter o mesmo e-mail não")
+    void updateEmail_ShouldResetVerificationOnlyWhenEmailChangesOrIsRemoved() {
+        NaturalPerson person = NaturalPerson.create("Ana", "ana@example.com", null, null, null, null, null, null, null);
+        person.confirmEmail();
+
+        person.update().email("ANA@example.com ").apply();
+        assertTrue(person.isEmailVerified());
+        assertEquals("ANA@example.com", person.getEmail());
+
+        person.update().email("").apply();
+        assertFalse(person.isEmailVerified());
+        assertNull(person.getEmail());
     }
 }
