@@ -172,7 +172,8 @@ public class LearnerController {
     @GetMapping("/autocomplete")
     @Operation(summary = "Autocomplete de Educandos",
             description = "Busca leve de educandos (por nome, apelido ou CPF da pessoa física) para componentes de "
-                    + "seleção do front, como o modal de vínculo de educando à turma.")
+                    + "seleção do front, como o modal de vínculo de educando à turma. Educandos com situação de "
+                    + "desistência não aparecem, porque não podem ser vinculados a turmas.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = LearnerAutocompleteResponse.class)))

@@ -92,7 +92,7 @@ Fluxos: [`autenticacao.md`](autenticacao.md).
 | GET    | `/learner/{id}/status-history`      | Histórico de desistências e retomadas (tipo, motivo, `eventDate`, `registeredAt`), mais recente primeiro |
 | GET    | `/learner`                          | Lista com filtros; cada item traz `status`: `ACTIVE` (cursando turma em andamento), `NO_CLASS` (ativo sem turma em andamento) ou `DROPPED_OUT`; filtro `status` aceita os mesmos valores. Traz também `programNames`: os programas das turmas em que o educando tem **vínculo ativo** (sem repetição, em ordem alfabética; lista vazia se não houver) |
 | GET    | `/learner/{id}`                     | Detalhe (inclui responsáveis; **não** inclui o histórico de status (use `/status-history`)) |
-| GET    | `/learner/autocomplete`             | Busca rápida                                                   |
+| GET    | `/learner/autocomplete`             | Busca rápida; **não traz educandos com situação de desistência** (RN-TUR-13) |
 | GET    | `/learner/eligible-responsibles`    | Pessoas da família elegíveis a responsável (`familyGroupId`, `excludeNaturalPersonId`) |
 
 Fluxos: [`fluxo-educandos.md`](fluxo-educandos.md).
@@ -144,7 +144,7 @@ Fluxos: [`fluxo-educandos.md`](fluxo-educandos.md).
 | PUT    | `/class-group/{classGroupId}/schedule/{id}` | Edita horário                               |
 | GET    | `/class-group/{classGroupId}/schedule`      | Lista horários                              |
 | DELETE | `/class-group/{classGroupId}/schedule/{id}` | Exclui horário                              |
-| POST   | `/class-group/{classGroupId}/learner`       | Vincula educando                            |
+| POST   | `/class-group/{classGroupId}/learner`       | Vincula educando; **409** se ele estiver com situação de desistência (RN-TUR-13) |
 | GET    | `/class-group/{classGroupId}/learner`       | Lista educandos da turma, com `learnerName`, `learnerCpf` e `learnerRg` (RG e CPF opcionais: `null` se a pessoa não tiver) |
 | DELETE | `/class-group/{classGroupId}/learner/{id}`  | Remove vínculo (`id` = id do **vínculo**)   |
 | POST   | `/class-group/{classGroupId}/collaborator`  | Vincula educador                            |

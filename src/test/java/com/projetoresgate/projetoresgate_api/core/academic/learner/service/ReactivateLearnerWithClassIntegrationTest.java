@@ -20,6 +20,8 @@ import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repositor
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.shared.testcontainers.PostgresIntegrationTest;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.service.CreateClassLearnerService;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.usecase.command.CreateClassLearnerCommand;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -140,5 +142,24 @@ class ReactivateLearnerWithClassIntegrationTest extends PostgresIntegrationTest 
     void shouldFailForUnknownClassGroup() {
         assertThrows(RuntimeException.class,
                 () -> service.handle(new ReactivateLearnerCommand(learner.getId(), null, UUID.randomUUID())));
+    }
+
+    @Test
+    @DisplayName("Desistente não pode ser vinculado a turma pelo vínculo comum; só entra reativando")
+    void droppedOutLearner_CannotBeLinkedWithoutReactivation() {
+        CreateClassLearnerService createLink = new CreateClassLearnerService(
+                classGroupRepository, classLearnerRepository, learnerRepository, naturalPersonRepository);
+
+        assertThrows(IllegalStateException.class,
+                () -> createLink.handle(new CreateClassLearnerCommand(otherClassGroup.getId(), learner.getId())));
+        entityManager.clear();
+        assertTrue(classLearnerRepository.findByClassGroupIdAndLearnerId(otherClassGroup.getId(), learner.getId()).isEmpty());
+
+        service.handle(new ReactivateLearnerCommand(learner.getId(), "Voltou", otherClassGroup.getId()));
+        entityManager.flush();
+        entityManager.clear();
+
+        assertTrue(classLearnerRepository.findByClassGroupIdAndLearnerId(otherClassGroup.getId(), learner.getId())
+                .orElseThrow().isActive());
     }
 }
