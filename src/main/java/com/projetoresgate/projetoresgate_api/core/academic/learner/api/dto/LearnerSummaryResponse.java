@@ -11,16 +11,19 @@ public record LearnerSummaryResponse(
         UUID id,
         String name,
         List<String> programNames,
+        List<LearnerClassGroupResponse> classGroups,
         String institutionName,
         Integer academicYear,
         LearnerParticipationStatus status
 ) {
     public static LearnerSummaryResponse fromEntity(Learner entity, String name, List<String> programNames,
+                                                    List<LearnerClassGroupResponse> classGroups,
                                                     String institutionName, boolean inProgress) {
         return new LearnerSummaryResponse(
                 entity.getId(),
                 name,
                 programNames,
+                classGroups,
                 institutionName,
                 entity.getAcademicYear(),
                 participationStatus(entity, inProgress)

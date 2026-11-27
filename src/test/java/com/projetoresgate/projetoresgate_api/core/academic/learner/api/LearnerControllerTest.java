@@ -1,6 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.academic.learner.api;
 
 import tools.jackson.databind.ObjectMapper;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerClassGroupResponse;
 import com.projetoresgate.projetoresgate_api.config.security.WithMockCustomUser;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.command.ResponsibleCommand;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.DropoutLearnerResponse;
@@ -71,6 +72,7 @@ class LearnerControllerTest {
     private static final UUID SCHOOL_GRADE_ID = UUID.randomUUID();
     private static final UUID INSTITUTION_ID = UUID.randomUUID();
     private static final UUID LEARNER_ID = UUID.randomUUID();
+    private static final UUID CLASS_GROUP_ID_IN_LIST = UUID.randomUUID();
 
     @Autowired
     private MockMvc mockMvc;
@@ -921,7 +923,9 @@ class LearnerControllerTest {
     @DisplayName("GET /learner - Deve retornar 200 com a lista de educandos")
     void findAll_ShouldReturn200() throws Exception {
         LearnerSummaryResponse summary = new LearnerSummaryResponse(
-                LEARNER_ID, "Maria da Silva", List.of("Música", "Robótica"), "Escola Projeto Resgate", 2026,
+                LEARNER_ID, "Maria da Silva", List.of("Música", "Robótica"),
+                List.of(new LearnerClassGroupResponse(CLASS_GROUP_ID_IN_LIST, "Música - 1ª Série")),
+                "Escola Projeto Resgate", 2026,
                 LearnerParticipationStatus.NO_CLASS);
 
         when(findAllUseCase.handle(any(FindAllLearnersQuery.class)))
@@ -934,6 +938,8 @@ class LearnerControllerTest {
                 .andExpect(jsonPath("$.content[0].name").value("Maria da Silva"))
                 .andExpect(jsonPath("$.content[0].programNames[0]").value("Música"))
                 .andExpect(jsonPath("$.content[0].programNames[1]").value("Robótica"))
+                .andExpect(jsonPath("$.content[0].classGroups[0].id").value(CLASS_GROUP_ID_IN_LIST.toString()))
+                .andExpect(jsonPath("$.content[0].classGroups[0].title").value("Música - 1ª Série"))
                 .andExpect(jsonPath("$.content[0].institutionName").value("Escola Projeto Resgate"))
                 .andExpect(jsonPath("$.content[0].academicYear").value(2026))
                 .andExpect(jsonPath("$.content[0].status").value("NO_CLASS"));

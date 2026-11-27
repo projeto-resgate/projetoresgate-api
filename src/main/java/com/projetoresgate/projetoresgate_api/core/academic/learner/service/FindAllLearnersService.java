@@ -1,5 +1,7 @@
 package com.projetoresgate.projetoresgate_api.core.academic.learner.service;
 
+import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerClassGroupResponse;
+import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.LearnerClassGroupRow;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.ClassLearner;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassLearnerRepository;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.LearnerProgramRow;
@@ -70,6 +72,7 @@ public class FindAllLearnersService implements FindAllLearnersUseCase {
         Map<UUID, String> personNames = resolvePersonNames(page.getContent());
         Map<UUID, String> institutionNames = resolveInstitutionNames(page.getContent());
         Map<UUID, List<String>> programNames = resolveProgramNames(page.getContent());
+        Map<UUID, List<LearnerClassGroupResponse>> classGroups = resolveClassGroups(page.getContent());
 
         Set<UUID> inProgress = resolveLearnersInProgress(page.getContent(), now);
 
@@ -77,6 +80,7 @@ public class FindAllLearnersService implements FindAllLearnersUseCase {
                 learner,
                 isNull(learner.getNaturalPersonId()) ? null : personNames.get(learner.getNaturalPersonId()),
                 programNames.getOrDefault(learner.getId(), List.of()),
+                classGroups.getOrDefault(learner.getId(), List.of()),
                 isNull(learner.getInstitutionId()) ? null : institutionNames.get(learner.getInstitutionId()),
                 inProgress.contains(learner.getId())));
     }
@@ -89,6 +93,18 @@ public class FindAllLearnersService implements FindAllLearnersUseCase {
         }
 
         return new HashSet<>(classLearnerRepository.findLearnerIdsInProgress(ids, now));
+    }
+
+    private Map<UUID, List<LearnerClassGroupResponse>> resolveClassGroups(List<Learner> learners) {
+        List<UUID> ids = learners.stream().map(Learner::getId).toList();
+
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+
+        return classLearnerRepository.findActiveClassGroupsByLearnerIds(ids).stream()
+                .collect(Collectors.groupingBy(LearnerClassGroupRow::getLearnerId, LinkedHashMap::new,
+                        Collectors.mapping(LearnerClassGroupResponse::fromRow, Collectors.toList())));
     }
 
     private Map<UUID, List<String>> resolveProgramNames(List<Learner> learners) {

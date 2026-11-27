@@ -97,6 +97,20 @@ public interface ClassLearnerRepository extends JpaRepository<ClassLearner, UUID
             nativeQuery = true)
     List<LearnerProgramRow> findActiveProgramNamesByLearnerIds(@Param("learnerIds") Collection<UUID> learnerIds);
 
+    @Query(value = """
+            select distinct cl.learner_id as "learnerId",
+                   cg.id as "classGroupId",
+                   cg.title as "title"
+            from class_learner cl
+            join class_group cg on cg.id = cl.class_group_id and cg.deleted_at is null
+            where cl.learner_id in (:learnerIds)
+              and cl.deleted_at is null
+              and cl.active = true
+            order by cg.title, cg.id
+            """,
+            nativeQuery = true)
+    List<LearnerClassGroupRow> findActiveClassGroupsByLearnerIds(@Param("learnerIds") Collection<UUID> learnerIds);
+
     @Modifying
     @Query("""
             update ClassLearner cl

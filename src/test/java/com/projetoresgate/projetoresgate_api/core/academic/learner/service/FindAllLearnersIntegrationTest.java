@@ -1,5 +1,6 @@
 package com.projetoresgate.projetoresgate_api.core.academic.learner.service;
 
+import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.LearnerClassGroupResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.ClassGroup;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.domain.ClassLearner;
 import com.projetoresgate.projetoresgate_api.core.academic.classgroup.repository.ClassGroupRepository;
@@ -33,6 +34,8 @@ import org.springframework.data.domain.PageRequest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -245,16 +248,19 @@ class FindAllLearnersIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("Deve listar os programas das turmas com vínculo ativo, sem repetir e em ordem alfabética")
+    @DisplayName("Deve listar programas e turmas dos vínculos ativos, ignorando vínculo inativo e turma excluída")
     void handle_ShouldReturnProgramNamesFromActiveClassLinks() {
         Program robotics = programRepository.save(Program.create("Robótica", null, ProgramStatus.ACTIVE, null));
         Program music = programRepository.save(Program.create("Música", null, ProgramStatus.ACTIVE, null));
         Program theater = programRepository.save(Program.create("Teatro", null, ProgramStatus.ACTIVE, null));
         Program chess = programRepository.save(Program.create("Xadrez", null, ProgramStatus.ACTIVE, null));
 
-        Learner ana = givenLearnerInClass("Ana", givenClassGroupOf(robotics), true);
-        classLearnerRepository.save(ClassLearner.create(givenClassGroupOf(music), ana.getId()));
-        classLearnerRepository.save(ClassLearner.create(givenClassGroupOf(robotics), ana.getId()));
+        ClassGroup firstRoboticsClass = givenClassGroupOf(robotics);
+        ClassGroup musicClass = givenClassGroupOf(music);
+        ClassGroup secondRoboticsClass = givenClassGroupOf(robotics);
+        Learner ana = givenLearnerInClass("Ana", firstRoboticsClass, true);
+        classLearnerRepository.save(ClassLearner.create(musicClass, ana.getId()));
+        classLearnerRepository.save(ClassLearner.create(secondRoboticsClass, ana.getId()));
         ClassLearner inactiveLink = ClassLearner.create(givenClassGroupOf(theater), ana.getId());
         inactiveLink.deactivate();
         classLearnerRepository.save(inactiveLink);
@@ -273,6 +279,11 @@ class FindAllLearnersIntegrationTest extends PostgresIntegrationTest {
                 .filter(item -> item.id().equals(bruno.getId())).findFirst().orElseThrow();
         assertEquals(List.of("Música", "Robótica"), anaRow.programNames());
         assertEquals(List.of(), brunoRow.programNames());
+        assertEquals(Set.of(firstRoboticsClass.getId(), musicClass.getId(), secondRoboticsClass.getId()),
+                anaRow.classGroups().stream().map(LearnerClassGroupResponse::id).collect(Collectors.toSet()));
+        assertEquals(3, anaRow.classGroups().size());
+        assertEquals("Música", anaRow.classGroups().getFirst().title());
+        assertEquals(List.of(), brunoRow.classGroups());
     }
 
     @Test
