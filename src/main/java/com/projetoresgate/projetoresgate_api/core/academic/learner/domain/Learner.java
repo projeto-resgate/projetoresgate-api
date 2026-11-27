@@ -197,6 +197,13 @@ public class Learner extends AuditableEntity implements NaturalPersonRoleHolder 
         this.statusHistory.add(history);
     }
 
+    public void ensureCanJoinClassGroup() {
+        if (this.status == LearnerStatus.DROPPED_OUT) {
+            throw new IllegalStateException(
+                    "Este educando está com situação de desistência. Reative-o antes de vinculá-lo a uma turma.");
+        }
+    }
+
     public void reactivate(String note, LocalDate eventDate) {
         if (this.status == LearnerStatus.ACTIVE) {
             throw new IllegalStateException("O educando não está desistente.");

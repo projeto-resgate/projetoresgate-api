@@ -35,6 +35,7 @@ public interface LearnerRepository extends JpaRepository<Learner, UUID>, JpaSpec
             from learner l
             join natural_person np on np.id = l.natural_person_id and np.deleted_at is null
             where l.deleted_at is null
+              and l.status = 'ACTIVE'
               and (cast(:searchTerm as text) is null
                    or strpos(lower(np.name), lower(cast(:searchTerm as text))) > 0
                    or strpos(lower(coalesce(np.nickname, '')), lower(cast(:searchTerm as text))) > 0

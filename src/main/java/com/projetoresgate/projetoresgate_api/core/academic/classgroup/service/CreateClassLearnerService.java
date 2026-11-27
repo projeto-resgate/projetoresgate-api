@@ -37,6 +37,7 @@ public class CreateClassLearnerService implements CreateClassLearnerUseCase {
     public ClassLearnerResponse handle(CreateClassLearnerCommand command) {
         ClassGroup classGroup = classGroupRepository.findByIdOrThrow(command.classGroupId());
         Learner learner = learnerRepository.findByIdOrThrow(command.learnerId());
+        learner.ensureCanJoinClassGroup();
 
         if (repository.existsByClassGroupIdAndLearnerId(classGroup.getId(), command.learnerId())) {
             throw new IllegalStateException("Este educando já está vinculado à turma.");

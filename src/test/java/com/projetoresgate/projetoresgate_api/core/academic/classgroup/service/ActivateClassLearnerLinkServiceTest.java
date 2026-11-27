@@ -146,4 +146,22 @@ class ActivateClassLearnerLinkServiceTest {
 
         verify(repository, never()).save(any());
     }
+
+    @Test
+    @DisplayName("Não deve ativar vínculo de educando com situação de desistência")
+    void handle_ShouldRejectDroppedOutLearner() {
+        ClassGroup classGroup = givenClassGroup();
+        UUID learnerId = UUID.randomUUID();
+        Learner learner = Learner.create(UUID.randomUUID(), null, null, false, null, 2026, null, null);
+        learner.dropOut("Mudou de cidade", null);
+
+        when(classGroupRepository.findByIdOrThrow(classGroup.getId())).thenReturn(classGroup);
+        when(learnerRepository.findByIdOrThrow(learnerId)).thenReturn(learner);
+
+        assertThrows(IllegalStateException.class,
+                () -> service.handle(new ActivateClassLearnerLinkCommand(classGroup.getId(), learnerId)));
+
+        verify(repository, never()).save(any(ClassLearner.class));
+        verify(repository, never()).findByClassGroupIdAndLearnerId(any(), any());
+    }
 }

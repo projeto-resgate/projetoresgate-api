@@ -316,4 +316,24 @@ class ListingQueriesIntegrationTest extends PostgresIntegrationTest {
         assertTrue(byCpf.getFirst().active());
         assertEquals(1, byName.size());
     }
+
+    @Test
+    @DisplayName("Autocomplete de educando não traz desistentes, sem perder itens do limite")
+    void learnerAutocomplete_ShouldHideDroppedOutLearners() {
+        Learner dropped = givenLearner(givenPerson("Ana Desistente", null, null));
+        givenLearner(givenPerson("Bruno Lima", null, null));
+        givenLearner(givenPerson("Carla Dias", null, null));
+        dropped.dropOut("Mudou de cidade", null);
+        learnerRepository.save(dropped);
+        flushAndClear();
+
+        List<LearnerAutocompleteResponse> suggestions = autocompleteLearners.handle(new AutocompleteLearnerQuery(tag, 2));
+        List<LearnerAutocompleteResponse> byName = autocompleteLearners.handle(
+                new AutocompleteLearnerQuery("Ana Desistente " + tag, 10));
+
+        assertEquals(2, suggestions.size());
+        assertTrue(suggestions.stream().noneMatch(suggestion -> suggestion.name().startsWith("Ana")));
+        assertTrue(suggestions.stream().allMatch(LearnerAutocompleteResponse::active));
+        assertTrue(byName.isEmpty());
+    }
 }

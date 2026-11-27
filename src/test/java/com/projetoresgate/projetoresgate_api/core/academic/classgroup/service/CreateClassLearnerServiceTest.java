@@ -128,4 +128,23 @@ class CreateClassLearnerServiceTest {
 
         verify(repository, never()).save(any());
     }
+
+    @Test
+    @DisplayName("Não deve vincular à turma um educando com situação de desistência")
+    void handle_ShouldRejectDroppedOutLearner() {
+        ClassGroup classGroup = givenClassGroup();
+        UUID learnerId = UUID.randomUUID();
+        Learner learner = Learner.create(UUID.randomUUID(), null, null, false, null, 2026, null, null);
+        learner.dropOut("Mudou de cidade", null);
+
+        when(classGroupRepository.findByIdOrThrow(classGroup.getId())).thenReturn(classGroup);
+        when(learnerRepository.findByIdOrThrow(learnerId)).thenReturn(learner);
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> service.handle(new CreateClassLearnerCommand(classGroup.getId(), learnerId)));
+
+        assertEquals("Este educando está com situação de desistência. Reative-o antes de vinculá-lo a uma turma.",
+                exception.getMessage());
+        verify(repository, never()).save(any(ClassLearner.class));
+    }
 }
