@@ -66,8 +66,8 @@ class FindLearnerByIdServiceTest {
 
         Learner learner = Learner.create(UUID.randomUUID(), null, null, false, null, 2026, null, null);
         learner.syncResponsibleList(List.of(
-                Responsible.create(learner, mother.getId(), ResponsibleType.FINANCIAL, Kinship.MOTHER, null),
-                Responsible.create(learner, father.getId(), ResponsibleType.COMMUNICATION, Kinship.FATHER, null)));
+                Responsible.create(learner, mother.getId(), List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, null),
+                Responsible.create(learner, father.getId(), List.of(ResponsibleType.COMMUNICATION), Kinship.FATHER, null)));
         when(repository.findByIdOrThrow(learner.getId())).thenReturn(learner);
         when(naturalPersonRepository.findAllById(any())).thenReturn(List.of(mother, father));
 
@@ -88,14 +88,14 @@ class FindLearnerByIdServiceTest {
 
         Learner learner = Learner.create(UUID.randomUUID(), null, null, false, null, 2026, null, null);
         learner.syncResponsibleList(List.of(Responsible.create(
-                learner, mother.getId(), ResponsibleType.FINANCIAL, Kinship.MOTHER, schoolGradeId)));
+                learner, mother.getId(), List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, schoolGradeId)));
         when(repository.findByIdOrThrow(learner.getId())).thenReturn(learner);
         when(naturalPersonRepository.findAllById(any())).thenReturn(List.of(mother));
 
         LearnerResponse response = service.handle(new FindLearnerByIdQuery(learner.getId()));
 
         ResponsibleResponse responsible = response.responsibleList().get(0);
-        assertEquals(ResponsibleType.FINANCIAL, responsible.type());
+        assertEquals(List.of(ResponsibleType.FINANCIAL), responsible.types());
         assertEquals(Kinship.MOTHER, responsible.kinship());
         assertEquals(schoolGradeId, responsible.schoolGradeId());
     }
@@ -108,8 +108,8 @@ class FindLearnerByIdServiceTest {
 
         Learner learner = Learner.create(UUID.randomUUID(), null, null, false, null, 2026, null, null);
         learner.syncResponsibleList(List.of(
-                Responsible.create(learner, mother.getId(), ResponsibleType.FINANCIAL, Kinship.MOTHER, null),
-                Responsible.create(learner, father.getId(), ResponsibleType.COMMUNICATION, Kinship.FATHER, null)));
+                Responsible.create(learner, mother.getId(), List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, null),
+                Responsible.create(learner, father.getId(), List.of(ResponsibleType.COMMUNICATION), Kinship.FATHER, null)));
         when(repository.findByIdOrThrow(learner.getId())).thenReturn(learner);
         when(naturalPersonRepository.findAllById(any())).thenReturn(List.of(mother, father));
 

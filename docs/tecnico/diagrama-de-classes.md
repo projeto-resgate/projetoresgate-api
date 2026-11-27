@@ -281,7 +281,7 @@ classDiagram
     class Responsible {
         -UUID id
         -UUID naturalPersonId
-        -ResponsibleType type
+        -Set~ResponsibleType~ types
         -Kinship kinship
         -UUID schoolGradeId
         +updateFrom(changes)

@@ -1,5 +1,11 @@
 package com.projetoresgate.projetoresgate_api.core.identity.familygroup.service;
 
+import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.FindEligibleResponsiblesQuery;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.service.FindEligibleResponsiblesService;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.ResponsibleType;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.Kinship;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Responsible;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.EligibleResponsibleResponse;
 import com.projetoresgate.projetoresgate_api.core.identity.address.domain.Address;
 import com.projetoresgate.projetoresgate_api.core.identity.address.usecase.command.AddressCommand;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.api.dto.FamilyGroupNaturalPersonResponse;
@@ -559,5 +565,32 @@ class FamilyGroupServiceIntegrationTest extends PostgresIntegrationTest {
         assertThrows(IllegalStateException.class,
                 () -> removeNaturalPersonService.handle(
                         new RemoveNaturalPersonFromFamilyGroupCommand(second.getId(), person.getId())));
+    }
+
+    @Test
+    @DisplayName("Responsáveis elegíveis: não traz o próprio educando nem quem já é responsável dele")
+    void findEligibleResponsibles_ShouldSkipLearnerAndCurrentResponsibles() {
+        FamilyGroup group = createService.handle(buildCommand("Família Elegível", "São Paulo"));
+        NaturalPerson child = givenPerson("Theo", "11144477750");
+        NaturalPerson mother = givenPerson("Renata", "11144477751");
+        NaturalPerson uncle = givenPerson("Otávio", "11144477752");
+        for (NaturalPerson person : List.of(child, mother, uncle)) {
+            addNaturalPersonService.handle(new AddNaturalPersonToFamilyGroupCommand(group.getId(), person.getId()));
+        }
+        FindEligibleResponsiblesService service = new FindEligibleResponsiblesService(
+                familyGroupRepository, learnerRepository, responsibleRepository);
+        FindEligibleResponsiblesQuery query = new FindEligibleResponsiblesQuery(group.getId(), child.getId(), PAGE_ALL);
+
+        assertEquals(List.of(uncle.getId(), mother.getId()), service.handle(query).getContent().stream()
+                .map(EligibleResponsibleResponse::naturalPersonId).toList());
+
+        Learner learner = learnerRepository.save(Learner.create(child.getId(), null, null, false, null, 2026, null, null));
+        responsibleRepository.save(Responsible.create(learner, mother.getId(),
+                List.of(ResponsibleType.COMMUNICATION, ResponsibleType.FINANCIAL), Kinship.MOTHER, null));
+        entityManager.flush();
+        entityManager.clear();
+
+        assertEquals(List.of(uncle.getId()), service.handle(query).getContent().stream()
+                .map(EligibleResponsibleResponse::naturalPersonId).toList());
     }
 }

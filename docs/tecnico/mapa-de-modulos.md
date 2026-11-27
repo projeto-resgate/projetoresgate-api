@@ -67,7 +67,7 @@ graph LR
 | Termo                    | Significado no sistema                                                                                          |
 |--------------------------|-----------------------------------------------------------------------------------------------------------------|
 | **Educando** (`Learner`) | Aluno atendido pela ONG. É uma *pessoa física* com dados acadêmicos extras. Uma pessoa só pode ser educando uma vez. |
-| **Responsável**          | Pessoa física ligada a um educando. Tem **tipo** (`COMMUNICATION` ou `FINANCIAL`) e **parentesco** (`Kinship`). |
+| **Responsável**          | Pessoa física ligada a um educando. Tem **um ou mais tipos** (`COMMUNICATION` e/ou `FINANCIAL`) e **parentesco** (`Kinship`). |
 | **Colaborador**          | Pessoa física que atua como educador. Pode ser voluntário e vinculado a uma pessoa jurídica.                    |
 | **Instituição**          | Uma *pessoa jurídica* usada como escola/parceiro de um programa, turma ou educando.                             |
 | **Programa**             | Iniciativa (ex.: reforço escolar, arte). Define as **categorias de educador** válidas para suas turmas.         |

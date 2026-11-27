@@ -121,10 +121,10 @@ class DeletionDependenciesIntegrationTest extends PostgresIntegrationTest {
         NaturalPerson person = givenPerson(null);
         givenLearner(person, null, null);
         Learner child = givenLearner(givenPerson(null), null, null);
-        child.syncResponsibleList(List.of(Responsible.create(child, person.getId(), ResponsibleType.FINANCIAL, Kinship.FATHER, null)));
+        child.syncResponsibleList(List.of(Responsible.create(child, person.getId(), List.of(ResponsibleType.FINANCIAL), Kinship.FATHER, null)));
         learnerRepository.save(child);
         Learner deletedChild = givenLearner(givenPerson(null), null, null);
-        deletedChild.syncResponsibleList(List.of(Responsible.create(deletedChild, person.getId(), ResponsibleType.FINANCIAL, Kinship.FATHER, null)));
+        deletedChild.syncResponsibleList(List.of(Responsible.create(deletedChild, person.getId(), List.of(ResponsibleType.FINANCIAL), Kinship.FATHER, null)));
         learnerRepository.save(deletedChild);
         collaboratorRepository.save(Collaborator.create(false, person.getId(), null));
         givenFamily(person);
@@ -179,11 +179,11 @@ class DeletionDependenciesIntegrationTest extends PostgresIntegrationTest {
         SchoolGrade grade = schoolGradeRepository.save(SchoolGrade.create("Série " + SEQUENCE.incrementAndGet(), null, 1));
         Learner learner = givenLearner(givenPerson(null), null, grade.getId());
         learner.syncResponsibleList(List.of(Responsible.create(learner, givenPerson(null).getId(),
-                ResponsibleType.FINANCIAL, Kinship.MOTHER, grade.getId())));
+                List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, grade.getId())));
         learnerRepository.save(learner);
         Learner deletedLearner = givenLearner(givenPerson(null), null, grade.getId());
         deletedLearner.syncResponsibleList(List.of(Responsible.create(deletedLearner, givenPerson(null).getId(),
-                ResponsibleType.FINANCIAL, Kinship.MOTHER, grade.getId())));
+                List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, grade.getId())));
         learnerRepository.save(deletedLearner);
         markDeleted("learner", deletedLearner.getId());
 

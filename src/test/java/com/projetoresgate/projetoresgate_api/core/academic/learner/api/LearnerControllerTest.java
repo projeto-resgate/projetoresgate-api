@@ -125,7 +125,7 @@ class LearnerControllerTest {
                 2026,
                 "Maria da Silva",
                 "MAT-2026-0001",
-                List.of(new ResponsibleCommand(RESPONSIBLE_PERSON_ID, ResponsibleType.FINANCIAL,
+                List.of(new ResponsibleCommand(RESPONSIBLE_PERSON_ID, List.of(ResponsibleType.FINANCIAL),
                         Kinship.FATHER, null)));
     }
 
@@ -148,7 +148,7 @@ class LearnerControllerTest {
                 "MAT-2026-0001",
                 LearnerStatus.ACTIVE,
                 List.of(new ResponsibleResponse(UUID.randomUUID(), RESPONSIBLE_PERSON_ID, "João Pereira",
-                        ResponsibleType.FINANCIAL, Kinship.FATHER, SCHOOL_GRADE_ID)),
+                        List.of(ResponsibleType.FINANCIAL), Kinship.FATHER, SCHOOL_GRADE_ID)),
                 null);
     }
 
@@ -189,7 +189,7 @@ class LearnerControllerTest {
                 .andExpect(jsonPath("$.responsibleList[0].naturalPersonId")
                         .value(RESPONSIBLE_PERSON_ID.toString()))
                 .andExpect(jsonPath("$.responsibleList[0].name").value("João Pereira"))
-                .andExpect(jsonPath("$.responsibleList[0].type").value("FINANCIAL"))
+                .andExpect(jsonPath("$.responsibleList[0].types[0]").value("FINANCIAL"))
                 .andExpect(jsonPath("$.responsibleList[0].kinship").value("FATHER"));
     }
 
@@ -246,18 +246,41 @@ class LearnerControllerTest {
 
     @Test
     @WithMockCustomUser
+    @DisplayName("POST /learner - Deve aceitar mais de um tipo de responsabilidade por responsável")
+    void create_ShouldAcceptMultipleResponsibleTypes() throws Exception {
+        when(createUseCase.handle(any(CreateLearnerCommand.class))).thenReturn(givenResponse());
+        String body = """
+                {"naturalPersonId": "%s", "familyGroupId": "%s", "interestArts": false, "academicYear": 2026,
+                 "responsibleList": [{"naturalPersonId": "%s", "types": ["COMMUNICATION", "FINANCIAL"],
+                                      "kinship": "MOTHER"}]}
+                """.formatted(NATURAL_PERSON_ID, FAMILY_GROUP_ID, RESPONSIBLE_PERSON_ID);
+
+        mockMvc.perform(post("/learner")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated());
+
+        ArgumentCaptor<CreateLearnerCommand> captor = ArgumentCaptor.forClass(CreateLearnerCommand.class);
+        verify(createUseCase).handle(captor.capture());
+        assertEquals(List.of(ResponsibleType.COMMUNICATION, ResponsibleType.FINANCIAL),
+                captor.getValue().responsibleList().getFirst().types());
+    }
+
+    @Test
+    @WithMockCustomUser
     @DisplayName("POST /learner - Deve retornar 400 quando um responsável não tiver tipo")
     void create_ShouldReturn400WhenResponsibleTypeIsMissing() throws Exception {
         CreateLearnerCommand command = new CreateLearnerCommand(NATURAL_PERSON_ID, FAMILY_GROUP_ID,
                 null, null, false, null, 2026, null, null,
-                List.of(new ResponsibleCommand(RESPONSIBLE_PERSON_ID, null, Kinship.FATHER, null)));
+                List.of(new ResponsibleCommand(RESPONSIBLE_PERSON_ID, List.of(), Kinship.FATHER, null)));
 
         mockMvc.perform(post("/learner")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(command)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(containsString("O tipo do responsável é obrigatório")));
+                .andExpect(content().string(containsString("Informe ao menos um tipo de responsabilidade")));
 
         verify(createUseCase, never()).handle(any());
     }
@@ -268,7 +291,7 @@ class LearnerControllerTest {
     void create_ShouldReturn400WhenResponsibleKinshipIsMissing() throws Exception {
         CreateLearnerCommand command = new CreateLearnerCommand(NATURAL_PERSON_ID, FAMILY_GROUP_ID,
                 null, null, false, null, 2026, null, null,
-                List.of(new ResponsibleCommand(RESPONSIBLE_PERSON_ID, ResponsibleType.FINANCIAL, null, null)));
+                List.of(new ResponsibleCommand(RESPONSIBLE_PERSON_ID, List.of(ResponsibleType.FINANCIAL), null, null)));
 
         mockMvc.perform(post("/learner")
                         .with(csrf())
@@ -399,7 +422,7 @@ class LearnerControllerTest {
     void update_ShouldSendResponsibleListWithoutBondIds() throws Exception {
         when(updateUseCase.handle(any(UpdateLearnerCommand.class))).thenReturn(givenResponse());
 
-        ResponsibleCommand responsible = new ResponsibleCommand(RESPONSIBLE_PERSON_ID, ResponsibleType.FINANCIAL,
+        ResponsibleCommand responsible = new ResponsibleCommand(RESPONSIBLE_PERSON_ID, List.of(ResponsibleType.FINANCIAL),
                 Kinship.FATHER, SCHOOL_GRADE_ID);
 
         mockMvc.perform(put("/learner/{id}", LEARNER_ID)

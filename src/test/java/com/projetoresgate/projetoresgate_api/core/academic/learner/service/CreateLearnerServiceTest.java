@@ -129,7 +129,7 @@ class CreateLearnerServiceTest {
         when(findLearnerByIdUseCase.handle(any(FindLearnerByIdQuery.class))).thenReturn(mockResponse());
 
         List<ResponsibleCommand> responsibleList = List.of(
-                new ResponsibleCommand(RESPONSIBLE_PERSON_ID, ResponsibleType.FINANCIAL, Kinship.MOTHER, null));
+                new ResponsibleCommand(RESPONSIBLE_PERSON_ID, List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, null));
 
         service.handle(givenCommand(responsibleList));
 
@@ -226,7 +226,7 @@ class CreateLearnerServiceTest {
         when(findLearnerByIdUseCase.handle(any(FindLearnerByIdQuery.class))).thenReturn(mockResponse());
 
         service.handle(givenCommand(List.of(
-                new ResponsibleCommand(RESPONSIBLE_PERSON_ID, ResponsibleType.FINANCIAL, Kinship.MOTHER, null))));
+                new ResponsibleCommand(RESPONSIBLE_PERSON_ID, List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, null))));
 
         assertEquals(Set.of(
                         new RoleAssignment(NATURAL_PERSON_ID, NaturalPersonRoleType.LEARNER),
@@ -289,7 +289,7 @@ class CreateLearnerServiceTest {
         givenNotMemberOfFamilyGroup(RESPONSIBLE_PERSON_ID);
 
         List<ResponsibleCommand> responsibles = List.of(
-                new ResponsibleCommand(RESPONSIBLE_PERSON_ID, ResponsibleType.FINANCIAL, Kinship.MOTHER, null));
+                new ResponsibleCommand(RESPONSIBLE_PERSON_ID, List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, null));
 
         InternalException exception = assertThrows(InternalException.class,
                 () -> service.handle(givenCommand(responsibles)));
@@ -307,7 +307,7 @@ class CreateLearnerServiceTest {
                         + responsibleSchoolGradeId));
 
         List<ResponsibleCommand> responsibles = List.of(
-                new ResponsibleCommand(RESPONSIBLE_PERSON_ID, ResponsibleType.FINANCIAL, Kinship.MOTHER,
+                new ResponsibleCommand(RESPONSIBLE_PERSON_ID, List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER,
                         responsibleSchoolGradeId));
 
         assertThrows(ResourceNotFoundException.class, () -> service.handle(givenCommand(responsibles)));
@@ -322,7 +322,7 @@ class CreateLearnerServiceTest {
         when(findLearnerByIdUseCase.handle(any(FindLearnerByIdQuery.class))).thenReturn(mockResponse());
 
         List<ResponsibleCommand> responsibles = List.of(
-                new ResponsibleCommand(RESPONSIBLE_PERSON_ID, ResponsibleType.FINANCIAL, Kinship.MOTHER, null));
+                new ResponsibleCommand(RESPONSIBLE_PERSON_ID, List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, null));
 
         service.handle(givenCommand(responsibles));
 
@@ -334,7 +334,7 @@ class CreateLearnerServiceTest {
 
         assertEquals(1, saved.getResponsibleList().size());
         assertEquals(RESPONSIBLE_PERSON_ID, responsible.getNaturalPersonId());
-        assertEquals(ResponsibleType.FINANCIAL, responsible.getType());
+        assertEquals(List.of(ResponsibleType.FINANCIAL), responsible.getTypes());
         assertEquals(Kinship.MOTHER, responsible.getKinship());
         assertSame(saved, responsible.getLearner());
     }

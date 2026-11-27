@@ -174,7 +174,7 @@ class NaturalPersonRoleConsistencyIntegrationTest extends PostgresIntegrationTes
 
         Learner learner = givenLearner(learnerPerson.getId());
         responsibleRepository.save(Responsible.create(
-                learner, responsiblePerson.getId(), ResponsibleType.FINANCIAL, Kinship.MOTHER, null));
+                learner, responsiblePerson.getId(), List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, null));
         entityManager.flush();
 
         assertEquals(1, responsibleRepository.countActiveByNaturalPersonId(responsiblePerson.getId()));
@@ -199,9 +199,9 @@ class NaturalPersonRoleConsistencyIntegrationTest extends PostgresIntegrationTes
         Learner secondLearner = givenLearner(secondLearnerPerson.getId());
 
         responsibleRepository.save(Responsible.create(
-                firstLearner, responsiblePerson.getId(), ResponsibleType.FINANCIAL, Kinship.MOTHER, null));
+                firstLearner, responsiblePerson.getId(), List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, null));
         responsibleRepository.save(Responsible.create(
-                secondLearner, responsiblePerson.getId(), ResponsibleType.FINANCIAL, Kinship.MOTHER, null));
+                secondLearner, responsiblePerson.getId(), List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, null));
         entityManager.flush();
 
         entityManager.createNativeQuery("update learner_responsible set deleted_at = now() where learner_id = :id")
@@ -218,5 +218,32 @@ class NaturalPersonRoleConsistencyIntegrationTest extends PostgresIntegrationTes
         NaturalPerson person = givenPerson("Iris Campos", "11144477747");
 
         assertTrue(findRolesService.handle(List.of(person.getId())).isEmpty());
+    }
+
+    @Test
+    @DisplayName("Deve gravar e reler os vários tipos de responsabilidade, e trocar a lista na edição")
+    void responsibleTypes_ShouldPersistAsList() {
+        NaturalPerson learnerPerson = givenPerson("Ivo Lopes", "11144477747");
+        NaturalPerson responsiblePerson = givenPerson("Júlia Lopes", "11144477748");
+        Learner learner = givenLearner(learnerPerson.getId());
+        Responsible responsible = responsibleRepository.save(Responsible.create(learner, responsiblePerson.getId(),
+                List.of(ResponsibleType.FINANCIAL, ResponsibleType.COMMUNICATION), Kinship.MOTHER, null));
+        entityManager.flush();
+        entityManager.clear();
+
+        Responsible reloaded = responsibleRepository.findById(responsible.getId()).orElseThrow();
+        assertEquals(List.of(ResponsibleType.COMMUNICATION, ResponsibleType.FINANCIAL), reloaded.getTypes());
+
+        reloaded.updateFrom(Responsible.create(learner, responsiblePerson.getId(),
+                List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, null));
+        responsibleRepository.save(reloaded);
+        entityManager.flush();
+        entityManager.clear();
+
+        assertEquals(List.of(ResponsibleType.FINANCIAL),
+                responsibleRepository.findById(responsible.getId()).orElseThrow().getTypes());
+        assertEquals(1L, ((Number) entityManager.createNativeQuery(
+                "select count(*) from learner_responsible_type where learner_responsible_id = :id")
+                .setParameter("id", responsible.getId()).getSingleResult()).longValue());
     }
 }

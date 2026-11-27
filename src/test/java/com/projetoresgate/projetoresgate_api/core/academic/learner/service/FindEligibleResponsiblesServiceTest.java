@@ -1,5 +1,8 @@
 package com.projetoresgate.projetoresgate_api.core.academic.learner.service;
 
+import com.projetoresgate.projetoresgate_api.core.academic.learner.repository.ResponsibleRepository;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.repository.LearnerRepository;
+import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Learner;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.api.dto.EligibleResponsibleResponse;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.usecase.query.FindEligibleResponsiblesQuery;
 import com.projetoresgate.projetoresgate_api.core.identity.familygroup.repository.FamilyGroupRepository;
@@ -14,6 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 
 import java.util.List;
+import java.util.Set;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -28,6 +33,12 @@ class FindEligibleResponsiblesServiceTest {
 
     @Mock
     private FamilyGroupRepository repository;
+
+    @Mock
+    private LearnerRepository learnerRepository;
+
+    @Mock
+    private ResponsibleRepository responsibleRepository;
 
     @InjectMocks
     private FindEligibleResponsiblesService service;
@@ -44,7 +55,7 @@ class FindEligibleResponsiblesServiceTest {
         UUID learnerPersonId = UUID.randomUUID();
         NaturalPerson mother = givenPerson("Maria Silva");
 
-        when(repository.findEligibleResponsiblesByFamilyGroupId(familyGroupId, learnerPersonId, PAGEABLE))
+        when(repository.findEligibleResponsiblesByFamilyGroupId(familyGroupId, Set.of(learnerPersonId), PAGEABLE))
                 .thenReturn(new PageImpl<>(List.of(mother), PAGEABLE, 1));
 
         Page<EligibleResponsibleResponse> page = service.handle(
@@ -63,7 +74,7 @@ class FindEligibleResponsiblesServiceTest {
         UUID familyGroupId = UUID.randomUUID();
         UUID learnerPersonId = UUID.randomUUID();
 
-        when(repository.findEligibleResponsiblesByFamilyGroupId(familyGroupId, learnerPersonId, PAGEABLE))
+        when(repository.findEligibleResponsiblesByFamilyGroupId(familyGroupId, Set.of(learnerPersonId), PAGEABLE))
                 .thenReturn(new PageImpl<>(List.of(), PAGEABLE, 0));
 
         Page<EligibleResponsibleResponse> page = service.handle(
@@ -86,5 +97,25 @@ class FindEligibleResponsiblesServiceTest {
                 new FindEligibleResponsiblesQuery(familyGroupId, learnerPersonId, PAGEABLE)));
 
         verify(repository, never()).findEligibleResponsiblesByFamilyGroupId(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Educando já cadastrado: deve excluir também quem já é responsável dele")
+    void handle_ShouldExcludeCurrentResponsibles() {
+        UUID familyGroupId = UUID.randomUUID();
+        UUID learnerPersonId = UUID.randomUUID();
+        UUID motherId = UUID.randomUUID();
+        Learner learner = Learner.create(learnerPersonId, null, null, false, null, 2026, null, null);
+        NaturalPerson uncle = givenPerson("Paulo Silva");
+
+        when(learnerRepository.findByNaturalPersonId(learnerPersonId)).thenReturn(Optional.of(learner));
+        when(responsibleRepository.findNaturalPersonIdsByLearnerId(learner.getId())).thenReturn(List.of(motherId));
+        when(repository.findEligibleResponsiblesByFamilyGroupId(familyGroupId, Set.of(learnerPersonId, motherId), PAGEABLE))
+                .thenReturn(new PageImpl<>(List.of(uncle), PAGEABLE, 1));
+
+        Page<EligibleResponsibleResponse> page = service.handle(
+                new FindEligibleResponsiblesQuery(familyGroupId, learnerPersonId, PAGEABLE));
+
+        assertEquals(List.of(uncle.getId()), page.getContent().stream().map(EligibleResponsibleResponse::naturalPersonId).toList());
     }
 }

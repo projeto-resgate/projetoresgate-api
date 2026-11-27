@@ -64,11 +64,11 @@ public interface FamilyGroupRepository extends JpaRepository<FamilyGroup, UUID>,
             select np from NaturalPerson np
             where np.id in (
                 select linked.id from FamilyGroup fg join fg.naturalPersonList linked
-                where fg.id = :familyGroupId and linked.id <> :excludeNaturalPersonId
+                where fg.id = :familyGroupId and linked.id not in :excludedNaturalPersonIds
             )
             """)
     Page<NaturalPerson> findEligibleResponsiblesByFamilyGroupId(@Param("familyGroupId") UUID familyGroupId,
-                                                                @Param("excludeNaturalPersonId") UUID excludeNaturalPersonId,
+                                                                @Param("excludedNaturalPersonIds") Collection<UUID> excludedNaturalPersonIds,
                                                                 Pageable pageable);
 
     @Query(value = """

@@ -73,7 +73,7 @@ sequenceDiagram
 | Uma pessoa física só pode ser educando **uma vez** (entre os não excluídos)                  | 409      |
 | O educando **não pode ser responsável de si mesmo**                                          | 400      |
 | A mesma pessoa **não pode** ser responsável do mesmo educando duas vezes                     | 400      |
-| Cada responsável exige **tipo** (`COMMUNICATION`/`FINANCIAL`) e **parentesco** (`Kinship`)   | 400      |
+| Cada responsável exige **ao menos um tipo** em `types` (`COMMUNICATION` e/ou `FINANCIAL`; a mesma pessoa pode ter os dois) e **parentesco** (`Kinship`) | 400      |
 | Ano letivo entre 1900 e 2100; nome da mãe e matrícula escolar ≤ 255 caracteres               | 400      |
 | No update, **não é possível trocar** a pessoa física do educando                             | 400      |
 

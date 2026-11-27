@@ -134,7 +134,7 @@ class UpdateLearnerServiceTest {
         givenFindByIdResponds();
 
         List<ResponsibleCommand> responsibleList = List.of(
-                new ResponsibleCommand(RESPONSIBLE_PERSON_ID, ResponsibleType.FINANCIAL, Kinship.FATHER, null));
+                new ResponsibleCommand(RESPONSIBLE_PERSON_ID, List.of(ResponsibleType.FINANCIAL), Kinship.FATHER, null));
 
         service.handle(givenCommand(responsibleList).withId(existing.getId()));
 
@@ -205,7 +205,7 @@ class UpdateLearnerServiceTest {
         when(repository.findByIdOrThrow(existing.getId())).thenReturn(existing);
 
         List<ResponsibleCommand> forbidden = List.of(
-                new ResponsibleCommand(NATURAL_PERSON_ID, ResponsibleType.FINANCIAL, Kinship.MOTHER, null));
+                new ResponsibleCommand(NATURAL_PERSON_ID, List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, null));
 
         assertThrows(InternalException.class,
                 () -> service.handle(givenCommand(forbidden).withId(existing.getId())));
@@ -231,7 +231,7 @@ class UpdateLearnerServiceTest {
     void handle_ShouldForgetRoleOfRemovedResponsible() {
         Learner existing = givenLearner();
         existing.syncResponsibleList(List.of(
-                Responsible.create(existing, RESPONSIBLE_PERSON_ID, ResponsibleType.FINANCIAL, Kinship.MOTHER, null)));
+                Responsible.create(existing, RESPONSIBLE_PERSON_ID, List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, null)));
 
         when(repository.findByIdOrThrow(existing.getId())).thenReturn(existing);
         when(repository.save(any(Learner.class))).thenAnswer(i -> i.getArgument(0));
@@ -253,7 +253,7 @@ class UpdateLearnerServiceTest {
 
         Learner existing = givenLearner();
         existing.syncResponsibleList(List.of(
-                Responsible.create(existing, RESPONSIBLE_PERSON_ID, ResponsibleType.FINANCIAL, Kinship.MOTHER, null)));
+                Responsible.create(existing, RESPONSIBLE_PERSON_ID, List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, null)));
 
         when(repository.findByIdOrThrow(existing.getId())).thenReturn(existing);
         when(repository.save(any(Learner.class))).thenAnswer(i -> i.getArgument(0));
@@ -261,7 +261,7 @@ class UpdateLearnerServiceTest {
 
         service.handle(new UpdateLearnerCommand(existing.getId(), NATURAL_PERSON_ID, FAMILY_GROUP_ID,
                 null, null, false, null, 2026, null, null, List.of(
-                new ResponsibleCommand(RESPONSIBLE_PERSON_ID, ResponsibleType.FINANCIAL, Kinship.MOTHER, null))));
+                new ResponsibleCommand(RESPONSIBLE_PERSON_ID, List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, null))));
 
         ArgumentCaptor<Learner> captor = ArgumentCaptor.forClass(Learner.class);
         verify(roleSynchronizer).declare(captor.capture());

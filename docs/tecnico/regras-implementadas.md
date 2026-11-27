@@ -133,7 +133,7 @@ Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `F
 | RN-LRN-02  | Uma pessoa física só pode ser educando uma vez                                          | 409  | `CreateLearnerService`             |
 | RN-LRN-03  | O educando não pode ser responsável de si mesmo                                         | 400  | `Learner.validateResponsibleList`  |
 | RN-LRN-04  | A mesma pessoa não pode ser responsável do mesmo educando duas vezes                    | 400  | `Learner.validateResponsibleList`  |
-| RN-LRN-05  | Responsável exige tipo (`COMMUNICATION`/`FINANCIAL`) e parentesco                       | 400  | `Responsible.validate`             |
+| RN-LRN-05  | Responsável exige **ao menos um tipo** (lista `types`: `COMMUNICATION` e/ou `FINANCIAL`, sem repetição) e parentesco | 400  | `Responsible.validate`             |
 | RN-LRN-06  | Ano letivo entre 1900 e 2100                                                            | 400  | `Learner.validateAcademicYear`     |
 | RN-LRN-07  | Não é possível trocar a pessoa física de um educando existente                          | 400  | `UpdateLearnerService`             |
 | RN-LRN-08  | Novo educando nasce `ACTIVE`                                                            | —    | `Learner` (construtor)             |

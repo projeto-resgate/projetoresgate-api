@@ -136,7 +136,7 @@ class DeletionConsistencyIntegrationTest extends PostgresIntegrationTest {
         NaturalPerson uncle = givenPerson("Tio", "tio@example.com");
         Learner learner = givenLearner(child);
         learner.syncResponsibleList(List.of(
-                Responsible.create(learner, father.getId(), ResponsibleType.FINANCIAL, Kinship.FATHER, null)));
+                Responsible.create(learner, father.getId(), List.of(ResponsibleType.FINANCIAL), Kinship.FATHER, null)));
         learnerRepository.save(learner);
         FamilyGroup family = givenFamily(child, father, uncle);
         flushAndClear();

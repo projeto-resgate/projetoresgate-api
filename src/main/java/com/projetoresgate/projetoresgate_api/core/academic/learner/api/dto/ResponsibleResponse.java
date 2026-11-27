@@ -4,13 +4,14 @@ import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.Respon
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.Kinship;
 import com.projetoresgate.projetoresgate_api.core.academic.learner.domain.enums.ResponsibleType;
 
+import java.util.List;
 import java.util.UUID;
 
 public record ResponsibleResponse(
         UUID id,
         UUID naturalPersonId,
         String name,
-        ResponsibleType type,
+        List<ResponsibleType> types,
         Kinship kinship,
         UUID schoolGradeId
 ) {
@@ -19,7 +20,7 @@ public record ResponsibleResponse(
                 entity.getId(),
                 entity.getNaturalPersonId(),
                 name,
-                entity.getType(),
+                entity.getTypes(),
                 entity.getKinship(),
                 entity.getSchoolGradeId()
         );

@@ -26,7 +26,7 @@ class LearnerTest {
     }
 
     private static Responsible newResponsible(Learner learner, UUID naturalPersonId) {
-        return Responsible.create(learner, naturalPersonId, ResponsibleType.FINANCIAL, Kinship.MOTHER, null);
+        return Responsible.create(learner, naturalPersonId, List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, null);
     }
 
     @Test
@@ -118,12 +118,12 @@ class LearnerTest {
         UUID responsibleId = responsible.getId();
 
         learner.syncResponsibleList(List.of(
-                Responsible.create(learner, OTHER_PERSON_ID, ResponsibleType.COMMUNICATION,
+                Responsible.create(learner, OTHER_PERSON_ID, List.of(ResponsibleType.COMMUNICATION),
                         Kinship.FATHER, null)));
 
         assertEquals(1, learner.getResponsibleList().size());
         assertEquals(responsibleId, learner.getResponsibleList().get(0).getId());
-        assertEquals(ResponsibleType.COMMUNICATION, learner.getResponsibleList().get(0).getType());
+        assertEquals(List.of(ResponsibleType.COMMUNICATION), learner.getResponsibleList().get(0).getTypes());
         assertEquals(Kinship.FATHER, learner.getResponsibleList().get(0).getKinship());
     }
 
@@ -190,7 +190,7 @@ class LearnerTest {
 
         assertEquals(1, learner.getResponsibleList().size());
         assertEquals(OTHER_PERSON_ID, learner.getResponsibleList().get(0).getNaturalPersonId());
-        assertEquals(ResponsibleType.FINANCIAL, learner.getResponsibleList().get(0).getType());
+        assertEquals(List.of(ResponsibleType.FINANCIAL), learner.getResponsibleList().get(0).getTypes());
     }
 
     @Test

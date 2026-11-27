@@ -201,7 +201,7 @@ public class LearnerController {
     @GetMapping("/eligible-responsibles")
     @Operation(summary = "Listar Responsáveis Elegíveis",
             description = "Lista as pessoas físicas do grupo familiar que podem virar responsável de um educando, excluindo da lista a própria "
-                    + "pessoa física do educando informada em excludeNaturalPersonId. Retorna apenas os dados do seletor (id, nome, rg, cpf e celular).")
+                    + "pessoa física do educando informada em excludeNaturalPersonId e, se o educando já existe, quem já é responsável dele. Retorna apenas os dados do seletor (id, nome, rg, cpf e celular).")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))),

@@ -10,6 +10,11 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import static java.util.Objects.nonNull;
@@ -29,9 +34,11 @@ public class Responsible extends AuditableEntity implements NaturalPersonRoleHol
 
     private UUID naturalPersonId;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "learner_responsible_type", joinColumns = @JoinColumn(name = "learner_responsible_id"))
     @Column(name = "responsible_type", nullable = false)
     @Enumerated(EnumType.STRING)
-    private ResponsibleType type;
+    private Set<ResponsibleType> types = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
     private Kinship kinship;
@@ -42,20 +49,29 @@ public class Responsible extends AuditableEntity implements NaturalPersonRoleHol
     protected Responsible() {
     }
 
-    private Responsible(UUID id, Learner learner, UUID naturalPersonId, ResponsibleType type, Kinship kinship,
-                        UUID schoolGradeId) {
+    private Responsible(UUID id, Learner learner, UUID naturalPersonId, Collection<ResponsibleType> types,
+                        Kinship kinship, UUID schoolGradeId) {
         this.id = id;
         this.learner = learner;
         this.naturalPersonId = naturalPersonId;
-        this.type = type;
+        replaceTypes(types);
         this.kinship = kinship;
         this.schoolGradeId = schoolGradeId;
         validate();
     }
 
-    public static Responsible create(Learner learner, UUID naturalPersonId, ResponsibleType type, Kinship kinship,
-                                     UUID schoolGradeId) {
-        return new Responsible(UUID.randomUUID(), learner, naturalPersonId, type, kinship, schoolGradeId);
+    public static Responsible create(Learner learner, UUID naturalPersonId, Collection<ResponsibleType> types,
+                                     Kinship kinship, UUID schoolGradeId) {
+        return new Responsible(UUID.randomUUID(), learner, naturalPersonId, types, kinship, schoolGradeId);
+    }
+
+    // Mantém a mesma instância da coleção, que o Hibernate acompanha; tipos repetidos contam uma vez só
+    private void replaceTypes(Collection<ResponsibleType> newTypes) {
+        List<ResponsibleType> incoming = nonNull(newTypes)
+                ? newTypes.stream().filter(Objects::nonNull).toList()
+                : List.of();
+        this.types.clear();
+        this.types.addAll(incoming);
     }
 
     public void validate() {
@@ -65,8 +81,8 @@ public class Responsible extends AuditableEntity implements NaturalPersonRoleHol
         if (!nonNull(this.naturalPersonId)) {
             throw new InternalException("A pessoa física do responsável é obrigatória.");
         }
-        if (!nonNull(this.type)) {
-            throw new InternalException("O tipo do responsável é obrigatório.");
+        if (this.types.isEmpty()) {
+            throw new InternalException("Informe ao menos um tipo de responsabilidade.");
         }
         if (!nonNull(this.kinship)) {
             throw new InternalException("O parentesco do responsável é obrigatório.");
@@ -75,7 +91,7 @@ public class Responsible extends AuditableEntity implements NaturalPersonRoleHol
 
     public void updateFrom(Responsible changes) {
         this.naturalPersonId = changes.naturalPersonId;
-        this.type = changes.type;
+        replaceTypes(changes.types);
         this.kinship = changes.kinship;
         this.schoolGradeId = changes.schoolGradeId;
         validate();
@@ -103,8 +119,8 @@ public class Responsible extends AuditableEntity implements NaturalPersonRoleHol
         return NaturalPersonRoleType.RESPONSIBLE;
     }
 
-    public ResponsibleType getType() {
-        return type;
+    public List<ResponsibleType> getTypes() {
+        return types.stream().sorted().toList();
     }
 
     public Kinship getKinship() {

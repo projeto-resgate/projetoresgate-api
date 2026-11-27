@@ -149,13 +149,13 @@ class LearnerRoleSynchronizerTest {
     }
 
     private Responsible givenResponsible() {
-        return Responsible.create(learner, RESPONSIBLE_PERSON_ID, ResponsibleType.FINANCIAL, Kinship.MOTHER, null);
+        return Responsible.create(learner, RESPONSIBLE_PERSON_ID, List.of(ResponsibleType.FINANCIAL), Kinship.MOTHER, null);
     }
 
     private Learner givenLearnerWithResponsible() {
         Learner withResponsible = Learner.create(LEARNER_PERSON_ID, null, null, false, null, 2026, null, null);
         withResponsible.syncResponsibleList(List.of(
-                Responsible.create(withResponsible, RESPONSIBLE_PERSON_ID, ResponsibleType.FINANCIAL,
+                Responsible.create(withResponsible, RESPONSIBLE_PERSON_ID, List.of(ResponsibleType.FINANCIAL),
                         Kinship.MOTHER, null)));
 
         return withResponsible;

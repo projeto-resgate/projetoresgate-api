@@ -87,6 +87,7 @@ erDiagram
     LEARNER ||--o{ LEARNER_RESPONSIBLE : "responsáveis"
     LEARNER ||--o{ LEARNER_STATUS_HISTORY : "histórico"
     LEARNER_RESPONSIBLE }o--|| NATURAL_PERSON : "é uma"
+    LEARNER_RESPONSIBLE ||--|{ LEARNER_RESPONSIBLE_TYPE : "tipos"
     COLLABORATOR }o--|| NATURAL_PERSON : "é uma"
     COLLABORATOR }o--o| LEGAL_PERSON : "empresa"
     CLASS_GROUP }o--|| PROGRAM : ""
@@ -111,8 +112,11 @@ erDiagram
     }
     LEARNER_RESPONSIBLE {
         uuid id PK
-        enum responsible_type "COMMUNICATION FINANCIAL"
         enum kinship "MOTHER FATHER ... OTHER"
+    }
+    LEARNER_RESPONSIBLE_TYPE {
+        uuid learner_responsible_id PK
+        enum responsible_type PK "COMMUNICATION FINANCIAL"
     }
     LEARNER_STATUS_HISTORY {
         uuid id PK
