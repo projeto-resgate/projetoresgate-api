@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @Entity
@@ -85,9 +86,7 @@ public class NaturalPerson extends AuditableEntity {
         if (!StringUtils.hasText(this.name)) {
             throw new InternalException("O nome não pode ser vazio.");
         }
-        if (!StringUtils.hasText(this.email)) {
-            throw new InternalException("O e-mail não pode ser vazio.");
-        }
+        this.email = blankToNull(this.email);
         if (StringUtils.hasText(this.cpf) && this.cpf.length() > 11) {
             throw new InternalException("O CPF não pode exceder 11 caracteres.");
         }
@@ -117,10 +116,11 @@ public class NaturalPerson extends AuditableEntity {
         }
 
         public Updater email(String email) {
-            if (!StringUtils.hasText(NaturalPerson.this.email) || !NaturalPerson.this.email.equalsIgnoreCase(email)) {
+            String newEmail = blankToNull(email);
+            if (isNull(newEmail) || !newEmail.equalsIgnoreCase(NaturalPerson.this.email)) {
                 NaturalPerson.this.isEmailVerified = false;
             }
-            NaturalPerson.this.email = email;
+            NaturalPerson.this.email = newEmail;
             return this;
         }
 
@@ -216,5 +216,9 @@ public class NaturalPerson extends AuditableEntity {
 
     public boolean isEmailVerified() {
         return isEmailVerified;
+    }
+
+    private static String blankToNull(String value) {
+        return StringUtils.hasText(value) ? value.trim() : null;
     }
 }

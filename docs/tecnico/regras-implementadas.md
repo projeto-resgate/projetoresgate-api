@@ -50,11 +50,11 @@ Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `F
 
 | ID         | Regra                                                                                   | HTTP | Onde                               |
 |------------|-----------------------------------------------------------------------------------------|------|------------------------------------|
-| RN-PES-01  | Nome e e-mail são obrigatórios                                                          | 400  | `NaturalPerson.validate`           |
+| RN-PES-01  | Nome é obrigatório; **e-mail é opcional** (em branco é gravado como nulo, V022)      | 400  | `NaturalPerson.validate`           |
 | RN-PES-02  | CPF, quando informado, é válido (`@CPF`), ≤ 11 caracteres e **único** entre ativos      | 400  | `Create/UpdateNaturalPersonService`|
 | RN-PES-03  | RG ≤ 20 caracteres; telefone e celular ≤ 20 caracteres                                  | 400  | `NaturalPerson.validate`           |
 | RN-PES-04  | Data de nascimento **não pode estar no futuro**                                         | 400  | `NaturalPerson.validate`           |
-| RN-PES-05  | Ao criar, dispara e-mail de confirmação (token de **24 h**)                             | —    | `RequestEmailConfirmationService`  |
+| RN-PES-05  | Ao criar, dispara e-mail de confirmação (token de **24 h**); pessoa **sem e-mail** não recebe e fica com `emailVerified = false` | —    | `RequestEmailConfirmationService`  |
 | RN-PES-06  | `request-email-confirmation` envia um link a **cada** pessoa ainda não verificada com aquele e-mail (sem diferenciar maiúsculas); e-mail inexistente ou já verificado não faz nada | 200  | `RequestEmailConfirmationService`  |
 | RN-PES-07  | Gênero: `MALE`, `FEMALE` ou `OTHER`                                                     | 400  | `Gender`                           |
 | RN-PES-08  | RG, quando informado, aceita pontuação, prefixo de UF e dígito `X` (ex.: `12.345.678-X`, `MG-12.345.678`) e é **único** entre ativos; mesma validação ao criar e editar. Pode ser o próprio CPF (CIN) | 400 | `RGValidator`, `Create/UpdateNaturalPersonService` |

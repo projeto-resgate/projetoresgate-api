@@ -327,6 +327,44 @@ BEGIN
         ('00000000-0000-0000-0001-000000000035', 'Bruna Teixeira', 'bruna.teixeira@example.com', 'bruna', '42367891249', '507825856', '1995-12-12', 'FEMALE', '1133678912', '11965752384', TRUE, now(), now())
     ON CONFLICT DO NOTHING;
 
+    ------------------------------------------------------------------
+    -- Pessoas físicas sem vínculo (pré-cadastro)
+    -- Ninguém aqui está em grupo familiar, é educando, responsável ou
+    -- colaborador: servem para testar busca, autocomplete, vincular a uma
+    -- família e a exclusão (permitida, porque não há vínculo).
+    -- Documentos gravados sem máscara (RN-GER-01), como chegam pela API:
+    --   RG de cada UF: SP (28.451.937-2), SP antigo com dígito X
+    --   (37.284.915-X), MG com prefixo da UF (MG-17.293.846), RJ, PR, RS,
+    --   BA, CE, PE, SC, DF e GO, com a quantidade de dígitos de cada estado;
+    --   Carteira de Identidade Nacional: o número do RG é o próprio CPF
+    --   (Kauã e Alex);
+    --   criança e bebê só com CPF, que sai na certidão de nascimento;
+    --   idosos só com o RG antigo, sem CPF (Benedita e Sebastião).
+    -- Mãe e filho (Rosana e Kauã) e pai e filha (Jefferson e Ana Clara)
+    -- usam o mesmo e-mail, o que a API permite.
+    -- Joana é um cadastro incompleto: sem RG, nascimento, gênero e telefone.
+    ------------------------------------------------------------------
+    INSERT INTO natural_person (id, name, email, nickname, cpf, rg, birth_date, gender, phone, cellphone, is_email_verified, date_created, date_updated) VALUES
+        ('00000000-0000-0000-0002-000000000001', 'Rosana Aparecida Freitas', 'rosana.freitas@example.com', NULL, '50731826426', '284519372', '1982-11-02', 'FEMALE', NULL, '11987452136', TRUE, now(), now()),
+        ('00000000-0000-0000-0002-000000000002', 'Kauã Henrique Freitas', 'rosana.freitas@example.com', 'Kauã', '61354072871', '61354072871', '2010-05-14', 'MALE', NULL, NULL, FALSE, now(), now()),
+        ('00000000-0000-0000-0002-000000000003', 'Benedita Rosa de Jesus', 'benedita.jesus@example.com', 'Dona Benedita', NULL, 'MG2418567', '1949-03-08', 'FEMALE', '3134251876', NULL, FALSE, now(), now()),
+        ('00000000-0000-0000-0002-000000000004', 'Yuki Tanaka Nakamura', 'yuki.nakamura@example.com', 'Yuki', '72965183400', '107654328', '1997-07-19', 'FEMALE', NULL, '41998213457', TRUE, now(), now()),
+        ('00000000-0000-0000-0002-000000000005', 'Samir Haddad Neto', 'samir.haddad@example.com', NULL, '83576294074', '214785936', '1975-01-23', 'MALE', '2125487963', '21976431852', TRUE, now(), now()),
+        ('00000000-0000-0000-0002-000000000006', 'Jefferson Luiz Ferreira', 'jefferson.ferreira@example.com', 'Jeff', '14827395691', '1342876509', '1990-04-11', 'MALE', NULL, '71991827364', TRUE, now(), now()),
+        ('00000000-0000-0000-0002-000000000007', 'Ana Clara dos Santos Ferreira', 'jefferson.ferreira@example.com', 'Aninha', '25438406723', NULL, '2016-09-30', 'FEMALE', NULL, NULL, FALSE, now(), now()),
+        ('00000000-0000-0000-0002-000000000008', 'Iracema Potiguara da Silva', 'iracema.silva@example.com', NULL, '36049517800', '2007093651', '1968-12-05', 'FEMALE', '8532561478', '85988214567', TRUE, now(), now()),
+        ('00000000-0000-0000-0002-000000000009', 'Maria Eduarda Lopes Cavalcanti', 'duda.cavalcanti@example.com', 'Duda', '47650628990', '7845123', '2005-02-17', 'FEMALE', NULL, '81996327418', TRUE, now(), now()),
+        ('00000000-0000-0000-0002-000000000010', 'Gustavo Henrique Bueno', 'gustavo.bueno@example.com', NULL, '58261739040', '6084391275', '1999-08-08', 'MALE', NULL, '51984561237', FALSE, now(), now()),
+        ('00000000-0000-0000-0002-000000000011', 'Letícia Vargas Schmitt', 'leticia.schmitt@example.com', 'Lelê', '69872840164', '5612843', '2001-06-21', 'FEMALE', NULL, '48991473682', TRUE, now(), now()),
+        ('00000000-0000-0000-0002-000000000012', 'Wellington Souza Brito', 'wellington.brito@example.com', NULL, '70483951250', '3045671', '1986-10-29', 'MALE', '6132458796', '61995218463', TRUE, now(), now()),
+        ('00000000-0000-0000-0002-000000000013', 'Raimunda Nonata Araújo', 'raimunda.araujo@example.com', 'Dona Raimunda', '81094062383', '5834127', '1958-05-31', 'FEMALE', '6232147856', NULL, FALSE, now(), now()),
+        ('00000000-0000-0000-0002-000000000014', 'Alex Moreira', 'alex.moreira@example.com', 'Alex', '92605173461', '92605173461', '1994-03-14', 'OTHER', NULL, '11974185296', TRUE, now(), now()),
+        ('00000000-0000-0000-0002-000000000015', 'Camila Ribeiro Batista', 'camila.batista@example.com', NULL, '13216284557', 'MG17293846', '1998-12-24', 'FEMALE', NULL, '31987412365', TRUE, now(), now()),
+        ('00000000-0000-0000-0002-000000000016', 'Lorenzo Batista Ribeiro', 'camila.batista@example.com', NULL, '23827395682', NULL, '2025-07-02', 'MALE', NULL, NULL, FALSE, now(), now()),
+        ('00000000-0000-0000-0002-000000000017', 'Sebastião Cardoso', 'sebastiao.cardoso@example.com', 'Seu Tião', NULL, '37284915X', '1947-09-15', 'MALE', '1123456789', NULL, FALSE, now(), now()),
+        ('00000000-0000-0000-0002-000000000018', 'Joana Darc Mendes', 'joana.mendes@example.com', NULL, '34438406714', NULL, NULL, NULL, NULL, NULL, FALSE, now(), now())
+    ON CONFLICT DO NOTHING;
+
     INSERT INTO family_group (id, friendly_id, name, household_income, per_capita_income, education_expense, health_expense, housing_expense, number_of_residents, address_id, date_created, date_updated) VALUES
         ('00000000-0000-0000-0001-000000000002', 'FAM-5', 'Família Oliveira', 6200.0, 1550.0, 744.0, 372.0, 1860.0, 4, '00000000-0000-0000-0001-000000000001', now(), now()),
         ('00000000-0000-0000-0001-000000000004', 'FAM-6', 'Família Santos', 2900.0, 966.67, 348.0, 174.0, 870.0, 3, '00000000-0000-0000-0001-000000000003', now(), now()),
@@ -512,6 +550,107 @@ BEGIN
         ('00000000-0000-0000-0000-000000000184'::uuid, timestamp '2026-02-06 13:00:00', timestamp '2026-08-07 13:00:00', timestamp '2027-01-07 13:00:00')
     ) AS v(id, old_start_date, start_date, end_date)
     WHERE class_group.id = v.id AND class_group.start_date = v.old_start_date;
+
+    ------------------------------------------------------------------
+    -- Pessoas que são educando E responsável ao mesmo tempo
+    -- Três famílias em que alguém estuda no projeto e também responde por
+    -- outro educando da casa (os papéis LEARNER e RESPONSIBLE juntos):
+    --   FAM-11 Nascimento (Manaus/AM): Jéssica, 19 anos, cursa o 3º EM e é
+    --     a mãe responsável pelo filho Miguel; a avó Sueli é responsável
+    --     financeira dos dois.
+    --   FAM-12 Andrade (Belém/PA): Larissa, 18 anos, cursa o 3º EM e cuida
+    --     da comunicação dos irmãos gêmeos Pedro Henrique e Paulo Henrique;
+    --     a tia Cláudia é a responsável financeira dos três.
+    --   FAM-13 Moura (Teresina/PI): Tiago, 17 anos, cursa o 2º EM e leva e
+    --     busca o sobrinho Heitor; a irmã Kelly é mãe de Heitor e tutora
+    --     legal de Tiago.
+    -- Ninguém está em turma: os sete aparecem como NO_CLASS.
+    ------------------------------------------------------------------
+    INSERT INTO address (id, street_type, street_name, zip_code, number, reference_point, complement, neighborhood, city, state, date_created, date_updated) VALUES
+        ('00000000-0000-0000-0003-000000000001', 'Rua', 'Lauro Cavalcante', '69020170', '215', 'Perto da feira da Panair', NULL, 'Centro', 'Manaus', 'AM', now(), now()),
+        ('00000000-0000-0000-0003-000000000002', 'Travessa', 'Padre Eutíquio', '66023710', '1180', NULL, 'Casa 3', 'Batista Campos', 'Belém', 'PA', now(), now()),
+        ('00000000-0000-0000-0003-000000000003', 'Rua', 'Coelho Rodrigues', '64000080', '740', 'Em frente à praça', NULL, 'Centro', 'Teresina', 'PI', now(), now())
+    ON CONFLICT DO NOTHING;
+
+    INSERT INTO natural_person (id, name, email, nickname, cpf, rg, birth_date, gender, phone, cellphone, is_email_verified, date_created, date_updated) VALUES
+        ('00000000-0000-0000-0003-000000000021', 'Sueli Nascimento', 'sueli.nascimento@example.com', 'Dona Sueli', '61290473803', '1683452', '1972-09-18', 'FEMALE', '9232331478', '92991452367', TRUE, now(), now()),
+        ('00000000-0000-0000-0003-000000000022', 'Jéssica Nascimento', 'jessica.nascimento@example.com', 'Jéssica', '71801584966', '2847615', '2007-04-10', 'FEMALE', NULL, '92994518273', TRUE, now(), now()),
+        ('00000000-0000-0000-0003-000000000023', 'Miguel Nascimento', 'jessica.nascimento@example.com', NULL, '82412695016', NULL, '2019-08-22', 'MALE', NULL, NULL, FALSE, now(), now()),
+        ('00000000-0000-0000-0003-000000000024', 'Cláudia Andrade', 'claudia.andrade@example.com', 'Tia Cláudia', '93023706158', '4517863', '1980-01-27', 'FEMALE', '9132447812', '91988142735', TRUE, now(), now()),
+        ('00000000-0000-0000-0003-000000000025', 'Larissa Andrade', 'larissa.andrade@example.com', 'Lari', '14634817217', '7341952', '2008-02-03', 'FEMALE', NULL, '91992613548', TRUE, now(), now()),
+        ('00000000-0000-0000-0003-000000000026', 'Pedro Henrique Andrade', 'claudia.andrade@example.com', NULL, '25245928396', '8812734', '2015-06-12', 'MALE', NULL, NULL, FALSE, now(), now()),
+        ('00000000-0000-0000-0003-000000000027', 'Paulo Henrique Andrade', 'claudia.andrade@example.com', NULL, '36856039492', NULL, '2015-06-12', 'MALE', NULL, NULL, FALSE, now(), now()),
+        ('00000000-0000-0000-0003-000000000028', 'Kelly Moura', 'kelly.moura@example.com', NULL, '47467140533', '3172846', '1995-11-30', 'FEMALE', NULL, '86994127356', TRUE, now(), now()),
+        ('00000000-0000-0000-0003-000000000029', 'Tiago Moura', 'tiago.moura@example.com', 'Tiaguinho', '58078251602', '3561987', '2009-03-17', 'MALE', NULL, '86981534726', FALSE, now(), now()),
+        ('00000000-0000-0000-0003-000000000030', 'Heitor Moura', 'kelly.moura@example.com', NULL, '69689362755', NULL, '2016-10-05', 'MALE', NULL, NULL, FALSE, now(), now())
+    ON CONFLICT DO NOTHING;
+
+    INSERT INTO family_group (id, friendly_id, name, household_income, per_capita_income, education_expense, health_expense, housing_expense, number_of_residents, address_id, date_created, date_updated) VALUES
+        ('00000000-0000-0000-0003-000000000011', 'FAM-11', 'Família Nascimento', '2400.0', '800.0', '180.0', '220.0', '650.0', 3, '00000000-0000-0000-0003-000000000001', now(), now()),
+        ('00000000-0000-0000-0003-000000000012', 'FAM-12', 'Família Andrade', '3100.0', '775.0', '320.0', '150.0', '900.0', 4, '00000000-0000-0000-0003-000000000002', now(), now()),
+        ('00000000-0000-0000-0003-000000000013', 'FAM-13', 'Família Moura', '1900.0', '633.33', '140.0', '90.0', '500.0', 3, '00000000-0000-0000-0003-000000000003', now(), now())
+    ON CONFLICT DO NOTHING;
+
+    INSERT INTO family_group_natural_person (family_group_id, natural_person_id) VALUES
+        ('00000000-0000-0000-0003-000000000011', '00000000-0000-0000-0003-000000000021'),
+        ('00000000-0000-0000-0003-000000000011', '00000000-0000-0000-0003-000000000022'),
+        ('00000000-0000-0000-0003-000000000011', '00000000-0000-0000-0003-000000000023'),
+        ('00000000-0000-0000-0003-000000000012', '00000000-0000-0000-0003-000000000024'),
+        ('00000000-0000-0000-0003-000000000012', '00000000-0000-0000-0003-000000000025'),
+        ('00000000-0000-0000-0003-000000000012', '00000000-0000-0000-0003-000000000026'),
+        ('00000000-0000-0000-0003-000000000012', '00000000-0000-0000-0003-000000000027'),
+        ('00000000-0000-0000-0003-000000000013', '00000000-0000-0000-0003-000000000028'),
+        ('00000000-0000-0000-0003-000000000013', '00000000-0000-0000-0003-000000000029'),
+        ('00000000-0000-0000-0003-000000000013', '00000000-0000-0000-0003-000000000030')
+    ON CONFLICT DO NOTHING;
+
+    PERFORM setval('family_group_friendly_id_seq',
+        GREATEST(
+            (SELECT COALESCE(MAX((substring(friendly_id FROM '^FAM-([0-9]+)$'))::bigint), 0) FROM family_group),
+            (SELECT last_value FROM family_group_friendly_id_seq)
+        ),
+        true
+    );
+
+    INSERT INTO learner (id, natural_person_id, institution_id, school_grade_id, interest_arts, scholarship_condition, academic_year, mother_name, school_enrollment, status, date_created, date_updated) VALUES
+        ('00000000-0000-0000-0003-000000000041', '00000000-0000-0000-0003-000000000022', '00000000-0000-0000-0000-000000000031', '00000000-0000-0000-0000-000000000082', TRUE, 'PARTIAL', 2026, 'Sueli Nascimento', '2026022', 'ACTIVE', now(), now()),
+        ('00000000-0000-0000-0003-000000000042', '00000000-0000-0000-0003-000000000023', '00000000-0000-0000-0000-000000000031', '00000000-0000-0000-0000-000000000072', TRUE, 'FULL', 2026, 'Jéssica Nascimento', '2026023', 'ACTIVE', now(), now()),
+        ('00000000-0000-0000-0003-000000000043', '00000000-0000-0000-0003-000000000025', '00000000-0000-0000-0000-000000000033', '00000000-0000-0000-0000-000000000082', FALSE, 'SOCIAL_ASSISTANCE', 2026, 'Rosângela Andrade', '2026024', 'ACTIVE', now(), now()),
+        ('00000000-0000-0000-0003-000000000044', '00000000-0000-0000-0003-000000000026', '00000000-0000-0000-0000-000000000032', '00000000-0000-0000-0000-000000000075', TRUE, 'SOCIAL_ASSISTANCE', 2026, 'Rosângela Andrade', '2026025', 'ACTIVE', now(), now()),
+        ('00000000-0000-0000-0003-000000000045', '00000000-0000-0000-0003-000000000027', '00000000-0000-0000-0000-000000000032', '00000000-0000-0000-0000-000000000075', FALSE, 'SOCIAL_ASSISTANCE', 2026, 'Rosângela Andrade', '2026026', 'ACTIVE', now(), now()),
+        ('00000000-0000-0000-0003-000000000046', '00000000-0000-0000-0003-000000000029', '00000000-0000-0000-0000-000000000034', '00000000-0000-0000-0000-000000000081', FALSE, 'PARTIAL', 2026, 'Socorro Moura', '2026027', 'ACTIVE', now(), now()),
+        ('00000000-0000-0000-0003-000000000047', '00000000-0000-0000-0003-000000000030', '00000000-0000-0000-0000-000000000034', '00000000-0000-0000-0000-000000000074', TRUE, 'FULL', 2026, 'Kelly Moura', '2026028', 'ACTIVE', now(), now())
+    ON CONFLICT DO NOTHING;
+
+    INSERT INTO learner_responsible (id, learner_id, natural_person_id, responsible_type, kinship, school_grade_id, date_created, date_updated) VALUES
+        ('00000000-0000-0000-0003-000000000051', '00000000-0000-0000-0003-000000000041', '00000000-0000-0000-0003-000000000021', 'FINANCIAL', 'MOTHER', NULL, now(), now()),
+        ('00000000-0000-0000-0003-000000000052', '00000000-0000-0000-0003-000000000042', '00000000-0000-0000-0003-000000000022', 'COMMUNICATION', 'MOTHER', '00000000-0000-0000-0000-000000000082', now(), now()),
+        ('00000000-0000-0000-0003-000000000053', '00000000-0000-0000-0003-000000000042', '00000000-0000-0000-0003-000000000021', 'FINANCIAL', 'GRANDMOTHER', NULL, now(), now()),
+        ('00000000-0000-0000-0003-000000000054', '00000000-0000-0000-0003-000000000043', '00000000-0000-0000-0003-000000000024', 'FINANCIAL', 'AUNT', '00000000-0000-0000-0000-000000000079', now(), now()),
+        ('00000000-0000-0000-0003-000000000055', '00000000-0000-0000-0003-000000000044', '00000000-0000-0000-0003-000000000025', 'COMMUNICATION', 'SISTER', '00000000-0000-0000-0000-000000000082', now(), now()),
+        ('00000000-0000-0000-0003-000000000056', '00000000-0000-0000-0003-000000000044', '00000000-0000-0000-0003-000000000024', 'FINANCIAL', 'AUNT', '00000000-0000-0000-0000-000000000079', now(), now()),
+        ('00000000-0000-0000-0003-000000000057', '00000000-0000-0000-0003-000000000045', '00000000-0000-0000-0003-000000000025', 'COMMUNICATION', 'SISTER', '00000000-0000-0000-0000-000000000082', now(), now()),
+        ('00000000-0000-0000-0003-000000000058', '00000000-0000-0000-0003-000000000045', '00000000-0000-0000-0003-000000000024', 'FINANCIAL', 'AUNT', '00000000-0000-0000-0000-000000000079', now(), now()),
+        ('00000000-0000-0000-0003-000000000059', '00000000-0000-0000-0003-000000000046', '00000000-0000-0000-0003-000000000028', 'FINANCIAL', 'LEGAL_GUARDIAN', '00000000-0000-0000-0000-000000000082', now(), now()),
+        ('00000000-0000-0000-0003-000000000060', '00000000-0000-0000-0003-000000000047', '00000000-0000-0000-0003-000000000028', 'FINANCIAL', 'MOTHER', '00000000-0000-0000-0000-000000000082', now(), now()),
+        ('00000000-0000-0000-0003-000000000061', '00000000-0000-0000-0003-000000000047', '00000000-0000-0000-0003-000000000029', 'COMMUNICATION', 'UNCLE', '00000000-0000-0000-0000-000000000081', now(), now())
+    ON CONFLICT DO NOTHING;
+
+    INSERT INTO natural_person_role (id, natural_person_id, role, date_created, date_updated) VALUES
+        ('00000000-0000-0000-0003-000000000071', '00000000-0000-0000-0003-000000000022', 'LEARNER', now(), now()),
+        ('00000000-0000-0000-0003-000000000072', '00000000-0000-0000-0003-000000000023', 'LEARNER', now(), now()),
+        ('00000000-0000-0000-0003-000000000073', '00000000-0000-0000-0003-000000000025', 'LEARNER', now(), now()),
+        ('00000000-0000-0000-0003-000000000074', '00000000-0000-0000-0003-000000000026', 'LEARNER', now(), now()),
+        ('00000000-0000-0000-0003-000000000075', '00000000-0000-0000-0003-000000000027', 'LEARNER', now(), now()),
+        ('00000000-0000-0000-0003-000000000076', '00000000-0000-0000-0003-000000000029', 'LEARNER', now(), now()),
+        ('00000000-0000-0000-0003-000000000077', '00000000-0000-0000-0003-000000000030', 'LEARNER', now(), now()),
+        ('00000000-0000-0000-0003-000000000078', '00000000-0000-0000-0003-000000000021', 'RESPONSIBLE', now(), now()),
+        ('00000000-0000-0000-0003-000000000079', '00000000-0000-0000-0003-000000000022', 'RESPONSIBLE', now(), now()),
+        ('00000000-0000-0000-0003-000000000080', '00000000-0000-0000-0003-000000000024', 'RESPONSIBLE', now(), now()),
+        ('00000000-0000-0000-0003-000000000081', '00000000-0000-0000-0003-000000000025', 'RESPONSIBLE', now(), now()),
+        ('00000000-0000-0000-0003-000000000082', '00000000-0000-0000-0003-000000000028', 'RESPONSIBLE', now(), now()),
+        ('00000000-0000-0000-0003-000000000083', '00000000-0000-0000-0003-000000000029', 'RESPONSIBLE', now(), now())
+    ON CONFLICT DO NOTHING;
 
     RAISE NOTICE 'Seeder aplicado com sucesso.';
 END $$;
