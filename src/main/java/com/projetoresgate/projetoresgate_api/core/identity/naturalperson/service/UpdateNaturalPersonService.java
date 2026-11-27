@@ -2,6 +2,7 @@ package com.projetoresgate.projetoresgate_api.core.identity.naturalperson.servic
 
 import com.projetoresgate.projetoresgate_api.core.identity.legalperson.repository.LegalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.domain.NaturalPerson;
+import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.EmailConfirmationTokenRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.repository.NaturalPersonRepository;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.RequestEmailConfirmationUseCase;
 import com.projetoresgate.projetoresgate_api.core.identity.naturalperson.usecase.UpdateNaturalPersonUseCase;
@@ -10,6 +11,7 @@ import com.projetoresgate.projetoresgate_api.infrastructure.exception.InternalEx
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @Service
@@ -18,13 +20,16 @@ public class UpdateNaturalPersonService implements UpdateNaturalPersonUseCase {
     private final NaturalPersonRepository repository;
     private final LegalPersonRepository legalPersonRepository;
     private final RequestEmailConfirmationUseCase requestEmailConfirmationUseCase;
+    private final EmailConfirmationTokenRepository emailConfirmationTokenRepository;
 
     public UpdateNaturalPersonService(NaturalPersonRepository repository,
                                       LegalPersonRepository legalPersonRepository,
-                                      RequestEmailConfirmationUseCase requestEmailConfirmationUseCase) {
+                                      RequestEmailConfirmationUseCase requestEmailConfirmationUseCase,
+                                      EmailConfirmationTokenRepository emailConfirmationTokenRepository) {
         this.repository = repository;
         this.legalPersonRepository = legalPersonRepository;
         this.requestEmailConfirmationUseCase = requestEmailConfirmationUseCase;
+        this.emailConfirmationTokenRepository = emailConfirmationTokenRepository;
     }
 
     @Override
@@ -65,6 +70,9 @@ public class UpdateNaturalPersonService implements UpdateNaturalPersonUseCase {
 
         if (nonNull(saved.getEmail()) && !saved.getEmail().equalsIgnoreCase(previousEmail)) {
             requestEmailConfirmationUseCase.handle(saved);
+        } else if (isNull(saved.getEmail()) && nonNull(previousEmail)) {
+            // Sem e-mail não há o que confirmar: um link enviado antes marcaria como verificada uma pessoa sem e-mail
+            emailConfirmationTokenRepository.deleteByNaturalPerson(saved);
         }
 
         return saved;

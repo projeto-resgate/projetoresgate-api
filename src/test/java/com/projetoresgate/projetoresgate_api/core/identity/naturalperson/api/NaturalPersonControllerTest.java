@@ -128,6 +128,44 @@ class NaturalPersonControllerTest {
     }
 
     @Test
+    @DisplayName("POST /natural-person - Deve aceitar cadastro sem e-mail, que é opcional")
+    void create_ShouldAcceptMissingEmail() throws Exception {
+        when(createUseCase.handle(any())).thenReturn(createMockPerson());
+
+        mockMvc.perform(post("/natural-person")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\": \"Sem E-mail\", \"cpf\": \"51086174968\"}"))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("POST /natural-person - Deve recusar e-mail informado em formato inválido")
+    void create_ShouldRejectInvalidEmail() throws Exception {
+        mockMvc.perform(post("/natural-person")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\": \"E-mail Errado\", \"email\": \"nao-e-email\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("email"));
+
+        verify(createUseCase, never()).handle(any());
+    }
+
+    @Test
+    @WithMockCustomUser
+    @DisplayName("PUT /natural-person/{id} - Deve aceitar edição sem e-mail, que é opcional")
+    void update_ShouldAcceptMissingEmail() throws Exception {
+        when(updateUseCase.handle(any())).thenReturn(createMockPerson());
+
+        mockMvc.perform(put("/natural-person/{id}", UUID.randomUUID())
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\": \"Sem E-mail\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     @WithMockCustomUser
     @DisplayName("DELETE /natural-person/{id} - Deve retornar 204 No Content ao deletar com sucesso")
     void delete_ShouldReturn204() throws Exception {

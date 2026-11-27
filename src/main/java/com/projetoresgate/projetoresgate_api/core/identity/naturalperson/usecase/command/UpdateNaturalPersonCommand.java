@@ -20,7 +20,6 @@ public record UpdateNaturalPersonCommand(
         UUID id,
         @NotBlank(message = "O nome é obrigatório")
         String name,
-        @NotBlank(message = "O e-mail é obrigatório")
         @Email(message = "E-mail inválido")
         String email,
         String nickname,
