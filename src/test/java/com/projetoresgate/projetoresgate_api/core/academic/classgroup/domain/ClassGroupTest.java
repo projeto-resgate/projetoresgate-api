@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DisplayName("ClassGroup - Test")
@@ -70,5 +72,29 @@ class ClassGroupTest {
         ClassGroup classGroup = givenClassGroup("Programa A", List.of());
 
         assertThrows(InternalException.class, () -> classGroup.refreshTitle(null, null));
+    }
+
+
+    @Test
+    @DisplayName("É ativa só com a data de hoje entre o início e o término, inclusive nos dois extremos")
+    void isActiveOn_ShouldDependOnPeriod() {
+        ClassGroup classGroup = ClassGroup.create(UUID.randomUUID(), UUID.randomUUID(), 20,
+                LocalDateTime.of(2025, 2, 2, 0, 0), 1, null, "Programa A", List.of());
+
+        assertTrue(classGroup.isActiveOn(LocalDateTime.of(2025, 2, 2, 0, 0)));
+        assertTrue(classGroup.isActiveOn(LocalDateTime.of(2025, 2, 20, 10, 0)));
+        assertTrue(classGroup.isActiveOn(LocalDateTime.of(2025, 3, 2, 0, 0)));
+        assertFalse(classGroup.isActiveOn(LocalDateTime.of(2025, 2, 1, 23, 59)));
+        assertFalse(classGroup.isActiveOn(LocalDateTime.of(2025, 3, 2, 0, 1)));
+    }
+
+    @Test
+    @DisplayName("Turma desativada não é ativa, mesmo dentro do período")
+    void isActiveOn_ShouldBeFalseWhenSuspended() {
+        ClassGroup classGroup = ClassGroup.create(UUID.randomUUID(), UUID.randomUUID(), 20,
+                LocalDateTime.of(2025, 2, 2, 0, 0), 1, null, "Programa A", List.of());
+        classGroup.suspend();
+
+        assertFalse(classGroup.isActiveOn(LocalDateTime.of(2025, 2, 20, 10, 0)));
     }
 }

@@ -292,6 +292,10 @@ public class ClassGroup extends AuditableEntity {
         return active;
     }
 
+    public boolean isActiveOn(LocalDateTime now) {
+        return active && !startDate.isAfter(now) && !endDate.isBefore(now);
+    }
+
     public List<SchoolGradeRef> getSchoolGradeList() {
         return schoolGradeList;
     }

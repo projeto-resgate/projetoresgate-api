@@ -80,7 +80,8 @@ public class ClassGroupController {
     @GetMapping
     @Operation(summary = "Listar Turmas",
             description = "Lista turmas com paginação, ordenadas pelo título, e filtros opcionais por termo de pesquisa, "
-                    + "programa, instituição e situação (ativa/inativa).")
+                    + "programa, instituição e situação. A turma é ativa quando a data de hoje está entre o início "
+                    + "e o término.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class)))
@@ -89,7 +90,7 @@ public class ClassGroupController {
             @Parameter(description = "Termo de pesquisa (título)") @RequestParam(required = false) String searchTerm,
             @Parameter(description = "Id do programa") @RequestParam(required = false) UUID programId,
             @Parameter(description = "Id da instituição") @RequestParam(required = false) UUID institutionId,
-            @Parameter(description = "Situação da turma") @RequestParam(required = false) Boolean active,
+            @Parameter(description = "Ativa (hoje entre o início e o término)") @RequestParam(required = false) Boolean active,
             @Parameter(description = "Número da página") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Tamanho da página") @RequestParam(defaultValue = "10") int size
     ) {

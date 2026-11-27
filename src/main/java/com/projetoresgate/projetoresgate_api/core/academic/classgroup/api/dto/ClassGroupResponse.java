@@ -43,7 +43,7 @@ public record ClassGroupResponse(
                 entity.getEndDate(),
                 resolveDurationInMonths(entity),
                 entity.getNote(),
-                entity.isActive(),
+                entity.isActiveOn(LocalDateTime.now()),
                 entity.getDateCreated()
         );
     }

@@ -180,6 +180,7 @@ Prefixos: `USR` usuário · `PES` pessoa física · `EMP` pessoa jurídica · `F
 | RN-TUR-11  | Excluir turma só é permitido **sem educandos nem educadores vinculados** (RN-GER-05); horários e séries vão junto | 409  | `SoftDeleteClassGroupService`      |
 | ~~RN-TUR-12~~ | ~~Editar turma: campos `null` preservam o valor atual~~ (substituída pela RN-GER-04) | — | — |
 | RN-TUR-13  | Educando com situação de **desistência** não pode ser vinculado a turma (nem ter um vínculo antigo reativado): reative o educando antes, o que já pode vincular à turma (`POST /learner/{id}/reactivate` com `classGroupId`). O autocomplete de educandos já não os mostra | 409  | `Learner.ensureCanJoinClassGroup`, `LearnerRepository.autocomplete`, `CreateClassLearnerService`, `ActivateClassLearnerLinkService` |
+| RN-TUR-14  | Turma **ativa = a data de hoje está entre o início e o término** (inclusive). O `active` das respostas e o filtro `?active=` são calculados; é a mesma regra que deixa o educando como matriculado | —    | `ClassGroup.isActiveOn`, `ClassGroupRepository.findRows` |
 
 ## Exclusão e cascatas
 
